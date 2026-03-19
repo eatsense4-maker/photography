@@ -34,6 +34,7 @@ export default function Navbar() {
     { path: '/theme', label: t('nav.theme') },
     { path: '/editions', label: t('nav.editions') },
     { path: '/winners', label: t('nav.winners') },
+    { path: '/gallery', label: t('nav.gallery') },
     { path: '/contact', label: t('nav.contact') },
   ];
 

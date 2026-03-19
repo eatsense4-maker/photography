@@ -5,6 +5,7 @@
     "theme": "Tema",
     "editions": "Edicionet",
     "winners": "Fituesit",
+    "gallery": "Galeria",
     "contact": "Kontakt",
     "login": "Hyr",
     "register": "Regjistrohu",
@@ -66,6 +67,19 @@
     "view_edition": "Shiko Edicionin",
     "participants": "Pjesëmarrës",
     "winner": "Fitues"
+  },
+  "gallery": {
+    "title": "Galeria",
+    "subtitle": "Eksploroni çdo edicion të FOKUS Award — nga 2006 deri sot",
+    "winner": "Fitues",
+    "photos": "foto",
+    "no_photos": "Nuk u gjetën foto.",
+    "loading": "Duke ngarkuar galerinë...",
+    "loading_more": "Duke ngarkuar më shumë foto...",
+    "all_photos": "Të Gjitha Fotografitë",
+    "theme": "Tema",
+    "view_edition": "Shiko edicionin",
+    "back_to_gallery": "Kthehu te Galeria"
   },
   "contact": {
     "title": "Na Kontaktoni",

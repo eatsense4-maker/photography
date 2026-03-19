@@ -5,6 +5,7 @@
     "theme": "Theme",
     "editions": "Editions",
     "winners": "Winners",
+    "gallery": "Gallery",
     "contact": "Contact",
     "login": "Log In",
     "register": "Register",
@@ -66,6 +67,19 @@
     "view_edition": "View Edition",
     "participants": "Participants",
     "winner": "Winner"
+  },
+  "gallery": {
+    "title": "Gallery",
+    "subtitle": "Explore every edition of FOKUS Award — from 2006 to today",
+    "winner": "Winner",
+    "photos": "photos",
+    "no_photos": "No photos found.",
+    "loading": "Loading gallery...",
+    "loading_more": "Loading more photos...",
+    "all_photos": "All Photographs",
+    "theme": "Theme",
+    "view_edition": "View edition",
+    "back_to_gallery": "Back to Gallery"
   },
   "contact": {
     "title": "Contact Us",

@@ -14,6 +14,8 @@ import AboutPage from '@/pages/public/AboutPage';
 import ThemePage from '@/pages/public/ThemePage';
 import EditionsPage from '@/pages/public/EditionsPage';
 import WinnersPage from '@/pages/public/WinnersPage';
+import GalleryPage from '@/pages/public/GalleryPage';
+import EditionGalleryPage from '@/pages/public/EditionGalleryPage';
 import ContactPage from '@/pages/public/ContactPage';
 
 // Auth Pages
@@ -76,6 +78,8 @@ export default function App() {
               <Route path="/theme" element={<ThemePage />} />
               <Route path="/editions" element={<EditionsPage />} />
               <Route path="/winners" element={<WinnersPage />} />
+              <Route path="/gallery" element={<GalleryPage />} />
+              <Route path="/gallery/:year" element={<EditionGalleryPage />} />
               <Route path="/contact" element={<ContactPage />} />
             </Route>
 
