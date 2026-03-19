@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Camera, Award, Globe2, Heart } from 'lucide-react';
+import { Camera, Award, Globe2, Heart, MapPin } from 'lucide-react';
 
 
 const fadeUp = {
@@ -14,6 +14,51 @@ const fadeUp = {
 
 export default function AboutPage() {
   const { t } = useTranslation();
+
+  const curators = [
+    {
+      name: 'Arben Alliaj',
+      country: 'Albania',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/arben-alliaj.jpg',
+      role: 'Founder & Director',
+      bio: 'Born in Patos, Fier (1975). Founder of the FOKUS Artistic Photography Competition in 2006, transformed into the FOKUS Award Festival. Photographer, designer and founder of "Benart Print".',
+    },
+    {
+      name: 'Burim Myftiu',
+      country: 'Kosovo / USA',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/burim-myftiu.jpg',
+      role: 'Curator',
+      bio: 'MA in Visual Arts (b. Prizren, 1961). Albanian American lecturer, art curator, visual artist and photographer. Co-founder of DOKUFEST. Appointed EU Ambassador of Culture of Kosovo in 2011.',
+    },
+    {
+      name: 'Saimir Ahmeti',
+      country: 'Albania',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/saimir-ahmeti.jpg',
+      role: 'Curator & Manager',
+      bio: 'Born in Fier (1973). Graduated in Art Management at the Academy of Fine Arts, Tirana. Chairman of the ANTIK Association. Manager of FOKUS AWARD 2007–2021.',
+    },
+    {
+      name: 'Elton Koritari',
+      country: 'Albania',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/elton-koritari.jpg',
+      role: 'Curator',
+      bio: 'Born in Tirana (1977). Co-founder and administrator of EJAlbum. Represented Albania at La Biennale di Venezia (2018) as curator of the pavilion "Space Zero".',
+    },
+    {
+      name: 'Osman Demiri',
+      country: 'North Macedonia',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/osman-demiri.jpg',
+      role: 'Curator',
+      bio: 'Born in Kumanovo (1965). Photographer, documentary filmmaker and lecturer at the University of Tetova. John Kaverdash School of Photography alumnus. Jury member in competitions across the Balkans.',
+    },
+    {
+      name: 'Vlora Demiri',
+      country: 'North Macedonia',
+      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/vlora-demiri.jpg',
+      role: 'Curator – 13th Edition',
+      bio: 'Born in Gostivar (1994). Art historian — Mimar Sinan Fine Arts University, Istanbul. Artistic director of Kult Gallery. Curator of the 13th Edition "The Other".',
+    },
+  ];
 
   const values = [
     {
@@ -168,6 +213,65 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-lg font-semibold text-white mb-2">{val.title}</h3>
                 <p className="text-sm text-surface-400 leading-relaxed">{val.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Curators */}
+      <section className="py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <motion.span custom={0} variants={fadeUp} className="text-primary-400 text-sm font-semibold uppercase tracking-widest">
+              The People Behind FOKUS
+            </motion.span>
+            <motion.h2
+              custom={1}
+              variants={fadeUp}
+              className="text-3xl md:text-4xl font-display font-bold text-white mt-3"
+            >
+              Curators
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {curators.map((c, i) => (
+              <motion.div
+                key={c.name}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                custom={i}
+                variants={fadeUp}
+                className="group rounded-2xl overflow-hidden bg-surface-900 border border-surface-800 hover:border-surface-700 transition-colors"
+              >
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={c.photo}
+                    alt={c.name}
+                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
+                    loading="lazy"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="text-lg font-display font-bold text-white">{c.name}</h3>
+                    <span className="shrink-0 text-xs font-medium text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      {c.role}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-surface-400 mb-3">
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    {c.country}
+                  </div>
+                  <p className="text-sm text-surface-300 leading-relaxed">{c.bio}</p>
+                </div>
               </motion.div>
             ))}
           </div>

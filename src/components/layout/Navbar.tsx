@@ -32,7 +32,6 @@ export default function Navbar() {
     { path: '/', label: t('nav.home') },
     { path: '/about', label: t('nav.about') },
     { path: '/theme', label: t('nav.theme') },
-    { path: '/editions', label: t('nav.editions') },
     { path: '/winners', label: t('nav.winners') },
     { path: '/gallery', label: t('nav.gallery') },
     { path: '/contact', label: t('nav.contact') },
@@ -63,20 +62,12 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="relative">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg font-display">F</span>
-              </div>
-            </div>
-            <div>
-              <span className="text-white text-lg font-bold font-display tracking-wide">
-                FOKUS
-              </span>
-              <span className="text-primary-400 text-xs block -mt-1 tracking-[0.2em] font-sans">
-                AWARD
-              </span>
-            </div>
+          <Link to="/" className="flex items-center group">
+            <img
+              src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+              alt="FOKUS Award"
+              className="h-10 w-auto object-contain"
+            />
           </Link>
 
           {/* Desktop Navigation */}

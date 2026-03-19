@@ -93,14 +93,12 @@ export default function LoginPage() {
         <div className="absolute inset-0 bg-gradient-to-r from-surface-950/60 to-surface-950" />
         <div className="relative z-10 flex items-end p-12">
           <div>
-            <Link to="/" className="flex items-center space-x-3 mb-8">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">
-                <span className="text-white font-bold text-xl font-display">F</span>
-              </div>
-              <div>
-                <span className="text-white text-xl font-bold font-display tracking-wide">FOKUS</span>
-                <span className="text-primary-400 text-xs block -mt-1 tracking-[0.2em]">AWARD</span>
-              </div>
+            <Link to="/" className="flex items-center mb-8">
+              <img
+                src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+                alt="FOKUS Award"
+                className="h-12 w-auto object-contain"
+              />
             </Link>
             <p className="text-2xl font-display text-white/80 italic max-w-md">
               "Photography is the story I fail to put into words."
@@ -118,11 +116,12 @@ export default function LoginPage() {
           className="w-full max-w-md"
         >
           {/* Mobile logo */}
-          <Link to="/" className="lg:hidden flex items-center space-x-3 mb-10">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">
-              <span className="text-white font-bold text-lg font-display">F</span>
-            </div>
-            <span className="text-white text-lg font-bold font-display tracking-wide">FOKUS AWARD</span>
+          <Link to="/" className="lg:hidden flex items-center mb-10">
+            <img
+              src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+              alt="FOKUS Award"
+              className="h-10 w-auto object-contain"
+            />
           </Link>
 
           <h1 className="text-3xl font-display font-bold text-white mb-2">

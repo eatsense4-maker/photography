@@ -17,7 +17,15 @@
       "slug": "edicioni-i-14-te-2023",
       "theme": "Things Have Changed",
       "winner": null,
-      "photoCount": 16
+      "photoCount": 56,
+      "categories": [
+        "Things Have Changed",
+        "PRESS",
+        "PEOPLE",
+        "LAND",
+        "LIFE"
+      ],
+      "mainCategory": "Things Have Changed"
     },
     {
       "number": 13,
@@ -250,148 +258,14 @@
       "year": 2025
     },
     {
-      "r2Key": "gallery/2023/main-first-place-2023.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-first-place-2023.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "main first place 2023",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/main-second-place-2023.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-second-place-2023.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "main second place 2023",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/main-third-place-2023.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-third-place-2023.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "main third place 2023",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PRESS1_1.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS1_1.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PRESS1_1",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PRESS1.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS1.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PRESS1",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PRESS32023.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS32023.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PRESS32023",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PEOPLE1.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE1.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PEOPLE1",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PEOPLE2.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE2.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PEOPLE2",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/PEOPLE3.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE3.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "PEOPLE3",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LANDWIN.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LANDWIN.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LANDWIN",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LAND1.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LAND1.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LAND1",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LAND3.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LAND3.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LAND3",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LIFE1.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE1.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LIFE1",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LIFE2.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE2.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LIFE2",
-      "edition": 14,
-      "year": 2023
-    },
-    {
-      "r2Key": "gallery/2023/LIFE3.jpeg",
-      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE3.jpeg",
-      "category": null,
-      "isWinner": true,
-      "photographer": "LIFE3",
-      "edition": 14,
-      "year": 2023
-    },
-    {
       "r2Key": "gallery/2023/bd774c7e-7e7f-4ff3-99ae-d6581c25d392.jpg",
       "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/bd774c7e-7e7f-4ff3-99ae-d6581c25d392.jpg",
       "category": null,
-      "isWinner": true,
-      "photographer": "bd774c7e-7e7f-4ff3-99ae-d6581c25d392",
+      "isWinner": false,
+      "photographer": null,
       "edition": 14,
-      "year": 2023
+      "year": 2023,
+      "isJury": true
     },
     {
       "r2Key": "gallery/2022/juria-finale-justini.jpg",
@@ -7460,6 +7334,611 @@
       "photographer": null,
       "edition": 13,
       "year": 2022
+    },
+    {
+      "r2Key": "gallery/2023/main-first-place-2023.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-first-place-2023.jpeg",
+      "category": "Things Have Changed",
+      "isWinner": true,
+      "place": 1,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/main-second-place-2023.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-second-place-2023.jpeg",
+      "category": "Things Have Changed",
+      "isWinner": true,
+      "place": 2,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/main-third-place-2023.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-third-place-2023.jpeg",
+      "category": "Things Have Changed",
+      "isWinner": true,
+      "place": 3,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907134480858914.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907134480858914.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907133960858966.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907133960858966.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907134360858926.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907134360858926.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907133937525635.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907133937525635.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907134160858946.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907134160858946.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907134317525597.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907134317525597.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907133947525634.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907133947525634.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/things-have-changed/907134150858947.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/things-have-changed/907134150858947.jpg",
+      "category": "Things Have Changed",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PRESS1_1.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS1_1.jpeg",
+      "category": "PRESS",
+      "isWinner": true,
+      "place": 1,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PRESS1.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS1.jpeg",
+      "category": "PRESS",
+      "isWinner": true,
+      "place": 2,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PRESS32023.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PRESS32023.jpeg",
+      "category": "PRESS",
+      "isWinner": true,
+      "place": 3,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132100859152.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132100859152.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132257525803.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132257525803.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132417525787.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132417525787.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132187525810.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132187525810.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132174192478.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132174192478.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132214192474.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132214192474.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132397525789.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132397525789.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/press/907132544192441.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/press/907132544192441.jpg",
+      "category": "PRESS",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PEOPLE1.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE1.jpeg",
+      "category": "PEOPLE",
+      "isWinner": true,
+      "place": 1,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PEOPLE2.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE2.jpeg",
+      "category": "PEOPLE",
+      "isWinner": true,
+      "place": 2,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/PEOPLE3.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE3.jpeg",
+      "category": "PEOPLE",
+      "isWinner": true,
+      "place": 3,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907129947526034.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907129947526034.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907129477526081.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907129477526081.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907130037526025.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907130037526025.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907130354192660.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907130354192660.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907129504192745.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907129504192745.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907130560859306.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907130560859306.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907129420859420.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907129420859420.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/people/907129527526076.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/people/907129527526076.jpg",
+      "category": "PEOPLE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LANDWIN.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LANDWIN.jpeg",
+      "category": "LAND",
+      "isWinner": true,
+      "place": 1,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LAND1.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LAND1.jpeg",
+      "category": "LAND",
+      "isWinner": true,
+      "place": 2,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LAND3.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LAND3.jpeg",
+      "category": "LAND",
+      "isWinner": true,
+      "place": 3,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907120657526963.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907120657526963.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121597526869.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121597526869.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121760860186.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121760860186.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121077526921.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121077526921.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121124193583.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121124193583.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121560860206.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121560860206.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907121104193585.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907121104193585.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/land/907120834193612.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/land/907120834193612.jpg",
+      "category": "LAND",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LIFE1.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE1.jpeg",
+      "category": "LIFE",
+      "isWinner": true,
+      "place": 1,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LIFE2.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE2.jpeg",
+      "category": "LIFE",
+      "isWinner": true,
+      "place": 2,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/LIFE3.jpeg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE3.jpeg",
+      "category": "LIFE",
+      "isWinner": true,
+      "place": 3,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908723127366716.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908723127366716.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908723137366715.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908723137366715.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908724274033268.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908724274033268.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908722740700088.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908722740700088.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908722690700093.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908722690700093.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908722707366758.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908722707366758.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908722824033413.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908722824033413.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
+    },
+    {
+      "r2Key": "gallery/2023/participants/life/908722710700091.jpg",
+      "url": "https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/participants/life/908722710700091.jpg",
+      "category": "LIFE",
+      "isWinner": false,
+      "place": null,
+      "title": null,
+      "photographer": null,
+      "edition": 14,
+      "year": 2023
     }
   ]
 }
