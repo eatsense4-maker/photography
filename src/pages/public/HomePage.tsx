@@ -108,7 +108,7 @@ export default function HomePage() {
         <motion.div style={{ y: heroY }} className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1920&h=1080&fit=crop)' }}
+            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=1920&h=1080&fit=crop)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-b from-surface-950/60 via-surface-950/50 to-surface-950" />
         </motion.div>
@@ -345,7 +345,7 @@ export default function HomePage() {
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-15"
-            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=1920&h=600&fit=crop)' }}
+            style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1485236715568-ddc5ee6ca227?w=1920&h=600&fit=crop)' }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-primary-950/90 via-surface-950 to-primary-950/90" />
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X as XIcon, Calendar, AlertTriangle, Award } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import type { Edition } from '@/types';
 
@@ -76,7 +77,8 @@ const JURY_CRITERIA = [
 ];
 
 export default function ThemePage() {
-  const [lang, setLang] = useState<'en' | 'al'>('en');
+  const { i18n } = useTranslation();
+  const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -186,28 +188,7 @@ export default function ThemePage() {
       {/* ── Concept essay ── */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Language toggle */}
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-2xl font-display font-bold text-white">The Concept</h2>
-            <div className="flex rounded-lg overflow-hidden border border-surface-700">
-              <button
-                onClick={() => setLang('en')}
-                className={`px-5 py-2 text-sm font-semibold transition-colors ${
-                  lang === 'en' ? 'bg-primary-500 text-white' : 'text-surface-400 hover:text-white'
-                }`}
-              >
-                EN
-              </button>
-              <button
-                onClick={() => setLang('al')}
-                className={`px-5 py-2 text-sm font-semibold transition-colors ${
-                  lang === 'al' ? 'bg-primary-500 text-white' : 'text-surface-400 hover:text-white'
-                }`}
-              >
-                AL
-              </button>
-            </div>
-          </div>
+          <h2 className="text-2xl font-display font-bold text-white mb-12">{lang === 'en' ? 'The Concept' : 'Koncepti'}</h2>
 
           <div className="space-y-6">
             {conceptParagraphs.map((paragraph, i) => (

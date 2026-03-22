@@ -20,18 +20,12 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-gold-500 flex items-center justify-center">
-                <span className="text-white font-bold text-lg font-display">F</span>
-              </div>
-              <div>
-                <span className="text-white text-lg font-bold font-display tracking-wide">
-                  FOKUS
-                </span>
-                <span className="text-primary-400 text-xs block -mt-1 tracking-[0.2em]">
-                  AWARD
-                </span>
-              </div>
+            <Link to="/" className="flex items-center mb-4">
+              <img
+                src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+                alt="FOKUS Award"
+                className="h-10 w-auto object-contain"
+              />
             </Link>
             <p className="text-surface-400 text-sm leading-relaxed mb-6">
               {t('footer.tagline')}

@@ -2,52 +2,49 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
+import { lazy, Suspense } from 'react';
 
 // Layouts
 import { PublicLayout, DashboardLayout } from '@/components/layout';
 import ProtectedRoute from '@/components/shared/ProtectedRoute';
 import AuthProvider from '@/components/shared/AuthProvider';
 
-// Public Pages
-import HomePage from '@/pages/public/HomePage';
-import AboutPage from '@/pages/public/AboutPage';
-import ThemePage from '@/pages/public/ThemePage';
-import EditionsPage from '@/pages/public/EditionsPage';
-import WinnersPage from '@/pages/public/WinnersPage';
-import GalleryPage from '@/pages/public/GalleryPage';
-import EditionGalleryPage from '@/pages/public/EditionGalleryPage';
-import ContactPage from '@/pages/public/ContactPage';
+// Lazy-loaded pages
+const HomePage = lazy(() => import('@/pages/public/HomePage'));
+const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
+const ThemePage = lazy(() => import('@/pages/public/ThemePage'));
+const EditionsPage = lazy(() => import('@/pages/public/EditionsPage'));
+const WinnersPage = lazy(() => import('@/pages/public/WinnersPage'));
+const GalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
+const EditionGalleryPage = lazy(() => import('@/pages/public/EditionGalleryPage'));
+const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 
-// Auth Pages
-import LoginPage from '@/pages/auth/LoginPage';
-import RegisterPage from '@/pages/auth/RegisterPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
+const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
 
-// User Pages
-import UserDashboard from '@/pages/user/UserDashboard';
-import UserSubmissions from '@/pages/user/UserSubmissions';
-import NewSubmission from '@/pages/user/NewSubmission';
-import SubmissionDetail from '@/pages/user/SubmissionDetail';
-import ProfilePage from '@/pages/user/ProfilePage';
-import CertificatesPage from '@/pages/user/CertificatesPage';
-import NotificationsPage from '@/pages/user/NotificationsPage';
+const UserDashboard = lazy(() => import('@/pages/user/UserDashboard'));
+const UserSubmissions = lazy(() => import('@/pages/user/UserSubmissions'));
+const NewSubmission = lazy(() => import('@/pages/user/NewSubmission'));
+const SubmissionDetail = lazy(() => import('@/pages/user/SubmissionDetail'));
+const ProfilePage = lazy(() => import('@/pages/user/ProfilePage'));
+const CertificatesPage = lazy(() => import('@/pages/user/CertificatesPage'));
+const NotificationsPage = lazy(() => import('@/pages/user/NotificationsPage'));
 
-// Jury Pages
-import JuryDashboard from '@/pages/jury/JuryDashboard';
-import JuryReview from '@/pages/jury/JuryReview';
-import JuryRanking from '@/pages/jury/JuryRanking';
+const JuryDashboard = lazy(() => import('@/pages/jury/JuryDashboard'));
+const JuryReview = lazy(() => import('@/pages/jury/JuryReview'));
+const JuryRanking = lazy(() => import('@/pages/jury/JuryRanking'));
 
-// Admin Pages
-import AdminDashboard from '@/pages/admin/AdminDashboard';
-import AdminEditions from '@/pages/admin/AdminEditions';
-import AdminCategories from '@/pages/admin/AdminCategories';
-import AdminSubmissions from '@/pages/admin/AdminSubmissions';
-import AdminUsers from '@/pages/admin/AdminUsers';
-import AdminJury from '@/pages/admin/AdminJury';
-import AdminPayments from '@/pages/admin/AdminPayments';
-import AdminResults from '@/pages/admin/AdminResults';
-import AdminContent from '@/pages/admin/AdminContent';
-import AdminPartners from '@/pages/admin/AdminPartners';
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'));
+const AdminEditions = lazy(() => import('@/pages/admin/AdminEditions'));
+const AdminCategories = lazy(() => import('@/pages/admin/AdminCategories'));
+const AdminSubmissions = lazy(() => import('@/pages/admin/AdminSubmissions'));
+const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
+const AdminJury = lazy(() => import('@/pages/admin/AdminJury'));
+const AdminPayments = lazy(() => import('@/pages/admin/AdminPayments'));
+const AdminResults = lazy(() => import('@/pages/admin/AdminResults'));
+const AdminContent = lazy(() => import('@/pages/admin/AdminContent'));
+const AdminPartners = lazy(() => import('@/pages/admin/AdminPartners'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,6 +67,11 @@ export default function App() {
       <PayPalScriptProvider options={paypalOptions}>
         <AuthProvider>
         <BrowserRouter>
+          <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center">
+              <div className="animate-spin h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full" />
+            </div>
+          }>
           <Routes>
             {/* Public Routes */}
             <Route element={<PublicLayout />}>
@@ -142,6 +144,7 @@ export default function App() {
             {/* Catch all */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
         </BrowserRouter>
 
         <Toaster

@@ -10,4 +10,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['framer-motion', 'lucide-react'],
+          'vendor-data': ['@supabase/supabase-js', '@tanstack/react-query'],
+          'vendor-paypal': ['@paypal/react-paypal-js'],
+        },
+      },
+    },
+  },
 })
