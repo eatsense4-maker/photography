@@ -19,6 +19,7 @@ import {
   CreditCard,
   Trophy,
   Handshake,
+  Newspaper,
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -65,6 +66,7 @@ export default function Sidebar() {
     { path: '/admin/payments', label: t('admin.payments'), icon: <CreditCard className="h-5 w-5" /> },
     { path: '/admin/results', label: t('admin.results'), icon: <Trophy className="h-5 w-5" /> },
     { path: '/admin/partners', label: t('admin.partners'), icon: <Handshake className="h-5 w-5" /> },
+    { path: '/admin/posts', label: 'News & Events', icon: <Newspaper className="h-5 w-5" /> },
   ];
 
   const links =

@@ -232,7 +232,7 @@ interface ModalProps {
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 }
 
 const modalSizes = {
@@ -240,6 +240,8 @@ const modalSizes = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
+  '2xl': 'max-w-4xl',
+  '3xl': 'max-w-5xl',
 };
 
 export const Modal: React.FC<ModalProps> = ({

@@ -45,6 +45,9 @@ const AdminPayments = lazy(() => import('@/pages/admin/AdminPayments'));
 const AdminResults = lazy(() => import('@/pages/admin/AdminResults'));
 const AdminContent = lazy(() => import('@/pages/admin/AdminContent'));
 const AdminPartners = lazy(() => import('@/pages/admin/AdminPartners'));
+const AdminPosts = lazy(() => import('@/pages/admin/AdminPosts'));
+const PostDetailPage = lazy(() => import('@/pages/public/PostDetailPage'));
+const NewsArchivePage = lazy(() => import('@/pages/public/NewsArchivePage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -82,6 +85,8 @@ export default function App() {
               <Route path="/winners" element={<WinnersPage />} />
               <Route path="/gallery" element={<GalleryPage />} />
               <Route path="/gallery/:year" element={<EditionGalleryPage />} />
+              <Route path="/news" element={<NewsArchivePage />} />
+              <Route path="/news/:slug" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
             </Route>
 
@@ -139,6 +144,7 @@ export default function App() {
               <Route path="/admin/results" element={<AdminResults />} />
               <Route path="/admin/content" element={<AdminContent />} />
               <Route path="/admin/partners" element={<AdminPartners />} />
+              <Route path="/admin/posts" element={<AdminPosts />} />
             </Route>
 
             {/* Catch all */}

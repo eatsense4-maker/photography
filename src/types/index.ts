@@ -170,6 +170,26 @@ export interface JuryAssignment {
   category?: Category;
 }
 
+export type PostCategory = 'news' | 'event' | 'announcement';
+
+export interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  body: string | null;
+  cover_image_url: string | null;
+  gallery_images: string[];
+  facebook_url: string | null;
+  category: PostCategory;
+  featured: boolean;
+  pinned: boolean;
+  published: boolean;
+  published_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ===== API / Component Types =====
 export interface PaginatedResponse<T> {
   data: T[];
