@@ -1,14 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
-import { Upload, X, Image as ImageIcon, ArrowRight, ArrowLeft } from 'lucide-react';
+import { PayPalButtons } from '@paypal/react-paypal-js';
+import {
+  Upload, X, ArrowRight, ArrowLeft, Image as ImageIcon,
+  CreditCard, Check, Camera, ShieldCheck, Package, Info, HelpCircle, Lock,
+} from 'lucide-react';
 import { Button, Input, Textarea, Select, Card } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { uploadPhoto } from '@/lib/r2';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+import type { PricingTier, Category } from '@/types';
 
 interface UploadedPhoto {
   id: string;
@@ -26,17 +31,70 @@ export default function NewSubmission() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Form state
+  // Edition
   const [editionId, setEditionId] = useState('');
-  const [categoryId, setCategoryId] = useState('');
+  const [editions, setEditions] = useState<{ value: string; label: string }[]>([]);
+
+  // Categories (multi-select)
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+
+  // Pricing tiers from DB
+  const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
+  const [selectedTierId, setSelectedTierId] = useState('');
+
+  // User credits
+  const [userCredits, setUserCredits] = useState<{ photo_credits: number; tier_id: string; submissions_remaining: number } | null>(null);
+
+  // Payment
+  const [paying, setPaying] = useState(false);
+  const [paymentComplete, setPaymentComplete] = useState(false);
+
+  // Per-category photos: { categoryId: UploadedPhoto[] }
+  const [categoryPhotos, setCategoryPhotos] = useState<Record<string, UploadedPhoto[]>>({});
+
+  // Active category in upload step
+  const [activeCategoryIdx, setActiveCategoryIdx] = useState(0);
+
+  // Submission details
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
 
-  // Dynamic options from Supabase
-  const [editions, setEditions] = useState<{ value: string; label: string }[]>([]);
-  const [categories, setCategories] = useState<{ value: string; label: string; maxPhotos: number }[]>([]);
-  const [maxPhotos, setMaxPhotos] = useState(10);
+  // ─── Derived state ───
+  const selectedCategories = useMemo(
+    () => categories.filter((c) => selectedCategoryIds.includes(c.id)),
+    [categories, selectedCategoryIds]
+  );
+
+  const paidCategories = useMemo(
+    () => selectedCategories.filter((c) => c.price > 0),
+    [selectedCategories]
+  );
+
+  const hasPaidCategories = paidCategories.length > 0;
+  const hasCredits = !!userCredits || paymentComplete;
+  const needsPayment = hasPaidCategories && !hasCredits;
+
+  const selectedTier = useMemo(
+    () => pricingTiers.find((t) => t.id === selectedTierId) || null,
+    [pricingTiers, selectedTierId]
+  );
+
+  const paymentAmount = useMemo(() => {
+    if (!selectedTier) return 0;
+    if (selectedTier.is_bundle) return Number(selectedTier.price);
+    return Number(selectedTier.price) * paidCategories.length;
+  }, [selectedTier, paidCategories.length]);
+
+  const paidPhotoLimit = useMemo(() => {
+    if (userCredits) return userCredits.photo_credits;
+    if (selectedTier) return selectedTier.photo_credits;
+    return 0;
+  }, [userCredits, selectedTier]);
+
+  const activeCategory = selectedCategories[activeCategoryIdx] || null;
+
+  // ─── Data fetching ───
 
   // Fetch editions
   useEffect(() => {
@@ -58,35 +116,60 @@ export default function NewSubmission() {
 
   // Fetch categories when edition changes
   useEffect(() => {
-    if (!editionId) {
-      setCategories([]);
-      return;
-    }
+    if (!editionId) { setCategories([]); return; }
     supabase
       .from('categories')
-      .select('id, name, max_photos')
+      .select('*')
       .eq('edition_id', editionId)
       .order('sort_order')
-      .then(({ data }) => {
-        setCategories(
-          (data || []).map((c) => ({
-            value: c.id,
-            label: c.name,
-            maxPhotos: c.max_photos,
-          }))
-        );
-      });
+      .then(({ data }) => setCategories(data || []));
   }, [editionId]);
 
-  // Update maxPhotos when category changes
+  // Fetch pricing tiers when edition changes
   useEffect(() => {
-    const cat = categories.find((c) => c.value === categoryId);
-    setMaxPhotos(cat?.maxPhotos || 10);
-  }, [categoryId, categories]);
+    if (!editionId) { setPricingTiers([]); return; }
+    supabase
+      .from('pricing_tiers')
+      .select('*')
+      .eq('edition_id', editionId)
+      .order('sort_order')
+      .then(({ data }) => setPricingTiers(data || []));
+  }, [editionId]);
+
+  // Check if user already has credits for this edition
+  useEffect(() => {
+    if (!editionId || !user?.id) { setUserCredits(null); return; }
+    supabase
+      .from('user_credits')
+      .select('photo_credits, tier_id, submissions_remaining')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .maybeSingle()
+      .then(({ data }) => setUserCredits(data || null));
+  }, [editionId, user?.id]);
+
+  // ─── Category selection ───
+  const toggleCategory = (catId: string) => {
+    setSelectedCategoryIds((prev) =>
+      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
+    );
+  };
+
+  // ─── Photos management ───
+  const getPhotosForCategory = (catId: string) => categoryPhotos[catId] || [];
+
+  const getMaxPhotos = (cat: Category) => {
+    if (cat.price > 0) return Math.min(cat.max_photos, paidPhotoLimit || cat.max_photos);
+    return cat.max_photos;
+  };
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      const remaining = maxPhotos - photos.length;
+      if (!activeCategory) return;
+      const catId = activeCategory.id;
+      const current = getPhotosForCategory(catId);
+      const max = getMaxPhotos(activeCategory);
+      const remaining = max - current.length;
       const filesToAdd = acceptedFiles.slice(0, remaining);
 
       const newPhotos: UploadedPhoto[] = filesToAdd.map((file) => ({
@@ -97,10 +180,16 @@ export default function NewSubmission() {
         uploaded: false,
       }));
 
-      setPhotos((prev) => [...prev, ...newPhotos]);
+      setCategoryPhotos((prev) => ({
+        ...prev,
+        [catId]: [...(prev[catId] || []), ...newPhotos],
+      }));
     },
-    [photos.length, maxPhotos]
+    [activeCategory, categoryPhotos, paidPhotoLimit]
   );
+
+  const currentPhotos = activeCategory ? getPhotosForCategory(activeCategory.id) : [];
+  const currentMaxPhotos = activeCategory ? getMaxPhotos(activeCategory) : 0;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -110,74 +199,138 @@ export default function NewSubmission() {
       'image/tiff': ['.tif', '.tiff'],
     },
     maxSize: 20 * 1024 * 1024,
-    disabled: photos.length >= maxPhotos,
+    disabled: !activeCategory || currentPhotos.length >= currentMaxPhotos,
   });
 
-  const removePhoto = (id: string) => {
-    setPhotos((prev) => {
-      const photo = prev.find((p) => p.id === id);
+  const removePhoto = (catId: string, photoId: string) => {
+    setCategoryPhotos((prev) => {
+      const photos = prev[catId] || [];
+      const photo = photos.find((p) => p.id === photoId);
       if (photo) URL.revokeObjectURL(photo.preview);
-      return prev.filter((p) => p.id !== id);
+      return { ...prev, [catId]: photos.filter((p) => p.id !== photoId) };
     });
   };
 
+  // ─── Step navigation ───
+  const canProceedStep1 = selectedCategoryIds.length > 0;
+  const canProceedUpload = selectedCategories.every(
+    (c) => getPhotosForCategory(c.id).length > 0
+  );
+
+  // In upload step: find the next category that still needs photos
+  const currentCatHasPhotos = activeCategory
+    ? getPhotosForCategory(activeCategory.id).length > 0
+    : false;
+  const nextEmptyCategoryIdx = selectedCategories.findIndex(
+    (c, i) => i > activeCategoryIdx && getPhotosForCategory(c.id).length === 0
+  );
+  const shouldAdvanceCategory = step === 3 && currentCatHasPhotos && nextEmptyCategoryIdx !== -1;
+
+  const goToNextStep = () => {
+    if (step === 1 && hasPaidCategories && !hasCredits) {
+      setStep(2);
+    } else if (step === 1) {
+      setStep(3);
+      setActiveCategoryIdx(0);
+    } else if (step === 2) {
+      setStep(3);
+      setActiveCategoryIdx(0);
+    } else if (step === 3 && shouldAdvanceCategory) {
+      setActiveCategoryIdx(nextEmptyCategoryIdx);
+    } else if (step === 3) {
+      setStep(4);
+    }
+  };
+
+  const goToPrevStep = () => {
+    if (step === 4) setStep(3);
+    else if (step === 3 && hasPaidCategories && !userCredits && paymentComplete) setStep(2);
+    else if (step === 3) setStep(1);
+    else if (step === 2) setStep(1);
+  };
+
+  // ─── Submit ───
   const handleSubmit = async (asDraft: boolean) => {
     if (!user?.id) return;
+
+    // Check submissions_remaining for paid categories (anti-spam)
+    const submittingPaidCount = selectedCategories.filter((c) => c.price > 0).length;
+    if (!asDraft && submittingPaidCount > 0 && userCredits && userCredits.submissions_remaining <= 0) {
+      toast.error('You have no submissions remaining for this edition. Contact support if you need assistance.');
+      return;
+    }
+
     setLoading(true);
     try {
-      // 1. Create the submission record
-      const { data: submission, error: subError } = await supabase
-        .from('submissions')
-        .insert({
-          user_id: user.id,
-          edition_id: editionId,
-          category_id: categoryId,
-          title: title || null,
-          description: description || null,
-          status: asDraft ? 'draft' : 'submitted',
-          submitted_at: asDraft ? null : new Date().toISOString(),
-        })
-        .select('id')
-        .single();
+      let submittedPaidCount = 0;
+      for (const cat of selectedCategories) {
+        const photos = getPhotosForCategory(cat.id);
+        if (photos.length === 0 && !asDraft) continue;
 
-      if (subError) throw subError;
+        const isPaid = cat.price > 0;
+        const status = asDraft ? 'draft' : (isPaid && !hasCredits ? 'draft' : 'submitted');
 
-      // 2. Upload photos to Supabase Storage and create submission_photos records
-      for (let i = 0; i < photos.length; i++) {
-        const photo = photos[i];
-        try {
-          const { key } = await uploadPhoto(photo.file, (progress) => {
-            setPhotos((prev) =>
-              prev.map((p) =>
-                p.id === photo.id ? { ...p, progress } : p
-              )
-            );
-          });
+        const { data: submission, error: subError } = await supabase
+          .from('submissions')
+          .insert({
+            user_id: user.id,
+            edition_id: editionId,
+            category_id: cat.id,
+            title: title || null,
+            description: description || null,
+            status,
+            submitted_at: status === 'submitted' ? new Date().toISOString() : null,
+          })
+          .select('id')
+          .single();
 
-          // Create photo record
-          await supabase.from('submission_photos').insert({
-            submission_id: submission.id,
-            storage_key: key,
-            original_filename: photo.file.name,
-            mime_type: photo.file.type,
-            file_size: photo.file.size,
-            sort_order: i,
-          });
+        if (subError) throw subError;
+        if (isPaid && status === 'submitted') submittedPaidCount++;
 
-          setPhotos((prev) =>
-            prev.map((p) =>
-              p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p
-            )
-          );
-        } catch (uploadErr) {
-          console.error('Photo upload failed:', uploadErr);
-          toast.error(`Failed to upload ${photo.file.name}`);
+        for (let i = 0; i < photos.length; i++) {
+          const photo = photos[i];
+          try {
+            const { key } = await uploadPhoto(photo.file, (progress) => {
+              setCategoryPhotos((prev) => ({
+                ...prev,
+                [cat.id]: (prev[cat.id] || []).map((p) =>
+                  p.id === photo.id ? { ...p, progress } : p
+                ),
+              }));
+            });
+
+            await supabase.from('submission_photos').insert({
+              submission_id: submission.id,
+              storage_key: key,
+              original_filename: photo.file.name,
+              mime_type: photo.file.type,
+              file_size: photo.file.size,
+              sort_order: i,
+            });
+
+            setCategoryPhotos((prev) => ({
+              ...prev,
+              [cat.id]: (prev[cat.id] || []).map((p) =>
+                p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p
+              ),
+            }));
+          } catch (uploadErr) {
+            console.error('Photo upload failed:', uploadErr);
+            toast.error(`Failed to upload ${photo.file.name}`);
+          }
         }
       }
 
-      toast.success(
-        asDraft ? 'Saved as draft!' : t('submission.submitted_success')
-      );
+      // Decrement submissions_remaining for paid submissions
+      if (submittedPaidCount > 0 && userCredits) {
+        await supabase.rpc('decrement_submissions_remaining', {
+          p_user_id: user.id,
+          p_edition_id: editionId,
+          p_count: submittedPaidCount,
+        });
+      }
+
+      toast.success(asDraft ? 'Saved as draft!' : t('submission.submitted_success'));
       navigate('/dashboard/submissions');
     } catch (err: any) {
       toast.error(err.message || 'Failed to submit');
@@ -186,167 +339,742 @@ export default function NewSubmission() {
     }
   };
 
+  // ─── Progress bar ───
+  const progressSteps = needsPayment
+    ? ['Choose Categories', 'Payment', 'Upload Photos', 'Review & Submit']
+    : ['Choose Categories', 'Upload Photos', 'Review & Submit'];
+
+  const currentProgressIdx = needsPayment
+    ? step - 1
+    : step === 1 ? 0 : step === 3 ? 1 : 2;
+
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-display font-bold text-white">
+    <div className="max-w-4xl mx-auto space-y-10 pb-12">
+      <div className="text-center">
+        <h1 className="text-3xl sm:text-4xl font-display font-bold text-white">
           {t('user.new_submission')}
         </h1>
-        <p className="text-surface-400 text-sm mt-1">
-          Submit your photos to the competition
+        <p className="text-surface-300 text-lg mt-2">
+          Follow the steps below to submit your photos
         </p>
       </div>
 
-      {/* Progress Steps */}
-      <div className="flex items-center gap-2">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex items-center gap-2 flex-1">
-            <div
-              className={`h-1 flex-1 rounded-full transition-colors ${
-                s <= step ? 'bg-primary-500' : 'bg-surface-800'
-              }`}
-            />
-          </div>
-        ))}
-      </div>
+      {/* Progress Steps — Large numbered circles */}
+      <nav aria-label="Submission progress" className="flex items-center justify-center gap-0">
+        {progressSteps.map((label, i) => {
+          const isCompleted = i < currentProgressIdx;
+          const isCurrent = i === currentProgressIdx;
+          return (
+            <div key={label} className="flex items-center">
+              <div className="flex flex-col items-center gap-1.5">
+                <div
+                  className={`h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold transition-all border-2 ${
+                    isCompleted
+                      ? 'bg-emerald-500 border-emerald-500 text-white'
+                      : isCurrent
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/30'
+                      : 'bg-surface-800 border-surface-600 text-surface-500'
+                  }`}
+                >
+                  {isCompleted ? <Check className="h-6 w-6" /> : i + 1}
+                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    isCompleted
+                      ? 'text-emerald-400'
+                      : isCurrent
+                      ? 'text-primary-400'
+                      : 'text-surface-500'
+                  }`}
+                >
+                  {label}
+                </span>
+              </div>
+              {i < progressSteps.length - 1 && (
+                <div
+                  className={`h-1 w-12 sm:w-20 mx-2 rounded-full mb-6 ${
+                    i < currentProgressIdx ? 'bg-emerald-500' : 'bg-surface-700'
+                  }`}
+                />
+              )}
+            </div>
+          );
+        })}
+      </nav>
 
-      {/* Step 1: Select Edition & Category */}
+      {/* ═══ STEP 1: Select Categories ═══ */}
       {step === 1 && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <Card className="p-6 space-y-6">
+          {/* Friendly instruction */}
+          <div className="flex items-start gap-4 p-5 rounded-xl bg-primary-500/5 border border-primary-500/20">
+            <Info className="h-6 w-6 text-primary-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-base text-white font-medium">Choose the categories you'd like to enter</p>
+              <p className="text-sm text-surface-300 mt-1">
+                You can select one or more categories. Some categories are free to enter, while others require a small fee.
+                Don't worry — we'll guide you through every step.
+              </p>
+            </div>
+          </div>
+
+          <Card className="p-6 sm:p-8 space-y-6">
             <Select
               label={t('submission.select_edition')}
               options={editions}
               placeholder="Choose an edition..."
               value={editionId}
-              onChange={(e) => { setEditionId(e.target.value); setCategoryId(''); }}
+              onChange={(e) => {
+                setEditionId(e.target.value);
+                setSelectedCategoryIds([]);
+              }}
             />
-            <Select
-              label={t('submission.select_category')}
-              options={categories}
-              placeholder="Choose a category..."
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-            />
-          </Card>
-          <div className="flex justify-end">
-            <Button
-              variant="primary"
-              icon={<ArrowRight className="h-4 w-4" />}
-              onClick={() => setStep(2)}
-              disabled={!editionId || !categoryId}
-            >
-              {t('common.next')}
-            </Button>
-          </div>
-        </motion.div>
-      )}
 
-      {/* Step 2: Upload Photos */}
-      {step === 2 && (
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
-        >
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              {t('submission.upload_photos')}
-            </h3>
-            <p className="text-sm text-surface-400 mb-6">
-              {t('submission.max_photos', { max: maxPhotos })} · {t('submission.photo_requirements')}
-            </p>
-
-            {/* Dropzone */}
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
-                isDragActive
-                  ? 'border-primary-500 bg-primary-500/5'
-                  : photos.length >= maxPhotos
-                  ? 'border-surface-800 bg-surface-900 cursor-not-allowed'
-                  : 'border-surface-700 hover:border-surface-500 bg-surface-900'
-              }`}
-            >
-              <input {...getInputProps()} />
-              <Upload className="h-10 w-10 text-surface-500 mx-auto mb-4" />
-              <p className="text-surface-300">
-                {isDragActive
-                  ? 'Drop files here...'
-                  : t('submission.drag_drop')}
-              </p>
-              <p className="text-xs text-surface-500 mt-2">
-                {photos.length}/{maxPhotos} photos
-              </p>
-            </div>
-
-            {/* Photo Previews */}
-            {photos.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
-                {photos.map((photo) => (
-                  <div key={photo.id} className="relative group aspect-square rounded-lg overflow-hidden bg-surface-800">
-                    <img
-                      src={photo.preview}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      onClick={() => removePhoto(photo.id)}
-                      className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                    {!photo.uploaded && photo.progress > 0 && (
-                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-700">
+            {editionId && categories.length > 0 && (
+              <div>
+                <label className="block text-base font-medium text-white mb-1">
+                  Select categories to participate in
+                </label>
+                <p className="text-sm text-surface-400 mb-4">
+                  Tap or click on a category to select it. A checkmark will appear when selected.
+                </p>
+                <div className="space-y-3">
+                  {categories.map((cat) => {
+                    const isSelected = selectedCategoryIds.includes(cat.id);
+                    const isPaid = cat.price > 0;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => toggleCategory(cat.id)}
+                        className={`w-full flex items-center gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                          isSelected
+                            ? 'border-primary-500 bg-primary-500/10 shadow-md shadow-primary-500/10'
+                            : 'border-surface-700 hover:border-surface-500 bg-surface-900'
+                        }`}
+                      >
                         <div
-                          className="h-full bg-primary-500 transition-all"
-                          style={{ width: `${photo.progress}%` }}
-                        />
-                      </div>
-                    )}
-                    {photo.uploaded && (
-                      <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center">
-                        <div className="bg-green-500 rounded-full p-1">
-                          <svg className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
+                          className={`h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+                            isSelected
+                              ? 'bg-primary-500 text-white'
+                              : 'border-2 border-surface-500'
+                          }`}
+                        >
+                          {isSelected && <Check className="h-5 w-5" />}
                         </div>
-                      </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-semibold text-white">{cat.name}</p>
+                          {cat.description && (
+                            <p className="text-sm text-surface-400 mt-0.5 line-clamp-2">{cat.description}</p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0 space-y-1">
+                          <p className="text-sm text-surface-400">Up to {cat.max_photos} photos</p>
+                          {isPaid ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gold-400 bg-gold-500/10 px-2.5 py-1 rounded-full">
+                              <CreditCard className="h-4 w-4" />
+                              Paid entry
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-sm font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                              ✓ Free
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {selectedCategoryIds.length > 0 && (
+              <div className="p-4 rounded-xl bg-surface-800/50 border border-surface-700 space-y-2">
+                <p className="text-base text-white font-medium">
+                  ✓ {selectedCategoryIds.length} categor{selectedCategoryIds.length === 1 ? 'y' : 'ies'} selected
+                </p>
+                {hasPaidCategories && (
+                  <p className="text-sm text-gold-400">
+                    {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'} — you'll choose a plan in the next step
+                    {hasCredits && (
+                      <span className="text-emerald-400 ml-1">
+                        — Credits already available ({userCredits?.photo_credits} photos/category)
+                      </span>
                     )}
+                  </p>
+                )}
+                {userCredits && userCredits.submissions_remaining <= 0 && hasPaidCategories && (
+                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 mt-2">
+                    <p className="text-sm text-red-400 font-medium">
+                      You have used all your paid submissions for this edition. You can still enter free categories.
+                      Contact support if you need to submit again.
+                    </p>
                   </div>
-                ))}
+                )}
+                {userCredits && userCredits.submissions_remaining > 0 && hasPaidCategories && (
+                  <p className="text-sm text-surface-400">
+                    {userCredits.submissions_remaining} paid submission{userCredits.submissions_remaining !== 1 ? 's' : ''} remaining
+                  </p>
+                )}
               </div>
             )}
           </Card>
 
-          <div className="flex justify-between">
-            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />} onClick={() => setStep(1)}>
-              {t('common.back')}
-            </Button>
+          <div className="flex justify-end">
             <Button
               variant="primary"
-              icon={<ArrowRight className="h-4 w-4" />}
-              onClick={() => setStep(3)}
-              disabled={photos.length === 0}
+              size="lg"
+              icon={<ArrowRight className="h-5 w-5" />}
+              onClick={goToNextStep}
+              disabled={!canProceedStep1}
+              className="text-base"
             >
-              {t('common.next')}
+              {hasPaidCategories && !hasCredits ? 'Continue to Choose Plan' : 'Continue to Upload Photos'}
             </Button>
           </div>
         </motion.div>
       )}
 
-      {/* Step 3: Details & Submit */}
+      {/* ═══ STEP 2: Payment ═══ */}
+      {step === 2 && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-8"
+        >
+          {paymentComplete && (
+            <Card className="p-8 sm:p-10 text-center">
+              <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-emerald-500/10 mb-5">
+                <Check className="h-10 w-10 text-emerald-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-white">Payment Confirmed!</h3>
+              <p className="text-base text-surface-300 mt-2 max-w-md mx-auto">
+                Your payment was successful. You now have <strong className="text-white">{paidPhotoLimit} photo credits</strong> for each paid category.
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                icon={<ArrowRight className="h-5 w-5" />}
+                onClick={goToNextStep}
+                className="mt-8 text-base"
+              >
+                Continue to Upload Photos
+              </Button>
+            </Card>
+          )}
+
+          {!paymentComplete && (
+            <>
+              {/* Friendly instruction */}
+              <div className="flex items-start gap-4 p-5 rounded-xl bg-gold-500/5 border border-gold-500/20">
+                <Info className="h-6 w-6 text-gold-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-base text-white font-medium">Choose your photo plan</p>
+                  <p className="text-sm text-surface-300 mt-1">
+                    Select how many photos you'd like to submit per paid category, then complete your payment.
+                    You can pay with any credit or debit card — no PayPal account required.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                <div className="lg:col-span-3 space-y-4">
+                  <Card className="p-6 sm:p-8">
+                    <h2 className="text-xl font-bold text-white mb-1">Choose Your Plan</h2>
+                    <p className="text-base text-surface-400 mb-6">
+                      You selected {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'}. Pick a plan below:
+                    </p>
+
+                    <div className="space-y-3">
+                      {pricingTiers.filter((t) => !t.is_bundle).map((tier) => {
+                        const isActive = selectedTierId === tier.id;
+                        const total = Number(tier.price) * paidCategories.length;
+                        return (
+                          <button
+                            key={tier.id}
+                            type="button"
+                            onClick={() => setSelectedTierId(tier.id)}
+                            className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                              isActive
+                                ? 'border-gold-500 bg-gold-500/10 shadow-md shadow-gold-500/10'
+                                : 'border-surface-700 hover:border-surface-500 bg-surface-900'
+                            }`}
+                          >
+                            <div
+                              className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                isActive ? 'border-gold-500' : 'border-surface-600'
+                              }`}
+                            >
+                              {isActive && <div className="h-3 w-3 rounded-full bg-gold-500" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <Camera className="h-5 w-5 text-surface-400" />
+                                <span className="text-white font-bold text-lg">{tier.name}</span>
+                              </div>
+                              <span className="text-sm text-surface-400">
+                                {tier.photo_credits} photo{tier.photo_credits > 1 ? 's' : ''} per category ·
+                                €{tier.price}/category × {paidCategories.length}
+                              </span>
+                            </div>
+                            <span className="text-2xl font-bold text-white">€{total.toFixed(0)}</span>
+                          </button>
+                        );
+                      })}
+
+                      {pricingTiers.filter((t) => t.is_bundle).map((tier) => {
+                        const isActive = selectedTierId === tier.id;
+                        const regularEquivalent = pricingTiers.find(
+                          (t) => !t.is_bundle && t.photo_credits === tier.photo_credits
+                        );
+                        const regularTotal = regularEquivalent
+                          ? Number(regularEquivalent.price) * paidCategories.length
+                          : 0;
+                        const savings = regularTotal - Number(tier.price);
+                        return (
+                          <button
+                            key={tier.id}
+                            type="button"
+                            onClick={() => setSelectedTierId(tier.id)}
+                            className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                              isActive
+                                ? 'border-emerald-500 bg-emerald-500/10 shadow-md shadow-emerald-500/10'
+                                : 'border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5'
+                            }`}
+                          >
+                            <div
+                              className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                isActive ? 'border-emerald-500' : 'border-emerald-500/40'
+                              }`}
+                            >
+                              {isActive && <div className="h-3 w-3 rounded-full bg-emerald-500" />}
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <Package className="h-5 w-5 text-emerald-400" />
+                                <span className="text-white font-bold text-lg">{tier.name}</span>
+                                {savings > 0 && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-300">
+                                    Save €{savings.toFixed(0)}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-sm text-surface-400">
+                                {tier.photo_credits} photos in every paid category · one flat price
+                              </span>
+                            </div>
+                            <span className="text-2xl font-bold text-emerald-400">€{Number(tier.price).toFixed(0)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                </div>
+
+                <div className="lg:col-span-2 space-y-4">
+                  <Card className="p-6">
+                    <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-4">
+                      Order Summary
+                    </h3>
+                    <div className="space-y-2 text-sm">
+                      {paidCategories.map((c) => (
+                        <div key={c.id} className="flex justify-between">
+                          <span className="text-surface-400 truncate max-w-[65%]">{c.name}</span>
+                          <span className="text-white">
+                            {selectedTier?.is_bundle ? '—' : selectedTier ? `€${Number(selectedTier.price).toFixed(0)}` : '—'}
+                          </span>
+                        </div>
+                      ))}
+                      {selectedTier && (
+                        <>
+                          <div className="border-t border-surface-700 pt-2 flex justify-between">
+                            <span className="text-surface-400">Plan</span>
+                            <span className="text-white">{selectedTier.name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-surface-400">Photos/category</span>
+                            <span className="text-white">{selectedTier.photo_credits}</span>
+                          </div>
+                          <div className="border-t border-surface-700 pt-2 flex justify-between">
+                            <span className="text-white font-semibold text-base">Total</span>
+                            <span className="text-2xl font-bold text-gold-400">€{paymentAmount.toFixed(2)}</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+
+                  {selectedTier && paymentAmount > 0 && (
+                    <Card className="p-6 space-y-5">
+                      <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider">
+                        Complete Payment
+                      </h3>
+
+                      {paying ? (
+                        <div className="flex flex-col items-center justify-center py-10 gap-3">
+                          <div className="animate-spin h-8 w-8 border-3 border-gold-500 border-t-transparent rounded-full" />
+                          <span className="text-base text-surface-300">Processing your payment...</span>
+                          <span className="text-sm text-surface-500">Please wait, do not close this page.</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-5">
+                          {/* ── Card Payment Section (primary) ── */}
+                          <div className="rounded-xl border-2 border-gold-500/40 bg-gradient-to-b from-gold-500/5 to-transparent p-5 space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-gold-500/15">
+                                  <CreditCard className="h-5 w-5 text-gold-400" />
+                                </div>
+                                <div>
+                                  <span className="text-white font-semibold text-sm">Pay with Card</span>
+                                  <p className="text-xs text-surface-400">Credit or debit card</p>
+                                </div>
+                              </div>
+                              {/* Card brand icons */}
+                              <div className="flex items-center gap-1.5">
+                                {['Visa', 'MC', 'Amex'].map((brand) => (
+                                  <span key={brand} className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold text-surface-300 uppercase tracking-wider">
+                                    {brand}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+
+                            <PayPalButtons
+                              style={{ layout: 'vertical', color: 'black', shape: 'pill', label: 'pay', height: 55 }}
+                              fundingSource="card"
+                              createOrder={async () => {
+                                const { data } = await supabase.functions.invoke('create-paypal-order', {
+                                  body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
+                                });
+                                if (!data?.orderId) throw new Error('Failed to create order');
+                                return data.orderId;
+                              }}
+                              onApprove={async (data) => {
+                                setPaying(true);
+                                try {
+                                  const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
+                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                  });
+                                  if (error) throw new Error(error.message || 'Capture request failed');
+                                  if (res?.success) {
+                                    setPaymentComplete(true);
+                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: paidCategories.length });
+                                    toast.success('Payment successful! Credits added.');
+                                  } else {
+                                    throw new Error(res?.error || 'Capture failed');
+                                  }
+                                } catch (err: any) { toast.error(err.message || 'Card payment failed.'); }
+                                finally { setPaying(false); }
+                              }}
+                              onError={() => toast.error('Card payment failed.')}
+                              onCancel={() => toast('Payment cancelled.', { icon: '⚠️' })}
+                            />
+
+                            <div className="flex items-center justify-center gap-1.5 text-xs text-surface-500">
+                              <Lock className="h-3 w-3" />
+                              <span>No PayPal account needed · card details entered securely</span>
+                            </div>
+                          </div>
+
+                          {/* ── Divider ── */}
+                          <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                              <div className="w-full border-t border-surface-700" />
+                            </div>
+                            <div className="relative flex justify-center">
+                              <span className="px-4 bg-surface-900 text-xs font-medium text-surface-500 uppercase tracking-wider">
+                                or
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* ── PayPal Button ── */}
+                          <div className="space-y-3">
+                            <PayPalButtons
+                              style={{ layout: 'vertical', color: 'blue', shape: 'pill', label: 'paypal', height: 50 }}
+                              fundingSource="paypal"
+                              createOrder={async () => {
+                                const { data } = await supabase.functions.invoke('create-paypal-order', {
+                                  body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
+                                });
+                                if (!data?.orderId) throw new Error('Failed to create order');
+                                return data.orderId;
+                              }}
+                              onApprove={async (data) => {
+                                setPaying(true);
+                                try {
+                                  const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
+                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                  });
+                                  if (error) throw new Error(error.message || 'Capture request failed');
+                                  if (res?.success) {
+                                    setPaymentComplete(true);
+                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: paidCategories.length });
+                                    toast.success('Payment successful! Credits added.');
+                                  } else {
+                                    throw new Error(res?.error || 'Capture failed');
+                                  }
+                                } catch (err: any) { toast.error(err.message || 'Payment capture failed.'); }
+                                finally { setPaying(false); }
+                              }}
+                              onError={() => toast.error('PayPal error.')}
+                              onCancel={() => toast('Payment cancelled.', { icon: '⚠️' })}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ── Trust badges ── */}
+                      <div className="border-t border-surface-800 pt-4 space-y-2">
+                        <div className="flex items-center gap-2 text-xs text-surface-400 justify-center">
+                          <ShieldCheck className="h-4 w-4 text-emerald-400" />
+                          <span>256-bit SSL encrypted · Secure checkout</span>
+                        </div>
+                        <p className="text-[11px] text-surface-500 text-center">
+                          Payments processed by PayPal. Your card details are never stored on our servers.
+                        </p>
+                      </div>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {!paymentComplete && (
+            <div className="flex justify-between">
+              <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
+                Go Back
+              </Button>
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* ═══ STEP 3: Upload Photos (per category) ═══ */}
       {step === 3 && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-6"
+          className="space-y-8"
         >
-          <Card className="p-6 space-y-6">
+          {/* Friendly instruction */}
+          <div className="flex items-start gap-4 p-5 rounded-xl bg-primary-500/5 border border-primary-500/20">
+            <Info className="h-6 w-6 text-primary-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-base text-white font-medium">Upload your photos</p>
+              <p className="text-sm text-surface-300 mt-1">
+                Upload photos for each category below. You can click the upload area or drag and drop files from your computer.
+                Accepted formats: JPG, PNG, TIFF. Maximum file size: 20 MB per photo.
+              </p>
+            </div>
+          </div>
+
+          {/* Category tabs — larger, pill-style */}
+          <div className="flex flex-wrap gap-2">
+            {selectedCategories.map((cat, idx) => {
+              const photos = getPhotosForCategory(cat.id);
+              const maxPhotos = getMaxPhotos(cat);
+              const isActive = activeCategoryIdx === idx;
+              const isFull = photos.length >= maxPhotos;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategoryIdx(idx)}
+                  className={`flex items-center gap-2 px-5 py-3 rounded-xl text-base font-medium whitespace-nowrap transition-all cursor-pointer border-2 ${
+                    isActive
+                      ? 'bg-primary-500/15 text-primary-300 border-primary-500/40 shadow-md'
+                      : 'bg-surface-800 text-surface-400 hover:text-white border-transparent hover:border-surface-600'
+                  }`}
+                >
+                  {cat.name}
+                  <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${
+                    isFull
+                      ? 'bg-emerald-500/20 text-emerald-400'
+                      : photos.length > 0
+                      ? 'bg-primary-500/20 text-primary-400'
+                      : 'bg-surface-700 text-surface-500'
+                  }`}>
+                    {photos.length}/{maxPhotos}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {activeCategory && (
+            <Card className="p-6 sm:p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-white">{activeCategory.name}</h3>
+                  <p className="text-base text-surface-400 mt-1">
+                    {currentPhotos.length} of {currentMaxPhotos} photos uploaded
+                    {activeCategory.price > 0 && (
+                      <> · <span className="text-gold-400">{paidPhotoLimit} credit{paidPhotoLimit !== 1 ? 's' : ''} available</span></>
+                    )}
+                    {activeCategory.price === 0 && (
+                      <> · <span className="text-emerald-400">Free category</span></>
+                    )}
+                  </p>
+                </div>
+                {activeCategory.price > 0 && (
+                  <span className="px-3 py-1.5 rounded-full bg-gold-500/10 text-sm font-medium text-gold-400">Paid</span>
+                )}
+              </div>
+
+              {/* Upload zone — large & friendly */}
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center transition-all ${
+                  isDragActive
+                    ? 'border-primary-500 bg-primary-500/5 scale-[1.01]'
+                    : currentPhotos.length >= currentMaxPhotos
+                    ? 'border-surface-800 bg-surface-900/50 cursor-not-allowed'
+                    : 'border-surface-600 hover:border-primary-500/50 bg-surface-900 cursor-pointer'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className={`h-14 w-14 mx-auto mb-4 ${
+                  currentPhotos.length >= currentMaxPhotos ? 'text-surface-700' : 'text-surface-400'
+                }`} />
+                {currentPhotos.length >= currentMaxPhotos ? (
+                  <>
+                    <p className="text-lg text-surface-500 font-medium">
+                      Maximum photos reached for this category
+                    </p>
+                    <p className="text-sm text-surface-600 mt-1">
+                      Remove a photo if you'd like to replace one
+                    </p>
+                  </>
+                ) : isDragActive ? (
+                  <p className="text-lg text-primary-400 font-medium">
+                    Drop your photos here!
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-lg text-white font-medium">
+                      Click here to choose photos from your computer
+                    </p>
+                    <p className="text-base text-surface-400 mt-2">
+                      or drag and drop files into this area
+                    </p>
+                    <p className="text-sm text-surface-500 mt-3">
+                      JPG, PNG, or TIFF · up to 20 MB each
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {/* Photo grid — always-visible remove buttons */}
+              {currentPhotos.length > 0 && (
+                <div className="mt-6">
+                  <p className="text-sm text-surface-400 mb-3">
+                    {currentPhotos.length} photo{currentPhotos.length !== 1 ? 's' : ''} added — click the ✕ button to remove a photo
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {currentPhotos.map((photo) => (
+                      <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-surface-800 border-2 border-surface-700">
+                        <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => removePhoto(activeCategory.id, photo.id)}
+                          className="absolute top-2 right-2 p-2 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer shadow-lg"
+                          title="Remove this photo"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        {!photo.uploaded && photo.progress > 0 && (
+                          <div className="absolute bottom-0 left-0 right-0 h-2 bg-surface-700">
+                            <div className="h-full bg-primary-500 transition-all rounded-b-xl" style={{ width: `${photo.progress}%` }} />
+                          </div>
+                        )}
+                        {photo.uploaded && (
+                          <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
+                            <div className="bg-emerald-500 rounded-full p-1.5">
+                              <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </Card>
+          )}
+
+          {/* Checklist showing per-category status */}
+          <Card className="p-5">
+            <h4 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-3">Upload Checklist</h4>
+            <div className="space-y-2">
+              {selectedCategories.map((cat) => {
+                const photos = getPhotosForCategory(cat.id);
+                const hasPhotos = photos.length > 0;
+                return (
+                  <div key={cat.id} className="flex items-center gap-3 text-base">
+                    <div className={`h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      hasPhotos ? 'bg-emerald-500 text-white' : 'bg-surface-700 text-surface-500'
+                    }`}>
+                      {hasPhotos ? <Check className="h-4 w-4" /> : <span className="text-sm">–</span>}
+                    </div>
+                    <span className={`${hasPhotos ? 'text-white' : 'text-surface-400'}`}>{cat.name}</span>
+                    <span className={`text-sm ml-auto ${hasPhotos ? 'text-emerald-400' : 'text-surface-500'}`}>
+                      {photos.length} photo{photos.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
+              Go Back
+            </Button>
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<ArrowRight className="h-5 w-5" />}
+              onClick={goToNextStep}
+              disabled={!currentCatHasPhotos}
+              className="text-base"
+            >
+              {canProceedUpload
+                ? 'Continue to Review'
+                : shouldAdvanceCategory
+                ? `Next: ${selectedCategories[nextEmptyCategoryIdx]?.name}`
+                : 'Add photos to continue'}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* ═══ STEP 4: Review & Submit ═══ */}
+      {step === 4 && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-8"
+        >
+          {/* Friendly instruction */}
+          <div className="flex items-start gap-4 p-5 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+            <Info className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-base text-white font-medium">Almost done!</p>
+              <p className="text-sm text-surface-300 mt-1">
+                Give your submission a title, review everything below, then click the green "Submit" button.
+                You can also save as a draft and come back later.
+              </p>
+            </div>
+          </div>
+
+          <Card className="p-6 sm:p-8 space-y-6">
             <Input
               label={t('submission.title')}
               placeholder={t('submission.title_placeholder')}
@@ -361,45 +1089,76 @@ export default function NewSubmission() {
               rows={4}
             />
 
-            {/* Summary */}
-            <div className="p-4 rounded-xl bg-surface-800/50 space-y-2">
-              <p className="text-sm text-surface-400">
-                <span className="text-surface-300 font-medium">Photos:</span> {photos.length}
-              </p>
-              <p className="text-sm text-surface-400">
+            <div className="space-y-4">
+              <h3 className="text-base font-semibold text-white">
+                Submission Summary
+              </h3>
+              <div className="text-base text-surface-400">
                 <span className="text-surface-300 font-medium">Edition:</span>{' '}
                 {editions.find((e) => e.value === editionId)?.label}
-              </p>
-              <p className="text-sm text-surface-400">
-                <span className="text-surface-300 font-medium">Category:</span>{' '}
-                {categories.find((c) => c.value === categoryId)?.label}
-              </p>
+              </div>
+
+              <div className="space-y-2">
+                {selectedCategories.map((cat) => {
+                  const photos = getPhotosForCategory(cat.id);
+                  return (
+                    <div key={cat.id} className="flex items-center justify-between p-4 rounded-xl bg-surface-800/50 border border-surface-700/50">
+                      <div className="flex items-center gap-3">
+                        <Camera className="h-5 w-5 text-surface-400" />
+                        <span className="text-base text-white font-medium">{cat.name}</span>
+                        {cat.price > 0 ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-400 font-medium">Paid</span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">Free</span>
+                        )}
+                      </div>
+                      <span className="text-sm text-surface-300 font-medium">
+                        {photos.length} photo{photos.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {hasPaidCategories && hasCredits && (
+                <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
+                  <p className="text-sm text-emerald-400 flex items-center gap-2">
+                    <Check className="h-5 w-5" />
+                    Payment confirmed — {paidPhotoLimit} photo{paidPhotoLimit !== 1 ? 's' : ''} per paid category
+                  </p>
+                </div>
+              )}
             </div>
           </Card>
 
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />} onClick={() => setStep(2)}>
-              {t('common.back')}
+            <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
+              Go Back
             </Button>
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={() => handleSubmit(true)}
-                loading={loading}
-              >
-                {t('submission.save_draft')}
+              <Button variant="secondary" size="lg" onClick={() => handleSubmit(true)} loading={loading} className="text-base">
+                Save as Draft
               </Button>
               <Button
                 variant="primary"
-                icon={<ImageIcon className="h-4 w-4" />}
+                size="lg"
+                icon={<ImageIcon className="h-5 w-5" />}
                 onClick={() => handleSubmit(false)}
                 loading={loading}
                 disabled={!title.trim()}
+                className="text-base bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25"
               >
-                {t('submission.submit')}
+                Submit My Photos
               </Button>
             </div>
           </div>
+
+          {!title.trim() && (
+            <p className="text-sm text-surface-400 text-center flex items-center justify-center gap-2">
+              <HelpCircle className="h-4 w-4" />
+              Please enter a title above before submitting
+            </p>
+          )}
         </motion.div>
       )}
     </div>

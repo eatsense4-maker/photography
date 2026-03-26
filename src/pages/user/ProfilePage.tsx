@@ -1,11 +1,24 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { User, Camera, MapPin, Globe, Save, Upload } from 'lucide-react';
-import { Button, Input, Textarea, Card } from '@/components/ui';
+import { User, Camera, MapPin, Globe, Save, Upload, CreditCard, Download, CheckCircle, Clock, XCircle, RotateCcw } from 'lucide-react';
+import { Button, Input, Textarea, Card, Badge } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
+
+interface UserPayment {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paypal_order_id: string | null;
+  paypal_capture_id: string | null;
+  paid_at: string | null;
+  created_at: string;
+  category: string;
+  tier_name: string | null;
+}
 
 export default function ProfilePage() {
   const { t } = useTranslation();
@@ -20,6 +33,8 @@ export default function ProfilePage() {
   const [country, setCountry] = useState('');
   const [website, setWebsite] = useState('');
   const [instagram, setInstagram] = useState('');
+  const [payments, setPayments] = useState<UserPayment[]>([]);
+  const [paymentsLoading, setPaymentsLoading] = useState(true);
 
   // Load current profile
   useEffect(() => {
@@ -42,6 +57,85 @@ export default function ProfilePage() {
         setFetching(false);
       });
   }, [user?.id]);
+
+  // Fetch user payments
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const fetchPayments = async () => {
+      const { data } = await supabase
+        .from('payments')
+        .select(`
+          id, amount, currency, status, paypal_order_id, paypal_capture_id, paid_at, created_at,
+          submissions!payments_submission_id_fkey(
+            categories!submissions_category_id_fkey(name)
+          ),
+          pricing_tiers!payments_tier_id_fkey(name)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setPayments(data.map((p: any) => ({
+          id: p.id,
+          amount: p.amount,
+          currency: p.currency,
+          status: p.status,
+          paypal_order_id: p.paypal_order_id,
+          paypal_capture_id: p.paypal_capture_id,
+          paid_at: p.paid_at,
+          created_at: p.created_at,
+          category: p.submissions?.categories?.name || '—',
+          tier_name: p.pricing_tiers?.name || null,
+        })));
+      }
+      setPaymentsLoading(false);
+    };
+
+    fetchPayments();
+  }, [user?.id]);
+
+  const downloadReceipt = (payment: UserPayment) => {
+    const date = payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('en-GB') : new Date(payment.created_at).toLocaleDateString('en-GB');
+    const lines = [
+      '═══════════════════════════════════════',
+      '           FOKUS AWARD — RECEIPT',
+      '═══════════════════════════════════════',
+      '',
+      `Date:            ${date}`,
+      `Receipt ID:      ${payment.id.slice(0, 8).toUpperCase()}`,
+      `Status:          ${payment.status.toUpperCase()}`,
+      '',
+      '───────────────────────────────────────',
+      '  DETAILS',
+      '───────────────────────────────────────',
+      '',
+      `Category:        ${payment.category}`,
+      ...(payment.tier_name ? [`Tier:            ${payment.tier_name}`] : []),
+      `Amount:          €${Number(payment.amount).toFixed(2)}`,
+      '',
+      '───────────────────────────────────────',
+      '  PAYMENT INFO',
+      '───────────────────────────────────────',
+      '',
+      `PayPal Order:    ${payment.paypal_order_id || '—'}`,
+      `Capture ID:      ${payment.paypal_capture_id || '—'}`,
+      `Paid by:         ${fullName || 'N/A'}`,
+      '',
+      '═══════════════════════════════════════',
+      '  Thank you for your participation!',
+      '  FOKUS Award Photography Competition',
+      '═══════════════════════════════════════',
+    ].join('\n');
+
+    const blob = new Blob([lines], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fokus-receipt-${payment.id.slice(0, 8)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -165,6 +259,86 @@ export default function ProfilePage() {
           placeholder="@username"
           icon={<Camera className="h-4 w-4" />}
         />
+      </Card>
+
+      {/* Payments */}
+      <Card className="p-6 space-y-6">
+        <h2 className="text-lg font-semibold text-white flex items-center gap-2">
+          <CreditCard className="h-5 w-5 text-primary-500" />
+          Payment History
+        </h2>
+
+        {paymentsLoading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-500" />
+          </div>
+        ) : payments.length === 0 ? (
+          <p className="text-surface-400 text-sm text-center py-8">No payments yet</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-surface-400 border-b border-surface-800">
+                  <th className="pb-3 font-medium">Date</th>
+                  <th className="pb-3 font-medium">Description</th>
+                  <th className="pb-3 font-medium">Amount</th>
+                  <th className="pb-3 font-medium">Status</th>
+                  <th className="pb-3 font-medium text-right">Receipt</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-surface-800">
+                {payments.map((p, i) => (
+                  <motion.tr
+                    key={p.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="text-surface-300 hover:bg-surface-800/50 transition-colors"
+                  >
+                    <td className="py-3 pr-4 whitespace-nowrap">
+                      {(p.paid_at || p.created_at).slice(0, 10)}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <div className="text-white">{p.tier_name || 'Submission'}</div>
+                      <div className="text-xs text-surface-500">{p.category}</div>
+                    </td>
+                    <td className="py-3 pr-4 font-medium text-white">
+                      €{Number(p.amount).toFixed(2)}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <Badge
+                        variant={
+                          p.status === 'completed' ? 'success' :
+                          p.status === 'pending' ? 'warning' :
+                          p.status === 'refunded' ? 'info' : 'danger'
+                        }
+                      >
+                        <span className="flex items-center gap-1">
+                          {p.status === 'completed' && <CheckCircle className="h-3 w-3" />}
+                          {p.status === 'pending' && <Clock className="h-3 w-3" />}
+                          {p.status === 'refunded' && <RotateCcw className="h-3 w-3" />}
+                          {p.status === 'failed' && <XCircle className="h-3 w-3" />}
+                          {p.status}
+                        </span>
+                      </Badge>
+                    </td>
+                    <td className="py-3 text-right">
+                      {p.status === 'completed' && (
+                        <button
+                          onClick={() => downloadReceipt(p)}
+                          className="inline-flex items-center gap-1 text-primary-400 hover:text-primary-300 transition-colors text-xs"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          Download
+                        </button>
+                      )}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       {/* Save */}

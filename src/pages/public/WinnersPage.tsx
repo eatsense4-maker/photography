@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Trophy, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
+import { getPhotoUrl } from '@/lib/r2';
 
 /* ── types ──────────────────────────────────────────────────────── */
 interface GalleryEdition {
@@ -86,10 +88,125 @@ export default function WinnersPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/gallery-data.json')
-      .then(r => r.json())
-      .then((d: GalleryData) => { setData(d); setLoading(false); });
+    Promise.all([
+      fetch('/gallery-data.json').then(r => r.json()).catch(() => ({ editions: [], photos: [] })),
+      fetchDbWinners(),
+    ]).then(([jsonData, db]) => {
+      const jsonYears = new Set((jsonData as GalleryData).editions.map((e: GalleryEdition) => e.year));
+      const mergedEditions = [
+        ...(jsonData as GalleryData).editions,
+        ...db.editions.filter(e => !jsonYears.has(e.year)),
+      ];
+      const mergedPhotos = [
+        ...(jsonData as GalleryData).photos,
+        ...db.photos,
+      ];
+      setData({ editions: mergedEditions, photos: mergedPhotos });
+      setLoading(false);
+    });
   }, []);
+
+  async function fetchDbWinners() {
+    const { data: editions } = await supabase
+      .from('editions')
+      .select('id, title, slug, year, theme, published')
+      .eq('published', true)
+      .order('year', { ascending: false });
+
+    if (!editions || editions.length === 0) return { editions: [] as GalleryEdition[], photos: [] as GalleryPhoto[] };
+
+    const editionIds = editions.map(e => e.id);
+
+    // Get all categories for published editions
+    const { data: cats } = await supabase
+      .from('categories')
+      .select('id, name, edition_id')
+      .in('edition_id', editionIds);
+
+    // Get approved photos with photographer info
+    const { data: subs } = await supabase
+      .from('submissions')
+      .select(`
+        id, edition_id, category_id,
+        categories!submissions_category_id_fkey(name),
+        profiles!submissions_user_id_fkey(full_name),
+        submission_photos!inner(id, storage_key, status)
+      `)
+      .in('edition_id', editionIds)
+      .eq('submission_photos.status', 'approved');
+
+    // Get all scores
+    const { data: allScores } = await supabase
+      .from('scores')
+      .select('score, photo_id')
+      .not('photo_id', 'is', null)
+      .not('score', 'is', null);
+
+    const photoAvg = new Map<string, number[]>();
+    for (const s of (allScores || []) as any[]) {
+      if (!photoAvg.has(s.photo_id)) photoAvg.set(s.photo_id, []);
+      photoAvg.get(s.photo_id)!.push(Number(s.score));
+    }
+
+    // Build photo info indexed by edition + category
+    type PhotoInfo = { photoId: string; storageKey: string; category: string; photographer: string; avg: number; editionId: string };
+    const allPhotos: PhotoInfo[] = [];
+    for (const sub of (subs || []) as any[]) {
+      for (const photo of sub.submission_photos || []) {
+        const scores = photoAvg.get(photo.id);
+        const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
+        allPhotos.push({
+          photoId: photo.id,
+          storageKey: photo.storage_key,
+          category: sub.categories?.name || '',
+          photographer: sub.profiles?.full_name || '',
+          avg,
+          editionId: sub.edition_id,
+        });
+      }
+    }
+
+    const resultEditions: GalleryEdition[] = [];
+    const resultPhotos: GalleryPhoto[] = [];
+
+    for (const ed of editions) {
+      const edCats = (cats || []).filter(c => c.edition_id === ed.id);
+      const edPhotos = allPhotos.filter(p => p.editionId === ed.id);
+
+      resultEditions.push({
+        number: ed.year,
+        year: ed.year,
+        title: ed.title,
+        slug: ed.slug,
+        theme: ed.theme,
+        winner: null,
+        photoCount: edPhotos.length,
+        categories: edCats.map(c => c.name),
+      });
+
+      // Per-category top 3 winners
+      for (const cat of edCats) {
+        const catPhotos = edPhotos.filter(p => p.category === cat.name);
+        catPhotos.sort((a, b) => b.avg - a.avg);
+        const top3 = catPhotos.slice(0, 3);
+        for (let i = 0; i < top3.length; i++) {
+          resultPhotos.push({
+            r2Key: top3[i].storageKey,
+            url: getPhotoUrl(top3[i].storageKey),
+            category: cat.name,
+            isWinner: true,
+            place: i + 1,
+            title: null,
+            photographer: top3[i].photographer,
+            edition: ed.year,
+            year: ed.year,
+          });
+        }
+      }
+    }
+
+    return { editions: resultEditions, photos: resultPhotos };
+  }
 
   const editionSections = useMemo(() => {
     if (!data) return [];

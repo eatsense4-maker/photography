@@ -1,8 +1,11 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.sandbox.paypal.com';
 const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')!;
 const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')!;
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 async function getAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`);
@@ -24,14 +27,67 @@ serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
       },
     });
   }
 
   try {
-    const { amount, currency = 'EUR', submissionId } = await req.json() as { amount: number; currency?: string; submissionId: string };
+    const body = await req.json() as Record<string, unknown>;
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
+    let amount: number;
+    let referenceId: string;
+
+    if (body.tierId && body.editionId) {
+      // New flow: tier-based pricing — validate from DB
+      const tierId = body.tierId as string;
+      const editionId = body.editionId as string;
+      const categoryIds = (body.categoryIds || []) as string[];
+
+      // Look up tier in DB
+      const { data: tier, error: tierErr } = await supabase
+        .from('pricing_tiers')
+        .select('id, price, is_bundle, edition_id')
+        .eq('id', tierId)
+        .eq('edition_id', editionId)
+        .single();
+
+      if (tierErr || !tier) {
+        return new Response(JSON.stringify({ error: 'Invalid pricing tier' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        });
+      }
+
+      if (tier.is_bundle) {
+        amount = parseFloat(tier.price);
+      } else {
+        // Count paid categories from DB to prevent client manipulation
+        const { count } = await supabase
+          .from('categories')
+          .select('*', { count: 'exact', head: true })
+          .in('id', categoryIds)
+          .gt('price', 0);
+
+        const paidCount = count || 0;
+        if (paidCount === 0) {
+          return new Response(JSON.stringify({ error: 'No paid categories selected' }), {
+            status: 400,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          });
+        }
+        amount = parseFloat(tier.price) * paidCount;
+      }
+
+      referenceId = `tier_${tierId}`;
+    } else {
+      // Legacy flow: amount passed directly (for backward compatibility)
+      amount = body.amount as number;
+      referenceId = (body.submissionId as string) || 'legacy';
+    }
+
+    const currency = (body.currency as string) || 'EUR';
     const accessToken = await getAccessToken();
 
     const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
@@ -44,7 +100,7 @@ serve(async (req) => {
         intent: 'CAPTURE',
         purchase_units: [
           {
-            reference_id: submissionId,
+            reference_id: referenceId,
             description: 'Fokus Award Competition Entry Fee',
             amount: {
               currency_code: currency,

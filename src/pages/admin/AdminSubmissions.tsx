@@ -29,6 +29,9 @@ interface AdminSubmission {
   category: string;
   categoryId: string;
   photoCount: number;
+  photosApproved: number;
+  photosRejected: number;
+  photosPending: number;
   status: string;
   paymentStatus: string;
   submittedAt: string;
@@ -55,25 +58,31 @@ export default function AdminSubmissions() {
         id, user_id, status, submitted_at, created_at,
         profiles!submissions_user_id_fkey(full_name, country),
         categories!submissions_category_id_fkey(id, name),
-        submission_photos(id),
+        submission_photos(id, status),
         payments(status)
       `)
       .order('created_at', { ascending: false });
 
     if (data) {
       setSubmissions(
-        data.map((s: any) => ({
-          id: s.id,
-          userId: s.user_id,
-          userName: s.profiles?.full_name || 'Unknown',
-          userCountry: s.profiles?.country || '—',
-          category: s.categories?.name || '—',
-          categoryId: s.categories?.id || '',
-          photoCount: s.submission_photos?.length || 0,
-          status: s.status,
-          paymentStatus: s.payments?.[0]?.status || 'none',
-          submittedAt: (s.submitted_at || s.created_at || '').slice(0, 10),
-        }))
+        data.map((s: any) => {
+          const photos = s.submission_photos || [];
+          return {
+            id: s.id,
+            userId: s.user_id,
+            userName: s.profiles?.full_name || 'Unknown',
+            userCountry: s.profiles?.country || '—',
+            category: s.categories?.name || '—',
+            categoryId: s.categories?.id || '',
+            photoCount: photos.length,
+            photosApproved: photos.filter((p: any) => p.status === 'approved').length,
+            photosRejected: photos.filter((p: any) => p.status === 'rejected').length,
+            photosPending: photos.filter((p: any) => p.status === 'pending').length,
+            status: s.status,
+            paymentStatus: s.payments?.[0]?.status || 'none',
+            submittedAt: (s.submitted_at || s.created_at || '').slice(0, 10),
+          };
+        })
       );
     }
     setLoading(false);
@@ -189,9 +198,16 @@ export default function AdminSubmissions() {
               </td>
               <td className="px-6 py-3 text-sm text-surface-300">{sub.category}</td>
               <td className="px-6 py-3">
-                <div className="flex items-center gap-1 text-sm text-surface-400">
-                  <Image className="h-3.5 w-3.5" />
-                  {sub.photoCount}
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Image className="h-3.5 w-3.5 text-surface-500" />
+                  <span className="text-white">{sub.photoCount}</span>
+                  {sub.photoCount > 0 && (
+                    <span className="text-xs text-surface-500 ml-1">
+                      {sub.photosApproved > 0 && <span className="text-emerald-400">{sub.photosApproved}✓</span>}
+                      {sub.photosRejected > 0 && <span className="text-red-400 ml-1">{sub.photosRejected}✗</span>}
+                      {sub.photosPending > 0 && <span className="text-surface-400 ml-1">{sub.photosPending}?</span>}
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="px-6 py-3">

@@ -27,15 +27,49 @@ serve(async (req) => {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
       },
     });
   }
 
   try {
-    const { orderId, submissionId, userId } = await req.json() as { orderId: string; submissionId: string; userId: string };
+    const body = await req.json() as Record<string, unknown>;
+    const orderId = body.orderId as string;
+    const userId = body.userId as string;
+
+    // New flow fields (tier-based credits)
+    const tierId = body.tierId as string | undefined;
+    const editionId = body.editionId as string | undefined;
+
+    // Legacy flow fields
+    const submissionId = body.submissionId as string | undefined;
 
     const accessToken = await getAccessToken();
+
+    // First check the order status before capturing
+    const checkRes = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const orderData = await checkRes.json() as any;
+
+    // If already completed, return success without re-capturing
+    if (orderData.status === 'COMPLETED') {
+      return new Response(
+        JSON.stringify({ success: true, captureId: 'already_completed' }),
+        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
+
+    // Order must be APPROVED to capture
+    if (orderData.status !== 'APPROVED') {
+      return new Response(
+        JSON.stringify({ error: `Order not approved. Current status: ${orderData.status}`, details: orderData }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        }
+      );
+    }
 
     // Capture the payment
     const captureRes = await fetch(
@@ -51,15 +85,24 @@ serve(async (req) => {
 
     const captureData = await captureRes.json() as any;
 
-    if (captureData.status !== 'COMPLETED') {
+    // Handle duplicate capture
+    if (!captureRes.ok && captureData?.details?.[0]?.issue === 'ORDER_ALREADY_CAPTURED') {
       return new Response(
-        JSON.stringify({ error: 'Payment not completed', details: captureData }),
+        JSON.stringify({ success: true, captureId: 'already_captured' }),
+        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+      );
+    }
+
+    if (captureData.status !== 'COMPLETED') {
+      // Extract a meaningful error from PayPal's response
+      const ppError = captureData?.details?.[0]?.issue
+        || captureData?.message
+        || `Capture status: ${captureData.status || 'unknown'}`;
+      return new Response(
+        JSON.stringify({ error: `Payment not completed: ${ppError}`, details: captureData }),
         {
           status: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
-          },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         }
       );
     }
@@ -71,9 +114,9 @@ serve(async (req) => {
     // Save to database
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Update payment record
-    await supabase.from('payments').upsert({
-      submission_id: submissionId,
+    // Create payment record
+    await supabase.from('payments').insert({
+      submission_id: submissionId || null,
       user_id: userId,
       amount: parseFloat(capture.amount.value),
       currency: capture.amount.currency_code,
@@ -81,21 +124,55 @@ serve(async (req) => {
       paypal_order_id: orderId,
       paypal_capture_id: capture.id,
       paypal_payer_email: payerEmail,
+      tier_id: tierId || null,
       paid_at: new Date().toISOString(),
     });
 
-    // Update submission status
-    await supabase
-      .from('submissions')
-      .update({ status: 'submitted', submitted_at: new Date().toISOString() })
-      .eq('id', submissionId);
+    // New flow: create user credits from tier
+    if (tierId && editionId) {
+      const { data: tier } = await supabase
+        .from('pricing_tiers')
+        .select('photo_credits')
+        .eq('id', tierId)
+        .single();
+
+      // Count how many paid categories exist for this edition to set submission limit
+      const { count: paidCategoryCount } = await supabase
+        .from('categories')
+        .select('id', { count: 'exact', head: true })
+        .eq('edition_id', editionId)
+        .gt('price', 0);
+
+      if (tier) {
+        await supabase.from('user_credits').upsert(
+          {
+            user_id: userId,
+            edition_id: editionId,
+            tier_id: tierId,
+            photo_credits: tier.photo_credits,
+            submissions_remaining: paidCategoryCount || 1,
+          },
+          { onConflict: 'user_id,edition_id' }
+        );
+      }
+    }
+
+    // Legacy flow: update submission status
+    if (submissionId) {
+      await supabase
+        .from('submissions')
+        .update({ status: 'submitted', submitted_at: new Date().toISOString() })
+        .eq('id', submissionId);
+    }
 
     // Create notification
     await supabase.from('notifications').insert({
       user_id: userId,
       type: 'success',
       title: 'Payment Confirmed',
-      message: 'Your submission has been received and payment confirmed.',
+      message: tierId
+        ? 'Your payment has been confirmed. Photo credits have been added to your account.'
+        : 'Your submission has been received and payment confirmed.',
       link: `/dashboard/submissions`,
     });
 

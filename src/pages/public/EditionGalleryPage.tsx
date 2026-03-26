@@ -12,6 +12,8 @@ import {
   Users,
   Tag,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { getPhotoUrl } from '@/lib/r2';
 
 /* ── types ────────────────────────────────────────────────────── */
 interface JuryMember {
@@ -85,11 +87,139 @@ export default function EditionGalleryPage() {
   const tabBarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const yearNum = Number(year);
     fetch('/gallery-data.json')
       .then((r) => r.json())
-      .then((d: GalleryData) => { setData(d); setLoading(false); })
+      .then(async (d: GalleryData) => {
+        // Check if edition exists in legacy JSON
+        const found = d.editions.find((e) => e.year === yearNum);
+        if (found) {
+          setData(d);
+          setLoading(false);
+        } else {
+          // Fallback: fetch from Supabase for published DB editions
+          const dbData = await fetchDbEditionData(yearNum);
+          if (dbData) {
+            setData({
+              editions: [...d.editions, dbData.edition],
+              photos: [...d.photos, ...dbData.photos],
+            });
+          } else {
+            setData(d);
+          }
+          setLoading(false);
+        }
+      })
       .catch(() => setLoading(false));
-  }, []);
+  }, [year]);
+
+  async function fetchDbEditionData(yr: number): Promise<{ edition: GalleryEdition; photos: GalleryPhoto[] } | null> {
+    const { data: ed } = await supabase
+      .from('editions')
+      .select('id, title, slug, year, theme, published')
+      .eq('year', yr)
+      .eq('published', true)
+      .single();
+
+    if (!ed) return null;
+
+    // Fetch categories
+    const { data: cats } = await supabase
+      .from('categories')
+      .select('id, name')
+      .eq('edition_id', ed.id);
+
+    // Fetch approved photos
+    const { data: subs } = await supabase
+      .from('submissions')
+      .select(`
+        id, category_id,
+        categories!submissions_category_id_fkey(name),
+        profiles!submissions_user_id_fkey(full_name),
+        submission_photos!inner(id, storage_key, status)
+      `)
+      .eq('edition_id', ed.id)
+      .eq('submission_photos.status', 'approved');
+
+    // Fetch scores
+    const { data: allScores } = await supabase
+      .from('scores')
+      .select('score, photo_id')
+      .not('photo_id', 'is', null)
+      .not('score', 'is', null);
+
+    const photoAvg = new Map<string, number[]>();
+    for (const s of (allScores || []) as any[]) {
+      if (!photoAvg.has(s.photo_id)) photoAvg.set(s.photo_id, []);
+      photoAvg.get(s.photo_id)!.push(Number(s.score));
+    }
+
+    // Compute per-category winners (top 3)
+    type PhInfo = { id: string; key: string; cat: string; photographer: string; avg: number };
+    const byCat = new Map<string, PhInfo[]>();
+    for (const sub of (subs || []) as any[]) {
+      const catName = sub.categories?.name || '';
+      if (!byCat.has(catName)) byCat.set(catName, []);
+      for (const photo of sub.submission_photos || []) {
+        const scores = photoAvg.get(photo.id);
+        const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
+        byCat.get(catName)!.push({
+          id: photo.id, key: photo.storage_key,
+          cat: catName, photographer: sub.profiles?.full_name || '',
+          avg,
+        });
+      }
+    }
+
+    // Mark winners per category
+    const winnerIds = new Set<string>();
+    const winnerPlace = new Map<string, number>();
+    for (const [, catPhotos] of byCat) {
+      catPhotos.sort((a, b) => b.avg - a.avg);
+      for (let i = 0; i < Math.min(3, catPhotos.length); i++) {
+        winnerIds.add(catPhotos[i].id);
+        winnerPlace.set(catPhotos[i].id, i + 1);
+      }
+    }
+
+    // Build photos array
+    const photos: GalleryPhoto[] = [];
+    let topWinner: string | null = null;
+    let topAvg = 0;
+    for (const sub of (subs || []) as any[]) {
+      for (const photo of sub.submission_photos || []) {
+        const isW = winnerIds.has(photo.id);
+        const place = winnerPlace.get(photo.id) ?? null;
+        const scores = photoAvg.get(photo.id);
+        const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
+        if (avg > topAvg) { topAvg = avg; topWinner = sub.profiles?.full_name || null; }
+        photos.push({
+          r2Key: photo.storage_key,
+          url: getPhotoUrl(photo.storage_key),
+          category: sub.categories?.name || null,
+          isWinner: isW,
+          place,
+          title: null,
+          photographer: sub.profiles?.full_name || null,
+          edition: yr,
+          year: yr,
+        });
+      }
+    }
+
+    const edition: GalleryEdition = {
+      number: yr,
+      year: yr,
+      title: ed.title,
+      slug: ed.slug,
+      theme: ed.theme,
+      winner: topWinner,
+      photoCount: photos.length,
+      categories: (cats || []).map(c => c.name),
+    };
+
+    return { edition, photos };
+  }
 
   const yearNum = Number(year);
   const edition = data?.editions.find((e) => e.year === yearNum) ?? null;

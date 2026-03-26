@@ -1,0 +1,473 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { motion } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
+import { Upload, X, Image as ImageIcon, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Button, Input, Textarea, Select, Card } from '@/components/ui';
+import { supabase } from '@/lib/supabase';
+import { uploadPhoto } from '@/lib/r2';
+import { useAuth } from '@/hooks/useAuth';
+import toast from 'react-hot-toast';
+
+const PAID_TIERS = [
+  { photos: 1, price: 5 },
+  { photos: 3, price: 10 },
+  { photos: 6, price: 15 },
+];
+
+interface UploadedPhoto {
+  id: string;
+  file: File;
+  preview: string;
+  progress: number;
+  uploaded: boolean;
+  storageKey?: string;
+}
+
+export default function NewSubmission() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // Form state
+  const [editionId, setEditionId] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
+
+  // Dynamic options from Supabase
+  const [editions, setEditions] = useState<{ value: string; label: string }[]>([]);
+  const [categories, setCategories] = useState<{ value: string; label: string; maxPhotos: number; price: number }[]>([]);
+  const [maxPhotos, setMaxPhotos] = useState(10);
+
+  // Fetch editions
+  useEffect(() => {
+    supabase
+      .from('editions')
+      .select('id, title, year')
+      .eq('status', 'open')
+      .eq('published', true)
+      .order('year', { ascending: false })
+      .then(({ data }) => {
+        const opts = (data || []).map((e) => ({
+          value: e.id,
+          label: `${e.title} — ${e.year} Edition`,
+        }));
+        setEditions(opts);
+        if (opts.length === 1) setEditionId(opts[0].value);
+      });
+  }, []);
+
+  // Fetch categories when edition changes
+  useEffect(() => {
+    if (!editionId) {
+      setCategories([]);
+      return;
+    }
+    supabase
+      .from('categories')
+      .select('id, name, max_photos, price')
+      .eq('edition_id', editionId)
+      .order('sort_order')
+      .then(({ data }) => {
+        setCategories(
+          (data || []).map((c) => ({
+            value: c.id,
+            label: c.price > 0 ? `${c.name} (€${c.price} entry fee)` : c.name,
+            maxPhotos: c.max_photos,
+            price: Number(c.price),
+          }))
+        );
+      });
+  }, [editionId]);
+
+  // Update maxPhotos when category changes
+  useEffect(() => {
+    const cat = categories.find((c) => c.value === categoryId);
+    setMaxPhotos(cat?.maxPhotos || 10);
+  }, [categoryId, categories]);
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const remaining = maxPhotos - photos.length;
+      const filesToAdd = acceptedFiles.slice(0, remaining);
+
+      const newPhotos: UploadedPhoto[] = filesToAdd.map((file) => ({
+        id: crypto.randomUUID(),
+        file,
+        preview: URL.createObjectURL(file),
+        progress: 0,
+        uploaded: false,
+      }));
+
+      setPhotos((prev) => [...prev, ...newPhotos]);
+    },
+    [photos.length, maxPhotos]
+  );
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/tiff': ['.tif', '.tiff'],
+    },
+    maxSize: 20 * 1024 * 1024,
+    disabled: photos.length >= maxPhotos,
+  });
+
+  const removePhoto = (id: string) => {
+    setPhotos((prev) => {
+      const photo = prev.find((p) => p.id === id);
+      if (photo) URL.revokeObjectURL(photo.preview);
+      return prev.filter((p) => p.id !== id);
+    });
+  };
+
+  const handleSubmit = async (asDraft: boolean) => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      // Check if this is a paid category
+      const cat = categories.find((c) => c.value === categoryId);
+      const isPaid = cat && cat.price > 0;
+
+      // For paid categories, always save as draft first — then redirect to checkout
+      const shouldDraft = asDraft || isPaid;
+
+      // 1. Create the submission record
+      const { data: submission, error: subError } = await supabase
+        .from('submissions')
+        .insert({
+          user_id: user.id,
+          edition_id: editionId,
+          category_id: categoryId,
+          title: title || null,
+          description: description || null,
+          status: shouldDraft ? 'draft' : 'submitted',
+          submitted_at: shouldDraft ? null : new Date().toISOString(),
+        })
+        .select('id')
+        .single();
+
+      if (subError) throw subError;
+
+      // 2. Upload photos to Supabase Storage and create submission_photos records
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        try {
+          const { key } = await uploadPhoto(photo.file, (progress) => {
+            setPhotos((prev) =>
+              prev.map((p) =>
+                p.id === photo.id ? { ...p, progress } : p
+              )
+            );
+          });
+
+          // Create photo record
+          await supabase.from('submission_photos').insert({
+            submission_id: submission.id,
+            storage_key: key,
+            original_filename: photo.file.name,
+            mime_type: photo.file.type,
+            file_size: photo.file.size,
+            sort_order: i,
+          });
+
+          setPhotos((prev) =>
+            prev.map((p) =>
+              p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p
+            )
+          );
+        } catch (uploadErr) {
+          console.error('Photo upload failed:', uploadErr);
+          toast.error(`Failed to upload ${photo.file.name}`);
+        }
+      }
+
+      toast.success(
+        asDraft ? 'Saved as draft!' : isPaid ? 'Photos uploaded! Proceeding to payment...' : t('submission.submitted_success')
+      );
+
+      // Redirect to checkout for paid categories, otherwise to submissions list
+      if (isPaid && !asDraft) {
+        navigate(`/dashboard/checkout?submission=${submission.id}`);
+      } else {
+        navigate('/dashboard/submissions');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-3xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-2xl font-display font-bold text-white">
+          {t('user.new_submission')}
+        </h1>
+        <p className="text-surface-400 text-sm mt-1">
+          Submit your photos to the competition
+        </p>
+      </div>
+
+      {/* Progress Steps */}
+      <div className="flex items-center gap-2">
+        {[1, 2, 3].map((s) => (
+          <div key={s} className="flex items-center gap-2 flex-1">
+            <div
+              className={`h-1 flex-1 rounded-full transition-colors ${
+                s <= step ? 'bg-primary-500' : 'bg-surface-800'
+              }`}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Step 1: Select Edition & Category */}
+      {step === 1 && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          <Card className="p-6 space-y-6">
+            <Select
+              label={t('submission.select_edition')}
+              options={editions}
+              placeholder="Choose an edition..."
+              value={editionId}
+              onChange={(e) => { setEditionId(e.target.value); setCategoryId(''); }}
+            />
+            <Select
+              label={t('submission.select_category')}
+              options={categories}
+              placeholder="Choose a category..."
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+            />
+
+            {/* Pricing info for paid categories */}
+            {(() => {
+              const cat = categories.find((c) => c.value === categoryId);
+              if (!cat || cat.price <= 0) return null;
+              return (
+                <div className="p-4 rounded-xl bg-gold-500/5 border border-gold-500/20">
+                  <p className="text-sm font-semibold text-gold-400 mb-2">Entry Fee Required</p>
+                  <p className="text-xs text-surface-300 mb-3">
+                    This category requires a paid entry. Choose how many photos you want to submit:
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    {PAID_TIERS.map((tier) => (
+                      <div key={tier.photos} className="p-2 rounded-lg bg-surface-800/60 border border-surface-700">
+                        <p className="text-lg font-bold text-white">€{tier.price}</p>
+                        <p className="text-[10px] text-surface-400">{tier.photos} photo{tier.photos > 1 ? 's' : ''}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-surface-500 mt-2 text-center">
+                    Or <strong className="text-emerald-400">€25 bundle</strong> — 3 photos in each Life & Land category
+                  </p>
+                </div>
+              );
+            })()}
+          </Card>
+          <div className="flex justify-end">
+            <Button
+              variant="primary"
+              icon={<ArrowRight className="h-4 w-4" />}
+              onClick={() => setStep(2)}
+              disabled={!editionId || !categoryId}
+            >
+              {t('common.next')}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Step 2: Upload Photos */}
+      {step === 2 && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              {t('submission.upload_photos')}
+            </h3>
+            <p className="text-sm text-surface-400 mb-6">
+              {t('submission.max_photos', { max: maxPhotos })} · {t('submission.photo_requirements')}
+            </p>
+
+            {/* Dropzone */}
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
+                isDragActive
+                  ? 'border-primary-500 bg-primary-500/5'
+                  : photos.length >= maxPhotos
+                  ? 'border-surface-800 bg-surface-900 cursor-not-allowed'
+                  : 'border-surface-700 hover:border-surface-500 bg-surface-900'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <Upload className="h-10 w-10 text-surface-500 mx-auto mb-4" />
+              <p className="text-surface-300">
+                {isDragActive
+                  ? 'Drop files here...'
+                  : t('submission.drag_drop')}
+              </p>
+              <p className="text-xs text-surface-500 mt-2">
+                {photos.length}/{maxPhotos} photos
+              </p>
+            </div>
+
+            {/* Photo Previews */}
+            {photos.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mt-6">
+                {photos.map((photo) => (
+                  <div key={photo.id} className="relative group aspect-square rounded-lg overflow-hidden bg-surface-800">
+                    <img
+                      src={photo.preview}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                    <button
+                      onClick={() => removePhoto(photo.id)}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    {!photo.uploaded && photo.progress > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-700">
+                        <div
+                          className="h-full bg-primary-500 transition-all"
+                          style={{ width: `${photo.progress}%` }}
+                        />
+                      </div>
+                    )}
+                    {photo.uploaded && (
+                      <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center">
+                        <div className="bg-green-500 rounded-full p-1">
+                          <svg className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <div className="flex justify-between">
+            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />} onClick={() => setStep(1)}>
+              {t('common.back')}
+            </Button>
+            <Button
+              variant="primary"
+              icon={<ArrowRight className="h-4 w-4" />}
+              onClick={() => setStep(3)}
+              disabled={photos.length === 0}
+            >
+              {t('common.next')}
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Step 3: Details & Submit */}
+      {step === 3 && (
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="space-y-6"
+        >
+          <Card className="p-6 space-y-6">
+            <Input
+              label={t('submission.title')}
+              placeholder={t('submission.title_placeholder')}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+            <Textarea
+              label={t('submission.description')}
+              placeholder={t('submission.description_placeholder')}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+            />
+
+            {/* Summary */}
+            <div className="p-4 rounded-xl bg-surface-800/50 space-y-2">
+              <p className="text-sm text-surface-400">
+                <span className="text-surface-300 font-medium">Photos:</span> {photos.length}
+              </p>
+              <p className="text-sm text-surface-400">
+                <span className="text-surface-300 font-medium">Edition:</span>{' '}
+                {editions.find((e) => e.value === editionId)?.label}
+              </p>
+              <p className="text-sm text-surface-400">
+                <span className="text-surface-300 font-medium">Category:</span>{' '}
+                {categories.find((c) => c.value === categoryId)?.label}
+              </p>
+              {(() => {
+                const cat = categories.find((c) => c.value === categoryId);
+                if (!cat || cat.price <= 0) return null;
+                const tier = PAID_TIERS.find((t) => photos.length <= t.photos) || PAID_TIERS[PAID_TIERS.length - 1];
+                return (
+                  <div className="pt-2 border-t border-surface-700">
+                    <p className="text-sm text-gold-400 font-semibold">
+                      Entry fee: €{tier.price} ({tier.photos} photo{tier.photos > 1 ? 's' : ''} tier)
+                    </p>
+                    <p className="text-[10px] text-surface-500 mt-0.5">
+                      You'll be redirected to checkout after uploading.
+                    </p>
+                  </div>
+                );
+              })()}
+            </div>
+          </Card>
+
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <Button variant="ghost" icon={<ArrowLeft className="h-4 w-4" />} onClick={() => setStep(2)}>
+              {t('common.back')}
+            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                onClick={() => handleSubmit(true)}
+                loading={loading}
+              >
+                {t('submission.save_draft')}
+              </Button>
+              {(() => {
+                const cat = categories.find((c) => c.value === categoryId);
+                const isPaid = cat && cat.price > 0;
+                return (
+                  <Button
+                    variant={isPaid ? 'gold' : 'primary'}
+                    icon={<ImageIcon className="h-4 w-4" />}
+                    onClick={() => handleSubmit(false)}
+                    loading={loading}
+                    disabled={!title.trim()}
+                  >
+                    {isPaid ? 'Proceed to Payment' : t('submission.submit')}
+                  </Button>
+                );
+              })()}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+}

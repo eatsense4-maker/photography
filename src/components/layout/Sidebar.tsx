@@ -18,6 +18,7 @@ import {
   UserCheck,
   CreditCard,
   Trophy,
+  Activity,
   Handshake,
   Newspaper,
   LogOut,
@@ -65,6 +66,7 @@ export default function Sidebar() {
     { path: '/admin/jury', label: t('admin.jury_management'), icon: <UserCheck className="h-5 w-5" /> },
     { path: '/admin/payments', label: t('admin.payments'), icon: <CreditCard className="h-5 w-5" /> },
     { path: '/admin/results', label: t('admin.results'), icon: <Trophy className="h-5 w-5" /> },
+    { path: '/admin/live-scoring', label: 'Live Scoring', icon: <Activity className="h-5 w-5" /> },
     { path: '/admin/partners', label: t('admin.partners'), icon: <Handshake className="h-5 w-5" /> },
     { path: '/admin/posts', label: 'News & Events', icon: <Newspaper className="h-5 w-5" /> },
   ];

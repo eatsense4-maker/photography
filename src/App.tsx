@@ -26,6 +26,7 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
 const UserDashboard = lazy(() => import('@/pages/user/UserDashboard'));
 const UserSubmissions = lazy(() => import('@/pages/user/UserSubmissions'));
 const NewSubmission = lazy(() => import('@/pages/user/NewSubmission'));
+const CheckoutPage = lazy(() => import('@/pages/user/CheckoutPage'));
 const SubmissionDetail = lazy(() => import('@/pages/user/SubmissionDetail'));
 const ProfilePage = lazy(() => import('@/pages/user/ProfilePage'));
 const CertificatesPage = lazy(() => import('@/pages/user/CertificatesPage'));
@@ -43,9 +44,11 @@ const AdminUsers = lazy(() => import('@/pages/admin/AdminUsers'));
 const AdminJury = lazy(() => import('@/pages/admin/AdminJury'));
 const AdminPayments = lazy(() => import('@/pages/admin/AdminPayments'));
 const AdminResults = lazy(() => import('@/pages/admin/AdminResults'));
+const AdminLiveScoring = lazy(() => import('@/pages/admin/AdminLiveScoring'));
 const AdminContent = lazy(() => import('@/pages/admin/AdminContent'));
 const AdminPartners = lazy(() => import('@/pages/admin/AdminPartners'));
 const AdminPosts = lazy(() => import('@/pages/admin/AdminPosts'));
+const AdminPricingTiers = lazy(() => import('@/pages/admin/AdminPricingTiers'));
 const PostDetailPage = lazy(() => import('@/pages/public/PostDetailPage'));
 const NewsArchivePage = lazy(() => import('@/pages/public/NewsArchivePage'));
 
@@ -106,6 +109,7 @@ export default function App() {
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/dashboard/submissions" element={<UserSubmissions />} />
               <Route path="/dashboard/submissions/new" element={<NewSubmission />} />
+              <Route path="/dashboard/checkout" element={<CheckoutPage />} />
               <Route path="/dashboard/submissions/:id" element={<SubmissionDetail />} />
               <Route path="/dashboard/profile" element={<ProfilePage />} />
               <Route path="/dashboard/certificates" element={<CertificatesPage />} />
@@ -142,9 +146,11 @@ export default function App() {
               <Route path="/admin/jury" element={<AdminJury />} />
               <Route path="/admin/payments" element={<AdminPayments />} />
               <Route path="/admin/results" element={<AdminResults />} />
+              <Route path="/admin/live-scoring" element={<AdminLiveScoring />} />
               <Route path="/admin/content" element={<AdminContent />} />
               <Route path="/admin/partners" element={<AdminPartners />} />
               <Route path="/admin/posts" element={<AdminPosts />} />
+              <Route path="/admin/pricing" element={<AdminPricingTiers />} />
             </Route>
 
             {/* Catch all */}

@@ -38,8 +38,8 @@
   --color-surface-900: #171717;
   --color-surface-950: #0a0a0a;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Playfair Display", ui-serif, Georgia, serif;
+  --font-sans: "Verdana", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Verdana", ui-sans-serif, system-ui, sans-serif;
 }
 
 /* ===== Base Styles ===== */

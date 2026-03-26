@@ -289,10 +289,10 @@ export default function ThemePage() {
             >
               <h3 className="text-base font-semibold text-primary-400 uppercase tracking-wider mb-4">Works & Format</h3>
               <ul className="space-y-2 text-surface-300 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />Series: <strong className="text-white">6–12 images</strong> (one project)</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />Single image: <strong className="text-white">1–3 images</strong> maximum</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" /><span><strong className="text-white">Main Theme / Press & News:</strong> Series (6–12 images) or Single (1–3 images)</span></li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" /><span><strong className="text-white">Life / Land categories:</strong> Up to 6 images per sub-category</span></li>
                 <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />Format: <strong className="text-white">JPEG, sRGB</strong>, 2500–4000 px long side</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />Documentary, conceptual, portrait, landscape, experimental</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />Documentary, conceptual, portrait, landscape, wildlife, street</li>
               </ul>
             </motion.div>
 
@@ -341,24 +341,68 @@ export default function ThemePage() {
             >
               <h3 className="text-2xl font-display font-bold text-white mb-8 flex items-center gap-3">
                 <Award className="h-6 w-6 text-gold-400" />
-                Prizes
+                Competition Categories & Prizes
               </h3>
-              <div className="space-y-4">
+
+              {/* Main Theme */}
+              <div className="mb-6">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-surface-500 mb-2">Category 1</p>
                 <div className="p-5 rounded-xl bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/30">
                   <p className="text-xs font-semibold text-gold-400 uppercase tracking-widest mb-1">Main Theme — BREATH</p>
                   <p className="text-3xl font-bold text-white">€1,000</p>
-                  <p className="text-sm text-surface-400 mt-1">Cash prize + Trophy</p>
+                  <p className="text-sm text-surface-400 mt-1">Series (6–12 images) or Single (1–3 images) · Cash prize + Trophy</p>
                 </div>
+              </div>
+
+              {/* Press & News */}
+              <div className="mb-6">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-surface-500 mb-2">Category 2</p>
                 <div className="p-5 rounded-xl bg-gradient-to-r from-gold-500/10 to-transparent border border-gold-500/30">
                   <p className="text-xs font-semibold text-gold-400 uppercase tracking-widest mb-1">Press & News</p>
                   <p className="text-3xl font-bold text-white">€1,000</p>
-                  <p className="text-sm text-surface-400 mt-1">Cash prize + Trophy</p>
+                  <p className="text-sm text-surface-400 mt-1">Series (6–12 images) or Single (1–3 images) · Cash prize + Trophy</p>
                 </div>
-                <div className="p-5 rounded-xl bg-surface-800/60 border border-surface-700">
-                  <p className="text-xs font-semibold text-surface-400 uppercase tracking-widest mb-1">Land · Life · Portrait</p>
-                  <p className="text-xl font-bold text-white">Honorary Award</p>
-                  <p className="text-sm text-surface-400 mt-1">Certificate + Trophy</p>
+              </div>
+
+              {/* Life Category */}
+              <div className="mb-6">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-surface-500 mb-2">Category 3 — Life</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/30">
+                    <p className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-1">Best Street Photography</p>
+                    <p className="text-2xl font-bold text-white">€500</p>
+                    <p className="text-sm text-surface-400 mt-1">Up to 6 images · Cash prize</p>
+                  </div>
+                  <div className="p-5 rounded-xl bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/30">
+                    <p className="text-xs font-semibold text-emerald-400 uppercase tracking-widest mb-1">Best Portrait</p>
+                    <p className="text-2xl font-bold text-white">€500</p>
+                    <p className="text-sm text-surface-400 mt-1">Up to 6 images · Cash prize</p>
+                  </div>
                 </div>
+              </div>
+
+              {/* Land Category */}
+              <div className="mb-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-surface-500 mb-2">Category 4 — Land</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="p-5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/30">
+                    <p className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-1">Best Landscape</p>
+                    <p className="text-2xl font-bold text-white">€500</p>
+                    <p className="text-sm text-surface-400 mt-1">Up to 6 images · Cash prize</p>
+                  </div>
+                  <div className="p-5 rounded-xl bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/30">
+                    <p className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-1">Best Wild World</p>
+                    <p className="text-2xl font-bold text-white">€500</p>
+                    <p className="text-sm text-surface-400 mt-1">Up to 6 images · Cash prize</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="mt-6 p-4 rounded-lg bg-surface-800/60 border border-surface-700 text-center">
+                <p className="text-xs text-surface-500 uppercase tracking-widest mb-1">Total Prize Pool</p>
+                <p className="text-2xl font-bold text-gold-400">€4,000</p>
+                <p className="text-xs text-surface-500 mt-1">+ Honorary diplomas, exhibition, catalog publication</p>
               </div>
             </motion.div>
 

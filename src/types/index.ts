@@ -72,6 +72,8 @@ export interface Submission {
   payment?: Payment;
 }
 
+export type PhotoReviewStatus = 'pending' | 'approved' | 'rejected';
+
 export interface SubmissionPhoto {
   id: string;
   submission_id: string;
@@ -84,12 +86,16 @@ export interface SubmissionPhoto {
   height: number | null;
   exif_data: Record<string, unknown> | null;
   sort_order: number;
+  status: PhotoReviewStatus;
+  reviewed_at: string | null;
+  review_note: string | null;
   created_at: string;
 }
 
 export interface Score {
   id: string;
   submission_id: string;
+  photo_id: string | null;
   jury_id: string;
   phase: ScoringPhase;
   score: number | null;
@@ -103,7 +109,7 @@ export interface Score {
 
 export interface Payment {
   id: string;
-  submission_id: string;
+  submission_id: string | null;
   user_id: string;
   amount: number;
   currency: string;
@@ -112,9 +118,34 @@ export interface Payment {
   paypal_capture_id: string | null;
   paypal_payer_email: string | null;
   metadata: Record<string, unknown> | null;
+  tier_id: string | null;
   paid_at: string | null;
   refunded_at: string | null;
   created_at: string;
+}
+
+export interface PricingTier {
+  id: string;
+  edition_id: string;
+  name: string;
+  photo_credits: number;
+  price: number;
+  is_bundle: boolean;
+  description: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface UserCredit {
+  id: string;
+  user_id: string;
+  edition_id: string;
+  tier_id: string;
+  photo_credits: number;
+  submissions_remaining: number;
+  created_at: string;
+  // Joined
+  tier?: PricingTier;
 }
 
 export interface Notification {

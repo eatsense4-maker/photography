@@ -334,7 +334,78 @@ export default function HomePage() {
       <section className="py-10 sm:py-14">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
 
-          {/* ── Row 1: Asymmetric 3-column bento grid ── */}
+          {/* ── Row 1: Full-width accent banner (Theme CTA) + Category strip ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-10">
+            {/* Theme banner — spans 3 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-3 relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-950 via-surface-900 to-surface-950 border border-surface-800"
+            >
+              <div
+                className="absolute inset-0 bg-cover bg-center opacity-15"
+                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=800&h=400&fit=crop)' }}
+              />
+              <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5">
+                <div className="flex-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 mb-2 block">2026 Theme</span>
+                  <h3 className="text-4xl font-display font-bold text-white leading-none">FRYMË</h3>
+                  <p className="text-gold-400 font-display italic text-xl mt-1">BREATH</p>
+                  <p className="text-sm text-surface-300 leading-relaxed mt-3 max-w-md">
+                    Breath is the most ordinary miracle — constant, unconscious, taken for granted until it changes everything.
+                  </p>
+                  {currentEdition?.status === 'open' && (
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-xs text-emerald-400 font-semibold">Submissions Open</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2 shrink-0 md:w-44">
+                  <div className="flex items-center gap-2 text-xs text-surface-500 mb-1">
+                    <Calendar className="h-3.5 w-3.5" />
+                    Deadline: <strong className="text-white">30 June 2026</strong>
+                  </div>
+                  <Link to="/theme">
+                    <Button variant="secondary" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
+                      Explore Theme
+                    </Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button variant="gold" size="sm" className="w-full">Submit Your Work</Button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Announcements column — spans 2 */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="lg:col-span-2 rounded-2xl border border-surface-800 bg-surface-900 p-5"
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <Megaphone className="h-4 w-4 text-amber-400" />
+                <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Announcements</h3>
+              </div>
+              <div className="space-y-4">
+                {announcements.length > 0 ? announcements.slice(0, 3).map(post => (
+                  <Link key={post.id} to={`/news/${post.slug}`} className="group block border-l-2 border-amber-500/30 pl-3 hover:border-amber-400 transition-colors">
+                    <p className="text-sm text-white font-medium group-hover:text-amber-300 transition-colors leading-snug line-clamp-2">
+                      {post.title}
+                    </p>
+                    <span className="text-[10px] text-surface-500 mt-0.5 block">{formatDate(post.published_at)}</span>
+                  </Link>
+                )) : (
+                  <p className="text-sm text-surface-600">No announcements yet</p>
+                )}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* ── Row 2: Asymmetric 3-column bento grid ── */}
           {bentoPosts.length > 0 && (
             <motion.div
               initial="hidden"
@@ -405,77 +476,6 @@ export default function HomePage() {
               </div>
             </motion.div>
           )}
-
-          {/* ── Row 2: Full-width accent banner (Theme CTA) + Category strip ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-10">
-            {/* Theme banner — spans 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-3 relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-950 via-surface-900 to-surface-950 border border-surface-800"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center opacity-15"
-                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=800&h=400&fit=crop)' }}
-              />
-              <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5">
-                <div className="flex-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 mb-2 block">2026 Theme</span>
-                  <h3 className="text-4xl font-display font-bold text-white leading-none">FRYMË</h3>
-                  <p className="text-gold-400 font-display italic text-xl mt-1">BREATH</p>
-                  <p className="text-sm text-surface-300 leading-relaxed mt-3 max-w-md">
-                    Breath is the most ordinary miracle — constant, unconscious, taken for granted until it changes everything.
-                  </p>
-                  {currentEdition?.status === 'open' && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-xs text-emerald-400 font-semibold">Submissions Open</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2 shrink-0 md:w-44">
-                  <div className="flex items-center gap-2 text-xs text-surface-500 mb-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Deadline: <strong className="text-white">30 June 2026</strong>
-                  </div>
-                  <Link to="/theme">
-                    <Button variant="secondary" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
-                      Explore Theme
-                    </Button>
-                  </Link>
-                  <Link to="/register">
-                    <Button variant="gold" size="sm" className="w-full">Submit Your Work</Button>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Announcements column — spans 2 */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-2 rounded-2xl border border-surface-800 bg-surface-900 p-5"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Megaphone className="h-4 w-4 text-amber-400" />
-                <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Announcements</h3>
-              </div>
-              <div className="space-y-4">
-                {announcements.length > 0 ? announcements.slice(0, 3).map(post => (
-                  <Link key={post.id} to={`/news/${post.slug}`} className="group block border-l-2 border-amber-500/30 pl-3 hover:border-amber-400 transition-colors">
-                    <p className="text-sm text-white font-medium group-hover:text-amber-300 transition-colors leading-snug line-clamp-2">
-                      {post.title}
-                    </p>
-                    <span className="text-[10px] text-surface-500 mt-0.5 block">{formatDate(post.published_at)}</span>
-                  </Link>
-                )) : (
-                  <p className="text-sm text-surface-600">No announcements yet</p>
-                )}
-              </div>
-            </motion.div>
-          </div>
 
           {/* ── Row 3: Horizontal scroll card row (events) ── */}
           {events.length > 0 && (
@@ -607,11 +607,14 @@ export default function HomePage() {
                 <h3 className="text-lg font-display font-bold text-white mb-2">
                   What does your breath look like?
                 </h3>
-                <p className="text-xs text-surface-400 leading-relaxed mb-4">
-                  Submit a series (6–12 images) or single image (1–3) exploring breath — intimate, ecological, political, or alive.
+                <p className="text-xs text-surface-400 leading-relaxed mb-3">
+                  4 categories, €4,000 total prizes. Explore breath — intimate, ecological, political, or alive.
                 </p>
+                <div className="space-y-1.5 text-xs text-surface-500 mb-4">
+                  <p className="text-gold-400 font-semibold">Main Theme · Press & News — €1,000 each</p>
+                  <p className="text-emerald-400 font-semibold">Life · Land sub-awards — €500 each</p>
+                </div>
                 <ul className="space-y-1.5 text-xs text-surface-500 mb-5">
-                  <li>No entry fee</li>
                   <li>Open to photographers 18+ worldwide</li>
                   <li>JPEG sRGB · 2500–4000 px</li>
                 </ul>

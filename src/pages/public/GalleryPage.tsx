@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Trophy, Image as ImageIcon } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { getPhotoUrl } from '@/lib/r2';
 
 /* ── types ────────────────────────────────────────────────────── */
 interface GalleryEdition {
@@ -38,14 +40,115 @@ export default function GalleryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/gallery-data.json')
-      .then((r) => r.json())
-      .then((d: GalleryData) => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    Promise.all([
+      fetch('/gallery-data.json').then((r) => r.json()).catch(() => ({ editions: [], photos: [] })),
+      fetchDbEditions(),
+    ]).then(([jsonData, { editions: dbEditions, photos: dbPhotos }]) => {
+      // Merge: DB editions that aren't already in JSON by year
+      const jsonYears = new Set((jsonData as GalleryData).editions.map((e: GalleryEdition) => e.year));
+      const mergedEditions = [
+        ...(jsonData as GalleryData).editions,
+        ...dbEditions.filter((e) => !jsonYears.has(e.year)),
+      ];
+      const mergedPhotos = [
+        ...(jsonData as GalleryData).photos,
+        ...dbPhotos,
+      ];
+      setData({ editions: mergedEditions, photos: mergedPhotos });
+      setLoading(false);
+    });
   }, []);
+
+  async function fetchDbEditions(): Promise<{ editions: GalleryEdition[]; photos: GalleryPhoto[] }> {
+    const { data: editions } = await supabase
+      .from('editions')
+      .select('id, title, slug, year, theme, published')
+      .eq('published', true)
+      .order('year', { ascending: false });
+
+    if (!editions || editions.length === 0) return { editions: [], photos: [] };
+
+    const editionIds = editions.map((e) => e.id);
+
+    // Fetch all approved photos for published editions in one query
+    const { data: subs } = await supabase
+      .from('submissions')
+      .select(`
+        id, edition_id, category_id,
+        categories!submissions_category_id_fkey(name),
+        profiles!submissions_user_id_fkey(full_name),
+        submission_photos!inner(id, storage_key, status)
+      `)
+      .in('edition_id', editionIds)
+      .eq('submission_photos.status', 'approved');
+
+    // Fetch all scores for these editions to determine winners
+    const { data: allScores } = await supabase
+      .from('scores')
+      .select('score, photo_id')
+      .not('photo_id', 'is', null)
+      .not('score', 'is', null);
+
+    // Build photo avg scores
+    const photoAvg = new Map<string, number[]>();
+    for (const s of (allScores || []) as any[]) {
+      if (!photoAvg.has(s.photo_id)) photoAvg.set(s.photo_id, []);
+      photoAvg.get(s.photo_id)!.push(Number(s.score));
+    }
+
+    // Group photos by edition
+    const editionPhotos = new Map<string, { photoId: string; storageKey: string; category: string | null; photographer: string | null; avg: number }[]>();
+    for (const sub of (subs || []) as any[]) {
+      const eid = sub.edition_id;
+      if (!editionPhotos.has(eid)) editionPhotos.set(eid, []);
+      for (const photo of sub.submission_photos || []) {
+        const scores = photoAvg.get(photo.id);
+        const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
+        editionPhotos.get(eid)!.push({
+          photoId: photo.id,
+          storageKey: photo.storage_key,
+          category: sub.categories?.name || null,
+          photographer: sub.profiles?.full_name || null,
+          avg,
+        });
+      }
+    }
+
+    const resultEditions: GalleryEdition[] = [];
+    const resultPhotos: GalleryPhoto[] = [];
+
+    for (const ed of editions) {
+      const photos = editionPhotos.get(ed.id) || [];
+      // Sort by avg score desc — top scorer is the "winner"
+      const sorted = [...photos].sort((a, b) => b.avg - a.avg);
+      const topWinner = sorted[0];
+
+      resultEditions.push({
+        number: ed.year,
+        year: ed.year,
+        title: ed.title,
+        slug: ed.slug,
+        theme: ed.theme,
+        winner: topWinner?.photographer || null,
+        photoCount: photos.length,
+      });
+
+      // Add a cover photo to the photos array for the gallery grid
+      if (topWinner) {
+        resultPhotos.push({
+          r2Key: topWinner.storageKey,
+          url: getPhotoUrl(topWinner.storageKey),
+          category: topWinner.category,
+          isWinner: true,
+          photographer: topWinner.photographer,
+          edition: ed.year,
+          year: ed.year,
+        });
+      }
+    }
+
+    return { editions: resultEditions, photos: resultPhotos };
+  }
 
   /* Sorted editions (newest first) with cover photo */
   const editionsWithCover = useMemo(() => {
@@ -56,8 +159,8 @@ export default function GalleryPage() {
       .map((ed) => {
         const photos = data.photos.filter((p) => p.edition === ed.number);
         const winners = photos.filter((p) => p.isWinner);
-        const cover = winners[0] || photos[0];
-        return { ...ed, cover, photoCount: photos.length, winnerCount: winners.length };
+        const cover = winners[0] || photos[0] || null;
+        return { ...ed, cover, photoCount: ed.photoCount || photos.length, winnerCount: winners.length };
       });
   }, [data]);
 
