@@ -349,12 +349,12 @@ export default function NewSubmission() {
     : step === 1 ? 0 : step === 3 ? 1 : 2;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 pb-12">
+    <div className="max-w-4xl mx-auto space-y-4 pb-6">
       <div className="text-center">
-        <h1 className="text-3xl sm:text-4xl font-display font-bold text-white">
+        <h1 className="text-xl font-display font-bold text-white">
           {t('user.new_submission')}
         </h1>
-        <p className="text-surface-300 text-lg mt-2">
+        <p className="text-surface-300 text-xs mt-1">
           Follow the steps below to submit your photos
         </p>
       </div>
@@ -366,20 +366,20 @@ export default function NewSubmission() {
           const isCurrent = i === currentProgressIdx;
           return (
             <div key={label} className="flex items-center">
-              <div className="flex flex-col items-center gap-1.5">
+              <div className="flex flex-col items-center gap-1">
                 <div
-                  className={`h-12 w-12 rounded-full flex items-center justify-center text-lg font-bold transition-all border-2 ${
+                  className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 ${
                     isCompleted
                       ? 'bg-emerald-500 border-emerald-500 text-white'
                       : isCurrent
-                      ? 'bg-primary-600 border-primary-500 text-white shadow-lg shadow-primary-500/30'
+                      ? 'bg-primary-600 border-primary-500 text-white shadow-sm shadow-primary-500/30'
                       : 'bg-surface-800 border-surface-600 text-surface-500'
                   }`}
                 >
-                  {isCompleted ? <Check className="h-6 w-6" /> : i + 1}
+                  {isCompleted ? <Check className="h-3.5 w-3.5" /> : i + 1}
                 </div>
                 <span
-                  className={`text-sm font-medium ${
+                  className={`text-[11px] font-medium ${
                     isCompleted
                       ? 'text-emerald-400'
                       : isCurrent
@@ -392,7 +392,7 @@ export default function NewSubmission() {
               </div>
               {i < progressSteps.length - 1 && (
                 <div
-                  className={`h-1 w-12 sm:w-20 mx-2 rounded-full mb-6 ${
+                  className={`h-0.5 w-10 sm:w-16 mx-1.5 rounded-full mb-5 ${
                     i < currentProgressIdx ? 'bg-emerald-500' : 'bg-surface-700'
                   }`}
                 />
@@ -407,21 +407,20 @@ export default function NewSubmission() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-8"
+          className="space-y-3"
         >
           {/* Friendly instruction */}
-          <div className="flex items-start gap-4 p-5 rounded-xl bg-primary-500/5 border border-primary-500/20">
-            <Info className="h-6 w-6 text-primary-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary-500/5 border border-primary-500/20">
+            <Info className="h-4 w-4 text-primary-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-base text-white font-medium">Choose the categories you'd like to enter</p>
-              <p className="text-sm text-surface-300 mt-1">
-                You can select one or more categories. Some categories are free to enter, while others require a small fee.
-                Don't worry — we'll guide you through every step.
+              <p className="text-sm text-white font-medium">Choose the categories you'd like to enter</p>
+              <p className="text-xs text-surface-300 mt-0.5">
+                Select one or more categories. Some are free, others require a small fee.
               </p>
             </div>
           </div>
 
-          <Card className="p-6 sm:p-8 space-y-6">
+          <Card className="p-4 space-y-3">
             <Select
               label={t('submission.select_edition')}
               options={editions}
@@ -435,13 +434,13 @@ export default function NewSubmission() {
 
             {editionId && categories.length > 0 && (
               <div>
-                <label className="block text-base font-medium text-white mb-1">
+                <label className="block text-sm font-medium text-white mb-0.5">
                   Select categories to participate in
                 </label>
-                <p className="text-sm text-surface-400 mb-4">
-                  Tap or click on a category to select it. A checkmark will appear when selected.
+                <p className="text-xs text-surface-400 mb-2">
+                  Click a category to select it.
                 </p>
-                <div className="space-y-3">
+                <div className="space-y-1.5">
                   {categories.map((cat) => {
                     const isSelected = selectedCategoryIds.includes(cat.id);
                     const isPaid = cat.price > 0;
@@ -450,37 +449,37 @@ export default function NewSubmission() {
                         key={cat.id}
                         type="button"
                         onClick={() => toggleCategory(cat.id)}
-                        className={`w-full flex items-center gap-4 p-4 sm:p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all text-left cursor-pointer ${
                           isSelected
-                            ? 'border-primary-500 bg-primary-500/10 shadow-md shadow-primary-500/10'
+                            ? 'border-primary-500 bg-primary-500/10'
                             : 'border-surface-700 hover:border-surface-500 bg-surface-900'
                         }`}
                       >
                         <div
-                          className={`h-7 w-7 rounded-md flex items-center justify-center flex-shrink-0 transition-colors ${
+                          className={`h-5 w-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
                             isSelected
                               ? 'bg-primary-500 text-white'
-                              : 'border-2 border-surface-500'
+                              : 'border border-surface-500'
                           }`}
                         >
-                          {isSelected && <Check className="h-5 w-5" />}
+                          {isSelected && <Check className="h-3 w-3" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-base font-semibold text-white">{cat.name}</p>
+                          <p className="text-sm font-medium text-white">{cat.name}</p>
                           {cat.description && (
-                            <p className="text-sm text-surface-400 mt-0.5 line-clamp-2">{cat.description}</p>
+                            <p className="text-xs text-surface-400 line-clamp-1">{cat.description}</p>
                           )}
                         </div>
-                        <div className="text-right flex-shrink-0 space-y-1">
-                          <p className="text-sm text-surface-400">Up to {cat.max_photos} photos</p>
+                        <div className="text-right flex-shrink-0 flex items-center gap-2">
+                          <span className="text-xs text-surface-500">Max {cat.max_photos}</span>
                           {isPaid ? (
-                            <span className="inline-flex items-center gap-1.5 text-sm font-medium text-gold-400 bg-gold-500/10 px-2.5 py-1 rounded-full">
-                              <CreditCard className="h-4 w-4" />
-                              Paid entry
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-gold-400 bg-gold-500/10 px-2 py-0.5 rounded-full">
+                              <CreditCard className="h-3 w-3" />
+                              Paid
                             </span>
                           ) : (
-                            <span className="inline-flex items-center text-sm font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-                              ✓ Free
+                            <span className="inline-flex items-center text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                              Free
                             </span>
                           )}
                         </div>
@@ -492,12 +491,12 @@ export default function NewSubmission() {
             )}
 
             {selectedCategoryIds.length > 0 && (
-              <div className="p-4 rounded-xl bg-surface-800/50 border border-surface-700 space-y-2">
-                <p className="text-base text-white font-medium">
+              <div className="p-2.5 rounded-lg bg-surface-800/50 border border-surface-700 space-y-1">
+                <p className="text-sm text-white font-medium">
                   ✓ {selectedCategoryIds.length} categor{selectedCategoryIds.length === 1 ? 'y' : 'ies'} selected
                 </p>
                 {hasPaidCategories && (
-                  <p className="text-sm text-gold-400">
+                  <p className="text-xs text-gold-400">
                     {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'} — you'll choose a plan in the next step
                     {hasCredits && (
                       <span className="text-emerald-400 ml-1">
@@ -507,15 +506,15 @@ export default function NewSubmission() {
                   </p>
                 )}
                 {userCredits && userCredits.submissions_remaining <= 0 && hasPaidCategories && (
-                  <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 mt-2">
-                    <p className="text-sm text-red-400 font-medium">
+                  <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 mt-1">
+                    <p className="text-xs text-red-400 font-medium">
                       You have used all your paid submissions for this edition. You can still enter free categories.
                       Contact support if you need to submit again.
                     </p>
                   </div>
                 )}
                 {userCredits && userCredits.submissions_remaining > 0 && hasPaidCategories && (
-                  <p className="text-sm text-surface-400">
+                  <p className="text-xs text-surface-400">
                     {userCredits.submissions_remaining} paid submission{userCredits.submissions_remaining !== 1 ? 's' : ''} remaining
                   </p>
                 )}
@@ -526,11 +525,10 @@ export default function NewSubmission() {
           <div className="flex justify-end">
             <Button
               variant="primary"
-              size="lg"
-              icon={<ArrowRight className="h-5 w-5" />}
+              size="sm"
+              icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
               disabled={!canProceedStep1}
-              className="text-base"
             >
               {hasPaidCategories && !hasCredits ? 'Continue to Choose Plan' : 'Continue to Upload Photos'}
             </Button>
@@ -543,23 +541,23 @@ export default function NewSubmission() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-8"
+          className="space-y-3"
         >
           {paymentComplete && (
-            <Card className="p-8 sm:p-10 text-center">
-              <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-emerald-500/10 mb-5">
-                <Check className="h-10 w-10 text-emerald-400" />
+            <Card className="p-5 text-center">
+              <div className="inline-flex items-center justify-center h-12 w-12 rounded-full bg-emerald-500/10 mb-3">
+                <Check className="h-6 w-6 text-emerald-400" />
               </div>
-              <h3 className="text-2xl font-bold text-white">Payment Confirmed!</h3>
-              <p className="text-base text-surface-300 mt-2 max-w-md mx-auto">
-                Your payment was successful. You now have <strong className="text-white">{paidPhotoLimit} photo credits</strong> for each paid category.
+              <h3 className="text-base font-bold text-white">Payment Confirmed!</h3>
+              <p className="text-sm text-surface-300 mt-1 max-w-md mx-auto">
+                You now have <strong className="text-white">{paidPhotoLimit} photo credits</strong> per paid category.
               </p>
               <Button
                 variant="primary"
-                size="lg"
-                icon={<ArrowRight className="h-5 w-5" />}
+                size="sm"
+                icon={<ArrowRight className="h-4 w-4" />}
                 onClick={goToNextStep}
-                className="mt-8 text-base"
+                className="mt-4"
               >
                 Continue to Upload Photos
               </Button>
@@ -569,26 +567,25 @@ export default function NewSubmission() {
           {!paymentComplete && (
             <>
               {/* Friendly instruction */}
-              <div className="flex items-start gap-4 p-5 rounded-xl bg-gold-500/5 border border-gold-500/20">
-                <Info className="h-6 w-6 text-gold-400 flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-gold-500/5 border border-gold-500/20">
+                <Info className="h-4 w-4 text-gold-400 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-base text-white font-medium">Choose your photo plan</p>
-                  <p className="text-sm text-surface-300 mt-1">
-                    Select how many photos you'd like to submit per paid category, then complete your payment.
-                    You can pay with any credit or debit card — no PayPal account required.
+                  <p className="text-sm text-white font-medium">Choose your photo plan</p>
+                  <p className="text-xs text-surface-300 mt-0.5">
+                    Select how many photos per paid category, then complete payment.
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 space-y-4">
-                  <Card className="p-6 sm:p-8">
-                    <h2 className="text-xl font-bold text-white mb-1">Choose Your Plan</h2>
-                    <p className="text-base text-surface-400 mb-6">
-                      You selected {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'}. Pick a plan below:
+              <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <div className="lg:col-span-3 space-y-3">
+                  <Card className="p-4">
+                    <h2 className="text-sm font-bold text-white mb-0.5">Choose Your Plan</h2>
+                    <p className="text-xs text-surface-400 mb-3">
+                      {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'} selected. Pick a plan:
                     </p>
 
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
                       {pricingTiers.filter((t) => !t.is_bundle).map((tier) => {
                         const isActive = selectedTierId === tier.id;
                         const total = Number(tier.price) * paidCategories.length;
@@ -597,30 +594,26 @@ export default function NewSubmission() {
                             key={tier.id}
                             type="button"
                             onClick={() => setSelectedTierId(tier.id)}
-                            className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left cursor-pointer ${
                               isActive
-                                ? 'border-gold-500 bg-gold-500/10 shadow-md shadow-gold-500/10'
+                                ? 'border-gold-500 bg-gold-500/10'
                                 : 'border-surface-700 hover:border-surface-500 bg-surface-900'
                             }`}
                           >
                             <div
-                              className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                              className={`h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                 isActive ? 'border-gold-500' : 'border-surface-600'
                               }`}
                             >
-                              {isActive && <div className="h-3 w-3 rounded-full bg-gold-500" />}
+                              {isActive && <div className="h-2.5 w-2.5 rounded-full bg-gold-500" />}
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Camera className="h-5 w-5 text-surface-400" />
-                                <span className="text-white font-bold text-lg">{tier.name}</span>
-                              </div>
-                              <span className="text-sm text-surface-400">
-                                {tier.photo_credits} photo{tier.photo_credits > 1 ? 's' : ''} per category ·
-                                €{tier.price}/category × {paidCategories.length}
+                              <span className="text-sm text-white font-semibold">{tier.name}</span>
+                              <span className="text-xs text-surface-400 ml-2">
+                                {tier.photo_credits} photo{tier.photo_credits > 1 ? 's' : ''}/cat · €{tier.price}/cat × {paidCategories.length}
                               </span>
                             </div>
-                            <span className="text-2xl font-bold text-white">€{total.toFixed(0)}</span>
+                            <span className="text-base font-bold text-white">€{total.toFixed(0)}</span>
                           </button>
                         );
                       })}
@@ -639,34 +632,34 @@ export default function NewSubmission() {
                             key={tier.id}
                             type="button"
                             onClick={() => setSelectedTierId(tier.id)}
-                            className={`w-full flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left cursor-pointer ${
+                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left cursor-pointer ${
                               isActive
-                                ? 'border-emerald-500 bg-emerald-500/10 shadow-md shadow-emerald-500/10'
+                                ? 'border-emerald-500 bg-emerald-500/10'
                                 : 'border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5'
                             }`}
                           >
                             <div
-                              className={`h-6 w-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                              className={`h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                 isActive ? 'border-emerald-500' : 'border-emerald-500/40'
                               }`}
                             >
-                              {isActive && <div className="h-3 w-3 rounded-full bg-emerald-500" />}
+                              {isActive && <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />}
                             </div>
                             <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <Package className="h-5 w-5 text-emerald-400" />
-                                <span className="text-white font-bold text-lg">{tier.name}</span>
+                              <div className="flex items-center gap-1.5">
+                                <Package className="h-3.5 w-3.5 text-emerald-400" />
+                                <span className="text-sm text-white font-semibold">{tier.name}</span>
                                 {savings > 0 && (
-                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-xs font-bold text-emerald-300">
+                                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-bold text-emerald-300">
                                     Save €{savings.toFixed(0)}
                                   </span>
                                 )}
                               </div>
-                              <span className="text-sm text-surface-400">
-                                {tier.photo_credits} photos in every paid category · one flat price
+                              <span className="text-xs text-surface-400">
+                                {tier.photo_credits} photos · all paid categories
                               </span>
                             </div>
-                            <span className="text-2xl font-bold text-emerald-400">€{Number(tier.price).toFixed(0)}</span>
+                            <span className="text-base font-bold text-emerald-400">€{Number(tier.price).toFixed(0)}</span>
                           </button>
                         );
                       })}
@@ -674,12 +667,12 @@ export default function NewSubmission() {
                   </Card>
                 </div>
 
-                <div className="lg:col-span-2 space-y-4">
-                  <Card className="p-6">
-                    <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-4">
+                <div className="lg:col-span-2 space-y-3">
+                  <Card className="p-4">
+                    <h3 className="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-2">
                       Order Summary
                     </h3>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-1.5 text-xs">
                       {paidCategories.map((c) => (
                         <div key={c.id} className="flex justify-between">
                           <span className="text-surface-400 truncate max-w-[65%]">{c.name}</span>
@@ -698,9 +691,9 @@ export default function NewSubmission() {
                             <span className="text-surface-400">Photos/category</span>
                             <span className="text-white">{selectedTier.photo_credits}</span>
                           </div>
-                          <div className="border-t border-surface-700 pt-2 flex justify-between">
-                            <span className="text-white font-semibold text-base">Total</span>
-                            <span className="text-2xl font-bold text-gold-400">€{paymentAmount.toFixed(2)}</span>
+                          <div className="border-t border-surface-700 pt-1.5 flex justify-between">
+                            <span className="text-white font-semibold text-sm">Total</span>
+                            <span className="text-lg font-bold text-gold-400">€{paymentAmount.toFixed(2)}</span>
                           </div>
                         </>
                       )}
@@ -708,35 +701,29 @@ export default function NewSubmission() {
                   </Card>
 
                   {selectedTier && paymentAmount > 0 && (
-                    <Card className="p-6 space-y-5">
-                      <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider">
+                    <Card className="p-4 space-y-3">
+                      <h3 className="text-xs font-semibold text-surface-300 uppercase tracking-wider">
                         Complete Payment
                       </h3>
 
                       {paying ? (
-                        <div className="flex flex-col items-center justify-center py-10 gap-3">
-                          <div className="animate-spin h-8 w-8 border-3 border-gold-500 border-t-transparent rounded-full" />
-                          <span className="text-base text-surface-300">Processing your payment...</span>
-                          <span className="text-sm text-surface-500">Please wait, do not close this page.</span>
+                        <div className="flex flex-col items-center justify-center py-5 gap-2">
+                          <div className="animate-spin h-6 w-6 border-2 border-gold-500 border-t-transparent rounded-full" />
+                          <span className="text-sm text-surface-300">Processing payment...</span>
+                          <span className="text-xs text-surface-500">Don't close this page.</span>
                         </div>
                       ) : (
-                        <div className="space-y-5">
+                        <div className="space-y-3">
                           {/* ── Card Payment Section (primary) ── */}
-                          <div className="rounded-xl border-2 border-gold-500/40 bg-gradient-to-b from-gold-500/5 to-transparent p-5 space-y-4">
+                          <div className="rounded-lg border border-gold-500/40 bg-gradient-to-b from-gold-500/5 to-transparent p-3 space-y-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2.5">
-                                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-gold-500/15">
-                                  <CreditCard className="h-5 w-5 text-gold-400" />
-                                </div>
-                                <div>
-                                  <span className="text-white font-semibold text-sm">Pay with Card</span>
-                                  <p className="text-xs text-surface-400">Credit or debit card</p>
-                                </div>
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-gold-400" />
+                                <span className="text-white font-semibold text-xs">Pay with Card</span>
                               </div>
-                              {/* Card brand icons */}
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1">
                                 {['Visa', 'MC', 'Amex'].map((brand) => (
-                                  <span key={brand} className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-bold text-surface-300 uppercase tracking-wider">
+                                  <span key={brand} className="px-1 py-0.5 rounded bg-white/10 text-[9px] font-bold text-surface-300 uppercase">
                                     {brand}
                                   </span>
                                 ))}
@@ -744,13 +731,19 @@ export default function NewSubmission() {
                             </div>
 
                             <PayPalButtons
-                              style={{ layout: 'vertical', color: 'black', shape: 'pill', label: 'pay', height: 55 }}
+                              style={{ layout: 'vertical', color: 'black', shape: 'pill', label: 'pay', height: 40 }}
                               fundingSource="card"
                               createOrder={async () => {
-                                const { data } = await supabase.functions.invoke('create-paypal-order', {
+                                const { data, error } = await supabase.functions.invoke('create-paypal-order', {
                                   body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
                                 });
-                                if (!data?.orderId) throw new Error('Failed to create order');
+                                if (error) {
+                                  let msg = error.message;
+                                  try { const body = await error.context?.json(); msg = body?.error || body?.details || msg; } catch {}
+                                  console.error('create-paypal-order error:', msg, error);
+                                  throw new Error(msg);
+                                }
+                                if (!data?.orderId) { console.error('create-paypal-order bad response:', data); throw new Error(data?.error || 'Failed to create order'); }
                                 return data.orderId;
                               }}
                               onApprove={async (data) => {
@@ -795,13 +788,19 @@ export default function NewSubmission() {
                           {/* ── PayPal Button ── */}
                           <div className="space-y-3">
                             <PayPalButtons
-                              style={{ layout: 'vertical', color: 'blue', shape: 'pill', label: 'paypal', height: 50 }}
+                              style={{ layout: 'vertical', color: 'blue', shape: 'pill', label: 'paypal', height: 38 }}
                               fundingSource="paypal"
                               createOrder={async () => {
-                                const { data } = await supabase.functions.invoke('create-paypal-order', {
+                                const { data, error } = await supabase.functions.invoke('create-paypal-order', {
                                   body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
                                 });
-                                if (!data?.orderId) throw new Error('Failed to create order');
+                                if (error) {
+                                  let msg = error.message;
+                                  try { const body = await error.context?.json(); msg = body?.error || body?.details || msg; } catch {}
+                                  console.error('create-paypal-order error:', msg, error);
+                                  throw new Error(msg);
+                                }
+                                if (!data?.orderId) { console.error('create-paypal-order bad response:', data); throw new Error(data?.error || 'Failed to create order'); }
                                 return data.orderId;
                               }}
                               onApprove={async (data) => {
@@ -829,14 +828,11 @@ export default function NewSubmission() {
                       )}
 
                       {/* ── Trust badges ── */}
-                      <div className="border-t border-surface-800 pt-4 space-y-2">
-                        <div className="flex items-center gap-2 text-xs text-surface-400 justify-center">
-                          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-                          <span>256-bit SSL encrypted · Secure checkout</span>
+                      <div className="border-t border-surface-800 pt-2">
+                        <div className="flex items-center gap-1.5 text-[11px] text-surface-400 justify-center">
+                          <ShieldCheck className="h-3 w-3 text-emerald-400" />
+                          <span>256-bit SSL · Secure checkout via PayPal</span>
                         </div>
-                        <p className="text-[11px] text-surface-500 text-center">
-                          Payments processed by PayPal. Your card details are never stored on our servers.
-                        </p>
                       </div>
                     </Card>
                   )}
@@ -847,8 +843,8 @@ export default function NewSubmission() {
 
           {!paymentComplete && (
             <div className="flex justify-between">
-              <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
-                Go Back
+              <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-4 w-4" />} onClick={goToPrevStep}>
+                Back
               </Button>
             </div>
           )}
@@ -860,22 +856,21 @@ export default function NewSubmission() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-8"
+          className="space-y-3"
         >
           {/* Friendly instruction */}
-          <div className="flex items-start gap-4 p-5 rounded-xl bg-primary-500/5 border border-primary-500/20">
-            <Info className="h-6 w-6 text-primary-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary-500/5 border border-primary-500/20">
+            <Info className="h-4 w-4 text-primary-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-base text-white font-medium">Upload your photos</p>
-              <p className="text-sm text-surface-300 mt-1">
-                Upload photos for each category below. You can click the upload area or drag and drop files from your computer.
-                Accepted formats: JPG, PNG, TIFF. Maximum file size: 20 MB per photo.
+              <p className="text-sm text-white font-medium">Upload your photos</p>
+              <p className="text-xs text-surface-300 mt-0.5">
+                JPG, PNG, or TIFF · max 20 MB each. Click or drag & drop.
               </p>
             </div>
           </div>
 
-          {/* Category tabs — larger, pill-style */}
-          <div className="flex flex-wrap gap-2">
+          {/* Category tabs */}
+          <div className="flex flex-wrap gap-1.5">
             {selectedCategories.map((cat, idx) => {
               const photos = getPhotosForCategory(cat.id);
               const maxPhotos = getMaxPhotos(cat);
@@ -886,14 +881,14 @@ export default function NewSubmission() {
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCategoryIdx(idx)}
-                  className={`flex items-center gap-2 px-5 py-3 rounded-xl text-base font-medium whitespace-nowrap transition-all cursor-pointer border-2 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
                     isActive
-                      ? 'bg-primary-500/15 text-primary-300 border-primary-500/40 shadow-md'
-                      : 'bg-surface-800 text-surface-400 hover:text-white border-transparent hover:border-surface-600'
+                      ? 'bg-primary-500/15 text-primary-300 border-primary-500/40'
+                      : 'bg-surface-800 text-surface-400 border-transparent hover:border-surface-600'
                   }`}
                 >
                   {cat.name}
-                  <span className={`text-sm font-bold px-2 py-0.5 rounded-full ${
+                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
                     isFull
                       ? 'bg-emerald-500/20 text-emerald-400'
                       : photos.length > 0
@@ -908,96 +903,75 @@ export default function NewSubmission() {
           </div>
 
           {activeCategory && (
-            <Card className="p-6 sm:p-8">
-              <div className="flex items-center justify-between mb-6">
+            <Card className="p-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-xl font-bold text-white">{activeCategory.name}</h3>
-                  <p className="text-base text-surface-400 mt-1">
-                    {currentPhotos.length} of {currentMaxPhotos} photos uploaded
+                  <h3 className="text-sm font-bold text-white">{activeCategory.name}</h3>
+                  <p className="text-xs text-surface-400 mt-0.5">
+                    {currentPhotos.length}/{currentMaxPhotos} photos
                     {activeCategory.price > 0 && (
-                      <> · <span className="text-gold-400">{paidPhotoLimit} credit{paidPhotoLimit !== 1 ? 's' : ''} available</span></>
+                      <> · <span className="text-gold-400">{paidPhotoLimit} credits</span></>
                     )}
                     {activeCategory.price === 0 && (
-                      <> · <span className="text-emerald-400">Free category</span></>
+                      <> · <span className="text-emerald-400">Free</span></>
                     )}
                   </p>
                 </div>
                 {activeCategory.price > 0 && (
-                  <span className="px-3 py-1.5 rounded-full bg-gold-500/10 text-sm font-medium text-gold-400">Paid</span>
+                  <span className="px-2 py-0.5 rounded-full bg-gold-500/10 text-xs font-medium text-gold-400">Paid</span>
                 )}
               </div>
 
-              {/* Upload zone — large & friendly */}
+              {/* Upload zone */}
               <div
                 {...getRootProps()}
-                className={`border-2 border-dashed rounded-2xl p-10 sm:p-14 text-center transition-all ${
+                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
                   isDragActive
-                    ? 'border-primary-500 bg-primary-500/5 scale-[1.01]'
+                    ? 'border-primary-500 bg-primary-500/5'
                     : currentPhotos.length >= currentMaxPhotos
                     ? 'border-surface-800 bg-surface-900/50 cursor-not-allowed'
                     : 'border-surface-600 hover:border-primary-500/50 bg-surface-900 cursor-pointer'
                 }`}
               >
                 <input {...getInputProps()} />
-                <Upload className={`h-14 w-14 mx-auto mb-4 ${
+                <Upload className={`h-8 w-8 mx-auto mb-2 ${
                   currentPhotos.length >= currentMaxPhotos ? 'text-surface-700' : 'text-surface-400'
                 }`} />
                 {currentPhotos.length >= currentMaxPhotos ? (
-                  <>
-                    <p className="text-lg text-surface-500 font-medium">
-                      Maximum photos reached for this category
-                    </p>
-                    <p className="text-sm text-surface-600 mt-1">
-                      Remove a photo if you'd like to replace one
-                    </p>
-                  </>
+                  <p className="text-sm text-surface-500">Max photos reached</p>
                 ) : isDragActive ? (
-                  <p className="text-lg text-primary-400 font-medium">
-                    Drop your photos here!
-                  </p>
+                  <p className="text-sm text-primary-400 font-medium">Drop here!</p>
                 ) : (
                   <>
-                    <p className="text-lg text-white font-medium">
-                      Click here to choose photos from your computer
-                    </p>
-                    <p className="text-base text-surface-400 mt-2">
-                      or drag and drop files into this area
-                    </p>
-                    <p className="text-sm text-surface-500 mt-3">
-                      JPG, PNG, or TIFF · up to 20 MB each
-                    </p>
+                    <p className="text-sm text-white font-medium">Click to choose or drag & drop</p>
+                    <p className="text-xs text-surface-500 mt-1">JPG, PNG, or TIFF · up to 20 MB</p>
                   </>
                 )}
               </div>
 
               {/* Photo grid — always-visible remove buttons */}
               {currentPhotos.length > 0 && (
-                <div className="mt-6">
-                  <p className="text-sm text-surface-400 mb-3">
-                    {currentPhotos.length} photo{currentPhotos.length !== 1 ? 's' : ''} added — click the ✕ button to remove a photo
-                  </p>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="mt-3">
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
                     {currentPhotos.map((photo) => (
-                      <div key={photo.id} className="relative aspect-square rounded-xl overflow-hidden bg-surface-800 border-2 border-surface-700">
+                      <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-surface-800 border border-surface-700">
                         <img src={photo.preview} alt="" className="w-full h-full object-cover" />
                         <button
                           onClick={() => removePhoto(activeCategory.id, photo.id)}
-                          className="absolute top-2 right-2 p-2 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer shadow-lg"
-                          title="Remove this photo"
+                          className="absolute top-1 right-1 p-1 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+                          title="Remove"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </button>
                         {!photo.uploaded && photo.progress > 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 h-2 bg-surface-700">
-                            <div className="h-full bg-primary-500 transition-all rounded-b-xl" style={{ width: `${photo.progress}%` }} />
+                          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-700">
+                            <div className="h-full bg-primary-500 transition-all" style={{ width: `${photo.progress}%` }} />
                           </div>
                         )}
                         {photo.uploaded && (
                           <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
-                            <div className="bg-emerald-500 rounded-full p-1.5">
-                              <svg className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                              </svg>
+                            <div className="bg-emerald-500 rounded-full p-1">
+                              <Check className="h-3 w-3 text-white" />
                             </div>
                           </div>
                         )}
@@ -1009,22 +983,22 @@ export default function NewSubmission() {
             </Card>
           )}
 
-          {/* Checklist showing per-category status */}
-          <Card className="p-5">
-            <h4 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-3">Upload Checklist</h4>
-            <div className="space-y-2">
+          {/* Checklist */}
+          <Card className="p-3">
+            <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1.5">Checklist</h4>
+            <div className="space-y-1">
               {selectedCategories.map((cat) => {
                 const photos = getPhotosForCategory(cat.id);
                 const hasPhotos = photos.length > 0;
                 return (
-                  <div key={cat.id} className="flex items-center gap-3 text-base">
-                    <div className={`h-6 w-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  <div key={cat.id} className="flex items-center gap-2 text-xs">
+                    <div className={`h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0 ${
                       hasPhotos ? 'bg-emerald-500 text-white' : 'bg-surface-700 text-surface-500'
                     }`}>
-                      {hasPhotos ? <Check className="h-4 w-4" /> : <span className="text-sm">–</span>}
+                      {hasPhotos ? <Check className="h-2.5 w-2.5" /> : <span className="text-[9px]">–</span>}
                     </div>
                     <span className={`${hasPhotos ? 'text-white' : 'text-surface-400'}`}>{cat.name}</span>
-                    <span className={`text-sm ml-auto ${hasPhotos ? 'text-emerald-400' : 'text-surface-500'}`}>
+                    <span className={`ml-auto ${hasPhotos ? 'text-emerald-400' : 'text-surface-500'}`}>
                       {photos.length} photo{photos.length !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -1034,22 +1008,21 @@ export default function NewSubmission() {
           </Card>
 
           <div className="flex justify-between">
-            <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
-              Go Back
+            <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-4 w-4" />} onClick={goToPrevStep}>
+              Back
             </Button>
             <Button
               variant="primary"
-              size="lg"
-              icon={<ArrowRight className="h-5 w-5" />}
+              size="sm"
+              icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
               disabled={!currentCatHasPhotos}
-              className="text-base"
             >
               {canProceedUpload
-                ? 'Continue to Review'
+                ? 'Review'
                 : shouldAdvanceCategory
                 ? `Next: ${selectedCategories[nextEmptyCategoryIdx]?.name}`
-                : 'Add photos to continue'}
+                : 'Add photos'}
             </Button>
           </div>
         </motion.div>
@@ -1060,21 +1033,20 @@ export default function NewSubmission() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-8"
+          className="space-y-3"
         >
           {/* Friendly instruction */}
-          <div className="flex items-start gap-4 p-5 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-            <Info className="h-6 w-6 text-emerald-400 flex-shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+            <Info className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-base text-white font-medium">Almost done!</p>
-              <p className="text-sm text-surface-300 mt-1">
-                Give your submission a title, review everything below, then click the green "Submit" button.
-                You can also save as a draft and come back later.
+              <p className="text-sm text-white font-medium">Almost done!</p>
+              <p className="text-xs text-surface-300 mt-0.5">
+                Add a title, review, then submit. You can also save as draft.
               </p>
             </div>
           </div>
 
-          <Card className="p-6 sm:p-8 space-y-6">
+          <Card className="p-4 space-y-3">
             <Input
               label={t('submission.title')}
               placeholder={t('submission.title_placeholder')}
@@ -1086,33 +1058,29 @@ export default function NewSubmission() {
               placeholder={t('submission.description_placeholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              rows={4}
+              rows={2}
             />
 
-            <div className="space-y-4">
-              <h3 className="text-base font-semibold text-white">
-                Submission Summary
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold text-surface-400 uppercase tracking-wider">
+                Summary
               </h3>
-              <div className="text-base text-surface-400">
-                <span className="text-surface-300 font-medium">Edition:</span>{' '}
-                {editions.find((e) => e.value === editionId)?.label}
-              </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {selectedCategories.map((cat) => {
                   const photos = getPhotosForCategory(cat.id);
                   return (
-                    <div key={cat.id} className="flex items-center justify-between p-4 rounded-xl bg-surface-800/50 border border-surface-700/50">
-                      <div className="flex items-center gap-3">
-                        <Camera className="h-5 w-5 text-surface-400" />
-                        <span className="text-base text-white font-medium">{cat.name}</span>
+                    <div key={cat.id} className="flex items-center justify-between p-2.5 rounded-lg bg-surface-800/50 border border-surface-700/50">
+                      <div className="flex items-center gap-2">
+                        <Camera className="h-3.5 w-3.5 text-surface-400" />
+                        <span className="text-sm text-white">{cat.name}</span>
                         {cat.price > 0 ? (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-gold-500/10 text-gold-400 font-medium">Paid</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold-500/10 text-gold-400">Paid</span>
                         ) : (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-medium">Free</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Free</span>
                         )}
                       </div>
-                      <span className="text-sm text-surface-300 font-medium">
+                      <span className="text-xs text-surface-300">
                         {photos.length} photo{photos.length !== 1 ? 's' : ''}
                       </span>
                     </div>
@@ -1121,42 +1089,42 @@ export default function NewSubmission() {
               </div>
 
               {hasPaidCategories && hasCredits && (
-                <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                  <p className="text-sm text-emerald-400 flex items-center gap-2">
-                    <Check className="h-5 w-5" />
-                    Payment confirmed — {paidPhotoLimit} photo{paidPhotoLimit !== 1 ? 's' : ''} per paid category
+                <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
+                  <p className="text-xs text-emerald-400 flex items-center gap-1.5">
+                    <Check className="h-3.5 w-3.5" />
+                    Payment confirmed — {paidPhotoLimit} photos/paid category
                   </p>
                 </div>
               )}
             </div>
           </Card>
 
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <Button variant="ghost" size="lg" icon={<ArrowLeft className="h-5 w-5" />} onClick={goToPrevStep} className="text-base">
-              Go Back
+          <div className="flex flex-col sm:flex-row justify-between gap-2">
+            <Button variant="ghost" size="sm" icon={<ArrowLeft className="h-4 w-4" />} onClick={goToPrevStep}>
+              Back
             </Button>
-            <div className="flex gap-3">
-              <Button variant="secondary" size="lg" onClick={() => handleSubmit(true)} loading={loading} className="text-base">
-                Save as Draft
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => handleSubmit(true)} loading={loading}>
+                Save Draft
               </Button>
               <Button
                 variant="primary"
-                size="lg"
-                icon={<ImageIcon className="h-5 w-5" />}
+                size="sm"
+                icon={<ImageIcon className="h-4 w-4" />}
                 onClick={() => handleSubmit(false)}
                 loading={loading}
                 disabled={!title.trim()}
-                className="text-base bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25"
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
-                Submit My Photos
+                Submit
               </Button>
             </div>
           </div>
 
           {!title.trim() && (
-            <p className="text-sm text-surface-400 text-center flex items-center justify-center gap-2">
-              <HelpCircle className="h-4 w-4" />
-              Please enter a title above before submitting
+            <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">
+              <HelpCircle className="h-3 w-3" />
+              Enter a title to submit
             </p>
           )}
         </motion.div>

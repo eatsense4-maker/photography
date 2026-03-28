@@ -1,11 +1,17 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.sandbox.paypal.com';
+const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.paypal.com';
 const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')!;
 const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+console.log('create-paypal-order init:', {
+  api: PAYPAL_API,
+  clientIdSet: !!PAYPAL_CLIENT_ID,
+  secretSet: !!PAYPAL_SECRET,
+});
 
 async function getAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`);
@@ -17,6 +23,11 @@ async function getAccessToken(): Promise<string> {
     },
     body: 'grant_type=client_credentials',
   });
+  if (!res.ok) {
+    const text = await res.text();
+    console.error('PayPal auth failed:', res.status, text);
+    throw new Error(`PayPal auth failed (${res.status})`);
+  }
   const data = await res.json() as { access_token: string };
   return data.access_token;
 }
@@ -98,6 +109,10 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         intent: 'CAPTURE',
+        application_context: {
+          shipping_preference: 'NO_SHIPPING',
+          user_action: 'PAY_NOW',
+        },
         purchase_units: [
           {
             reference_id: referenceId,
@@ -105,11 +120,40 @@ serve(async (req) => {
             amount: {
               currency_code: currency,
               value: amount.toFixed(2),
+              breakdown: {
+                item_total: {
+                  currency_code: currency,
+                  value: amount.toFixed(2),
+                },
+              },
             },
+            items: [
+              {
+                name: 'Competition Entry Fee',
+                unit_amount: {
+                  currency_code: currency,
+                  value: amount.toFixed(2),
+                },
+                quantity: '1',
+                category: 'DIGITAL_GOODS',
+              },
+            ],
           },
         ],
       }),
     });
+
+    if (!orderRes.ok) {
+      const errBody = await orderRes.text();
+      console.error('PayPal create order failed:', orderRes.status, errBody);
+      return new Response(
+        JSON.stringify({ error: `PayPal API error (${orderRes.status})`, details: errBody }),
+        {
+          status: 502,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+        }
+      );
+    }
 
     const order = await orderRes.json() as { id: string };
 
@@ -120,8 +164,9 @@ serve(async (req) => {
       },
     });
   } catch (error) {
+    console.error('create-paypal-order error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to create PayPal order' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to create PayPal order' }),
       {
         status: 500,
         headers: {

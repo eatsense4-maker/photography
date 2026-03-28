@@ -1,11 +1,13 @@
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.sandbox.paypal.com';
+const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.paypal.com';
 const PAYPAL_CLIENT_ID = Deno.env.get('PAYPAL_CLIENT_ID')!;
 const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+console.log('capture-paypal-order init:', { api: PAYPAL_API, clientIdSet: !!PAYPAL_CLIENT_ID, secretSet: !!PAYPAL_SECRET });
 
 async function getAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`);
@@ -17,6 +19,11 @@ async function getAccessToken(): Promise<string> {
     },
     body: 'grant_type=client_credentials',
   });
+  if (!res.ok) {
+    const text = await res.text();
+    console.error('PayPal auth failed:', res.status, text);
+    throw new Error(`PayPal auth failed (${res.status})`);
+  }
   const data = await res.json() as { access_token: string };
   return data.access_token;
 }
@@ -93,15 +100,16 @@ serve(async (req) => {
       );
     }
 
-    if (captureData.status !== 'COMPLETED') {
-      // Extract a meaningful error from PayPal's response
+    if (!captureRes.ok || captureData.status !== 'COMPLETED') {
       const ppError = captureData?.details?.[0]?.issue
         || captureData?.message
         || `Capture status: ${captureData.status || 'unknown'}`;
+      const ppDesc = captureData?.details?.[0]?.description || '';
+      console.error('PayPal capture failed:', captureRes.status, JSON.stringify(captureData));
       return new Response(
-        JSON.stringify({ error: `Payment not completed: ${ppError}`, details: captureData }),
+        JSON.stringify({ error: `Payment not completed: ${ppError}`, description: ppDesc, details: captureData }),
         {
-          status: 400,
+          status: 502,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
         }
       );
@@ -186,8 +194,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('capture-paypal-order error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to capture payment' }),
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to capture payment' }),
       {
         status: 500,
         headers: {

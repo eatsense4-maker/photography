@@ -20,19 +20,11 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
+import CompetitionModal from '@/components/CompetitionModal';
 import { supabase } from '@/lib/supabase';
 import type { Edition, Partner, Post } from '@/types';
 
 /* ---------- static data ---------- */
-const PAST_WINNERS = [
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/main-first-place-2023.jpeg', label: 'Things Have Changed — 1st Place', edition: 'IFFA 14 · 2023' },
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/PEOPLE1.jpeg', label: 'People — 1st Place', edition: 'IFFA 14 · 2023' },
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LANDWIN.jpeg', label: 'Land — 1st Place', edition: 'IFFA 14 · 2023' },
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2022/Mourning.jpg', label: 'The Other — 1st Place', edition: 'IFFA 13 · 2022' },
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2023/LIFE1.jpeg', label: 'Life — 1st Place', edition: 'IFFA 14 · 2023' },
-  { url: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/gallery/2022/Pershendetja-e-fundit.jpg', label: 'Portrait — 1st Place', edition: 'IFFA 13 · 2022' },
-];
-
 const CATEGORY_COLORS: Record<string, string> = {
   news: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
   event: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
@@ -77,6 +69,29 @@ export default function HomePage() {
   const [partners, setPartners] = useState<Partner[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [sliderPosts, setSliderPosts] = useState<Post[]>([]);
+  const [showCompetitionModal, setShowCompetitionModal] = useState(false);
+
+  // Auto-show competition modal on first visit
+  useEffect(() => {
+    const dismissed = localStorage.getItem('iffa17_modal_dismissed');
+    if (!dismissed) {
+      const timer = setTimeout(() => setShowCompetitionModal(true), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Re-open modal if returning from Google OAuth
+  useEffect(() => {
+    if (localStorage.getItem('iffa17_modal_return')) {
+      localStorage.removeItem('iffa17_modal_return');
+      setShowCompetitionModal(true);
+    }
+  }, []);
+
+  const handleCloseModal = () => {
+    setShowCompetitionModal(false);
+    localStorage.setItem('iffa17_modal_dismissed', '1');
+  };
 
   // Slider state
   const [slideIndex, setSlideIndex] = useState(0);
@@ -237,12 +252,12 @@ export default function HomePage() {
                     )}
                   </div>
                   <Link to={`/news/${currentSlide?.slug}`} className="group">
-                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-[1.1] group-hover:text-primary-300 transition-colors">
+                    <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-[1.1] group-hover:text-primary-300 transition-colors">
                       {currentSlide?.title}
                     </h1>
                   </Link>
                   {currentSlide?.excerpt && (
-                    <p className="text-surface-300 mt-3 text-base md:text-lg line-clamp-2 leading-relaxed">
+                    <p className="text-surface-300 mt-3 text-sm md:text-base line-clamp-2 leading-relaxed">
                       {currentSlide.excerpt}
                     </p>
                   )}
@@ -372,9 +387,7 @@ export default function HomePage() {
                       Explore Theme
                     </Button>
                   </Link>
-                  <Link to="/register">
-                    <Button variant="gold" size="sm" className="w-full">Submit Your Work</Button>
-                  </Link>
+                  <Button variant="gold" size="sm" className="w-full" onClick={() => setShowCompetitionModal(true)}>Submit Your Work</Button>
                 </div>
               </div>
             </motion.div>
@@ -487,7 +500,7 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 snap-x snap-mandatory scrollbar-hide">
-                {events.map((post, i) => (
+                {events.slice(0, 4).map((post, i) => (
                   <motion.div
                     key={post.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -649,38 +662,7 @@ export default function HomePage() {
             </aside>
           </div>
 
-          {/* ── Row 5: Award-Winning Work gallery ── */}
-          <div className="pt-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display font-bold text-white">Award-Winning Work</h2>
-              <Link to="/gallery" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
-                View Gallery <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {PAST_WINNERS.map((photo, i) => (
-                <div
-                  key={i}
-                  className={`relative overflow-hidden rounded-xl group cursor-pointer ${
-                    i === 0 ? 'md:col-span-2 md:row-span-2' : ''
-                  }`}
-                  style={{ aspectRatio: i === 0 ? '1' : '4/3' }}
-                >
-                  <img
-                    src={photo.url}
-                    alt={photo.label}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-surface-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                    <p className="text-white text-xs font-semibold leading-tight">{photo.label}</p>
-                    <p className="text-gold-400 text-[10px] mt-0.5">{photo.edition}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
         </div>
       </section>
 
@@ -724,6 +706,8 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
+      {/* Competition Modal */}
+      <CompetitionModal isOpen={showCompetitionModal} onClose={handleCloseModal} />
     </div>
   );
 }
