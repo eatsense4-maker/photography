@@ -155,38 +155,38 @@ export default function AdminResults() {
     setLoading(false);
   };
 
-  const handlePublishEdition = async () => {
+  const handlePublishResults = async () => {
     if (!selectedEdition) return;
     setPublishing(true);
     const { error } = await supabase
       .from('editions')
-      .update({ status: 'completed', published: true, updated_at: new Date().toISOString() })
+      .update({ results_published: true, updated_at: new Date().toISOString() })
       .eq('id', selectedEdition);
     setPublishing(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success('Edition published! Gallery & Winners pages updated.');
+    toast.success('Results published! Winners & participants are now visible.');
     setPublishModal(false);
     setEditions((prev) =>
-      prev.map((e) => (e.id === selectedEdition ? { ...e, status: 'completed' as any, published: true } : e))
+      prev.map((e) => (e.id === selectedEdition ? { ...e, results_published: true } : e))
     );
   };
 
-  const handleUnpublish = async () => {
+  const handleUnpublishResults = async () => {
     if (!selectedEdition) return;
     const { error } = await supabase
       .from('editions')
-      .update({ published: false, updated_at: new Date().toISOString() })
+      .update({ results_published: false, updated_at: new Date().toISOString() })
       .eq('id', selectedEdition);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success('Edition unpublished');
+    toast.success('Results unpublished');
     setEditions((prev) =>
-      prev.map((e) => (e.id === selectedEdition ? { ...e, published: false } : e))
+      prev.map((e) => (e.id === selectedEdition ? { ...e, results_published: false } : e))
     );
   };
 
@@ -221,11 +221,11 @@ export default function AdminResults() {
         </div>
         <div className="flex gap-3">
           <Button variant="secondary" icon={<Download className="h-4 w-4" />}>Export</Button>
-          {currentEdition?.published ? (
-            <Button variant="ghost" icon={<Eye className="h-4 w-4" />} onClick={handleUnpublish}>Unpublish</Button>
+          {currentEdition?.results_published ? (
+            <Button variant="ghost" icon={<Eye className="h-4 w-4" />} onClick={handleUnpublishResults}>Unpublish Results</Button>
           ) : (
             <Button variant="primary" icon={<Globe className="h-4 w-4" />} onClick={() => setPublishModal(true)} disabled={categoryWinners.length === 0}>
-              Publish Edition
+              Publish Results
             </Button>
           )}
         </div>
@@ -253,19 +253,19 @@ export default function AdminResults() {
         </div>
         {currentEdition && (
           <div className="flex items-center gap-2 pb-1">
-            <Badge variant={currentEdition.published ? 'success' : 'secondary'}>
-              {currentEdition.published ? 'Published' : currentEdition.status}
+            <Badge variant={currentEdition.results_published ? 'success' : 'secondary'}>
+              {currentEdition.results_published ? 'Results Published' : 'Results Draft'}
             </Badge>
           </div>
         )}
       </div>
 
-      {currentEdition?.published && (
+      {currentEdition?.results_published && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-4 border-green-500/30 bg-green-500/5">
             <p className="text-green-400 text-sm font-medium flex items-center gap-2">
               <Globe className="h-4 w-4" />
-              This edition is published. Winners appear on the Winners page and photos are visible in the Gallery.
+              Results are published. Winners and participants are visible on the Winners page.
             </p>
           </Card>
         </motion.div>
@@ -370,21 +370,20 @@ export default function AdminResults() {
       )}
 
       {/* Publish Confirmation Modal */}
-      <Modal isOpen={publishModal} onClose={() => setPublishModal(false)} title="Publish Edition">
+      <Modal isOpen={publishModal} onClose={() => setPublishModal(false)} title="Publish Results">
         <div className="space-y-4">
           <p className="text-surface-300">
-            Publishing <strong className="text-white">{currentEdition?.title} ({currentEdition?.year})</strong> will:
+            Publishing results for <strong className="text-white">{currentEdition?.title} ({currentEdition?.year})</strong> will:
           </p>
           <ul className="text-sm text-surface-400 space-y-2 ml-4 list-disc">
-            <li>Set the edition status to <Badge variant="primary">Completed</Badge></li>
-            <li>Add all approved photos to the <strong className="text-white">Gallery</strong> page</li>
+            <li>Announce the <strong className="text-white">winners</strong> and <strong className="text-white">participants</strong> publicly</li>
             <li>Display the top 3 winners per category on the <strong className="text-white">Winners</strong> page</li>
-            <li>Make the edition publicly visible</li>
           </ul>
+          <p className="text-xs text-surface-500 mt-2">This does not change the edition status or gallery visibility.</p>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="ghost" onClick={() => setPublishModal(false)}>Cancel</Button>
-            <Button variant="primary" icon={<Globe className="h-4 w-4" />} onClick={handlePublishEdition} loading={publishing}>
-              Publish
+            <Button variant="primary" icon={<Globe className="h-4 w-4" />} onClick={handlePublishResults} loading={publishing}>
+              Publish Results
             </Button>
           </div>
         </div>

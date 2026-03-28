@@ -109,8 +109,8 @@ export default function WinnersPage() {
   async function fetchDbWinners() {
     const { data: editions } = await supabase
       .from('editions')
-      .select('id, title, slug, year, theme, published')
-      .eq('published', true)
+      .select('id, title, slug, year, theme, published, results_published')
+      .eq('results_published', true)
       .order('year', { ascending: false });
 
     if (!editions || editions.length === 0) return { editions: [] as GalleryEdition[], photos: [] as GalleryPhoto[] };

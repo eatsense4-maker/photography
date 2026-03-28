@@ -345,7 +345,49 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ===== MAGAZINE CONTENT — Diverse chaotic layout ===== */}
+      {/* ===== COMPETITION CATEGORIES — shown when open ===== */}
+      {currentEdition?.status === 'open' && (
+        <section className="py-10 sm:py-14 border-b border-surface-800">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 block mb-1">IFFA 17 · Open Call</span>
+                <h2 className="text-xl font-display font-bold text-white">Competition Categories</h2>
+              </div>
+              <Link to="/apply" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
+                View All <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { slug: 'theme', title: 'Theme — BREATH', prize: '€1,000', img: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=400&h=300&fit=crop', color: 'text-gold-400', border: 'hover:border-gold-500/40' },
+                { slug: 'press-news', title: 'Press & News', prize: '€1,000', img: 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=400&h=300&fit=crop', color: 'text-blue-400', border: 'hover:border-blue-500/40' },
+                { slug: 'life', title: 'Life', prize: '2 × €500', img: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop', color: 'text-emerald-400', border: 'hover:border-emerald-500/40' },
+                { slug: 'land', title: 'Land', prize: '2 × €500', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop', color: 'text-sky-400', border: 'hover:border-sky-500/40' },
+              ].map((cat, i) => (
+                <motion.div
+                  key={cat.slug}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.08 }}
+                >
+                  <Link to={`/apply/${cat.slug}`} className={`group block relative rounded-xl overflow-hidden h-44 border border-surface-800 ${cat.border} transition-all`}>
+                    <img src={cat.img} alt={cat.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className={`text-xs font-bold ${cat.color}`}>{cat.prize}</p>
+                      <h3 className="text-sm font-semibold text-white leading-tight">{cat.title}</h3>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ===== MAGAZINE CONTENT ===== */}
       <section className="py-10 sm:py-14">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
 
@@ -382,7 +424,7 @@ export default function HomePage() {
                     <Calendar className="h-3.5 w-3.5" />
                     Deadline: <strong className="text-white">30 June 2026</strong>
                   </div>
-                  <Link to="/theme">
+                  <Link to="/apply/theme">
                     <Button variant="secondary" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
                       Explore Theme
                     </Button>
@@ -554,7 +596,7 @@ export default function HomePage() {
               </div>
               {news.length > 0 ? (
                 <div className="space-y-4">
-                  {news.slice(0, 5).map((post, i) => {
+                  {news.slice(0, 3).map((post, i) => {
                     const isNew = post.published_at && (Date.now() - new Date(post.published_at).getTime()) < 7 * 24 * 60 * 60 * 1000;
                     return (
                     <motion.div
@@ -606,37 +648,31 @@ export default function HomePage() {
 
             {/* Sidebar stack */}
             <aside className="lg:col-span-4 space-y-6">
-              {/* Open call card */}
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                className="rounded-2xl border border-surface-800 bg-surface-900 p-5"
-              >
-                <div className="flex items-center gap-2 mb-3">
-                  <Wind className="h-4 w-4 text-emerald-400" />
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Open Call</span>
-                </div>
-                <h3 className="text-lg font-display font-bold text-white mb-2">
-                  What does your breath look like?
-                </h3>
-                <p className="text-xs text-surface-400 leading-relaxed mb-3">
-                  4 categories, €4,000 total prizes. Explore breath — intimate, ecological, political, or alive.
-                </p>
-                <div className="space-y-1.5 text-xs text-surface-500 mb-4">
-                  <p className="text-gold-400 font-semibold">Main Theme · Press & News — €1,000 each</p>
-                  <p className="text-emerald-400 font-semibold">Life · Land sub-awards — €500 each</p>
-                </div>
-                <ul className="space-y-1.5 text-xs text-surface-500 mb-5">
-                  <li>Open to photographers 18+ worldwide</li>
-                  <li>JPEG sRGB · 2500–4000 px</li>
-                </ul>
-                <Link to="/register">
-                  <Button variant="gold" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
-                    Submit by 30 June 2026
-                  </Button>
-                </Link>
-              </motion.div>
+              {/* Apply CTA */}
+              {currentEdition?.status === 'open' && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  className="rounded-2xl border border-surface-800 bg-surface-900 p-5"
+                >
+                  <div className="flex items-center gap-2 mb-3">
+                    <Wind className="h-4 w-4 text-emerald-400" />
+                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Open Call</span>
+                  </div>
+                  <h3 className="text-lg font-display font-bold text-white mb-2">
+                    IFFA 17 · €4,000 in prizes
+                  </h3>
+                  <p className="text-xs text-surface-400 leading-relaxed mb-4">
+                    4 categories across theme, press, life & land photography.
+                  </p>
+                  <Link to="/apply">
+                    <Button variant="gold" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
+                      View Categories
+                    </Button>
+                  </Link>
+                </motion.div>
+              )}
 
               {/* Quick Links */}
               <div className="rounded-2xl border border-surface-800 bg-surface-900 p-5">

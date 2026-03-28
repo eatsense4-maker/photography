@@ -22,6 +22,8 @@ interface UploadedPhoto {
   progress: number;
   uploaded: boolean;
   storageKey?: string;
+  title: string;
+  description: string;
 }
 
 export default function NewSubmission() {
@@ -178,6 +180,8 @@ export default function NewSubmission() {
         preview: URL.createObjectURL(file),
         progress: 0,
         uploaded: false,
+        title: '',
+        description: '',
       }));
 
       setCategoryPhotos((prev) => ({
@@ -211,11 +215,23 @@ export default function NewSubmission() {
     });
   };
 
+  const updatePhotoField = (catId: string, photoId: string, field: 'title' | 'description', value: string) => {
+    setCategoryPhotos((prev) => ({
+      ...prev,
+      [catId]: (prev[catId] || []).map((p) =>
+        p.id === photoId ? { ...p, [field]: value } : p
+      ),
+    }));
+  };
+
   // ─── Step navigation ───
   const canProceedStep1 = selectedCategoryIds.length > 0;
   const canProceedUpload = selectedCategories.every(
     (c) => getPhotosForCategory(c.id).length > 0
   );
+  const allCurrentPhotosTitled = activeCategory
+    ? getPhotosForCategory(activeCategory.id).every((p) => p.title.trim() !== '')
+    : false;
 
   // In upload step: find the next category that still needs photos
   const currentCatHasPhotos = activeCategory
@@ -306,6 +322,8 @@ export default function NewSubmission() {
               mime_type: photo.file.type,
               file_size: photo.file.size,
               sort_order: i,
+              title: photo.title || null,
+              description: photo.description || null,
             });
 
             setCategoryPhotos((prev) => ({
@@ -949,35 +967,55 @@ export default function NewSubmission() {
                 )}
               </div>
 
-              {/* Photo grid — always-visible remove buttons */}
+              {/* Photo grid with per-photo title & description */}
               {currentPhotos.length > 0 && (
-                <div className="mt-3">
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                    {currentPhotos.map((photo) => (
-                      <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden bg-surface-800 border border-surface-700">
+                <div className="mt-3 space-y-3">
+                  {currentPhotos.map((photo, idx) => (
+                    <div key={photo.id} className="flex gap-3 p-2.5 rounded-lg bg-surface-800/50 border border-surface-700/50">
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-800 flex-shrink-0">
                         <img src={photo.preview} alt="" className="w-full h-full object-cover" />
                         <button
                           onClick={() => removePhoto(activeCategory.id, photo.id)}
-                          className="absolute top-1 right-1 p-1 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+                          className="absolute top-1 right-1 p-0.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
                           title="Remove"
                         >
-                          <X className="h-3 w-3" />
+                          <X className="h-2.5 w-2.5" />
                         </button>
                         {!photo.uploaded && photo.progress > 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-700">
+                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-700">
                             <div className="h-full bg-primary-500 transition-all" style={{ width: `${photo.progress}%` }} />
                           </div>
                         )}
                         {photo.uploaded && (
                           <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
-                            <div className="bg-emerald-500 rounded-full p-1">
-                              <Check className="h-3 w-3 text-white" />
+                            <div className="bg-emerald-500 rounded-full p-0.5">
+                              <Check className="h-2.5 w-2.5 text-white" />
                             </div>
                           </div>
                         )}
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-surface-500 font-mono">#{idx + 1}</span>
+                          <span className="text-[10px] text-surface-500 truncate">{photo.file.name}</span>
+                        </div>
+                        <input
+                          type="text"
+                          placeholder="Photo title (required)"
+                          value={photo.title}
+                          onChange={(e) => updatePhotoField(activeCategory.id, photo.id, 'title', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Description (optional)"
+                          value={photo.description}
+                          onChange={(e) => updatePhotoField(activeCategory.id, photo.id, 'description', e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
+                        />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </Card>
@@ -1016,7 +1054,7 @@ export default function NewSubmission() {
               size="sm"
               icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
-              disabled={!currentCatHasPhotos}
+              disabled={!currentCatHasPhotos || !allCurrentPhotosTitled}
             >
               {canProceedUpload
                 ? 'Review'
@@ -1066,23 +1104,38 @@ export default function NewSubmission() {
                 Summary
               </h3>
 
-              <div className="space-y-1.5">
+              <div className="space-y-2">
                 {selectedCategories.map((cat) => {
                   const photos = getPhotosForCategory(cat.id);
                   return (
-                    <div key={cat.id} className="flex items-center justify-between p-2.5 rounded-lg bg-surface-800/50 border border-surface-700/50">
-                      <div className="flex items-center gap-2">
-                        <Camera className="h-3.5 w-3.5 text-surface-400" />
-                        <span className="text-sm text-white">{cat.name}</span>
-                        {cat.price > 0 ? (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold-500/10 text-gold-400">Paid</span>
-                        ) : (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Free</span>
-                        )}
+                    <div key={cat.id} className="rounded-lg bg-surface-800/50 border border-surface-700/50 overflow-hidden">
+                      <div className="flex items-center justify-between p-2.5">
+                        <div className="flex items-center gap-2">
+                          <Camera className="h-3.5 w-3.5 text-surface-400" />
+                          <span className="text-sm text-white">{cat.name}</span>
+                          {cat.price > 0 ? (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold-500/10 text-gold-400">Paid</span>
+                          ) : (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Free</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-surface-300">
+                          {photos.length} photo{photos.length !== 1 ? 's' : ''}
+                        </span>
                       </div>
-                      <span className="text-xs text-surface-300">
-                        {photos.length} photo{photos.length !== 1 ? 's' : ''}
-                      </span>
+                      {photos.length > 0 && (
+                        <div className="border-t border-surface-700/50 px-2.5 py-1.5 space-y-1">
+                          {photos.map((photo, idx) => (
+                            <div key={photo.id} className="flex items-center gap-2 text-xs">
+                              <img src={photo.preview} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
+                              <span className="text-surface-300 flex-shrink-0">#{idx + 1}</span>
+                              <span className={`truncate ${photo.title.trim() ? 'text-white' : 'text-red-400 italic'}`}>
+                                {photo.title.trim() || 'Missing title'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -1113,7 +1166,7 @@ export default function NewSubmission() {
                 icon={<ImageIcon className="h-4 w-4" />}
                 onClick={() => handleSubmit(false)}
                 loading={loading}
-                disabled={!title.trim()}
+                disabled={!title.trim() || selectedCategories.some(cat => getPhotosForCategory(cat.id).some(p => !p.title.trim()))}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
                 Submit
@@ -1121,10 +1174,10 @@ export default function NewSubmission() {
             </div>
           </div>
 
-          {!title.trim() && (
+          {(!title.trim() || selectedCategories.some(cat => getPhotosForCategory(cat.id).some(p => !p.title.trim()))) && (
             <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">
               <HelpCircle className="h-3 w-3" />
-              Enter a title to submit
+              {!title.trim() ? 'Enter a submission title to submit' : 'All photos need a title'}
             </p>
           )}
         </motion.div>

@@ -12,7 +12,8 @@ import AuthProvider from '@/components/shared/AuthProvider';
 // Lazy-loaded pages
 const HomePage = lazy(() => import('@/pages/public/HomePage'));
 const AboutPage = lazy(() => import('@/pages/public/AboutPage'));
-const ThemePage = lazy(() => import('@/pages/public/ThemePage'));
+const ApplyPage = lazy(() => import('@/pages/public/ApplyPage'));
+const CategoryDetailPage = lazy(() => import('@/pages/public/CategoryDetailPage'));
 const EditionsPage = lazy(() => import('@/pages/public/EditionsPage'));
 const WinnersPage = lazy(() => import('@/pages/public/WinnersPage'));
 const GalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
@@ -83,7 +84,9 @@ export default function App() {
             <Route element={<PublicLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/about" element={<AboutPage />} />
-              <Route path="/theme" element={<ThemePage />} />
+              <Route path="/apply" element={<ApplyPage />} />
+              <Route path="/apply/:categorySlug" element={<CategoryDetailPage />} />
+              <Route path="/theme" element={<Navigate to="/apply" replace />} />
               <Route path="/editions" element={<EditionsPage />} />
               <Route path="/winners" element={<WinnersPage />} />
               <Route path="/gallery" element={<GalleryPage />} />

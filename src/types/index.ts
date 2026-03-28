@@ -37,6 +37,7 @@ export interface Edition {
   rules: string | null;
   prizes: string | null;
   published: boolean;
+  results_published: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -80,6 +81,8 @@ export interface SubmissionPhoto {
   storage_key: string;
   thumbnail_key: string | null;
   original_filename: string | null;
+  title: string | null;
+  description: string | null;
   mime_type: string | null;
   file_size: number | null;
   width: number | null;
