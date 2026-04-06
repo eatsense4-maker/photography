@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { Camera, Trophy, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -35,6 +36,7 @@ interface GalleryData {
 /* ── component ────────────────────────────────────────────────── */
 export default function GalleryPage() {
   const { t } = useTranslation();
+  usePageTitle('Gallery');
   const navigate = useNavigate();
   const [data, setData] = useState<GalleryData | null>(null);
   const [loading, setLoading] = useState(true);

@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { getPhotoUrl } from '@/lib/r2';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,6 +29,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
   const { t } = useTranslation();
+  usePageTitle('Register');
   const navigate = useNavigate();
   const { signUp, signInWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -78,7 +81,7 @@ export default function RegisterPage() {
           <div>
             <Link to="/" className="flex items-center mb-8">
               <img
-                src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+                src={getPhotoUrl('brand/fokus-logo.png')}
                 alt="FOKUS Award"
                 className="h-12 w-auto object-contain"
               />
@@ -100,7 +103,7 @@ export default function RegisterPage() {
         >
           <Link to="/" className="lg:hidden flex items-center mb-10">
             <img
-              src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+              src={getPhotoUrl('brand/fokus-logo.png')}
               alt="FOKUS Award"
               className="h-10 w-auto object-contain"
             />

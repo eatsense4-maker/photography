@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Star, Users, Image, BarChart3 } from 'lucide-react';
 import { Card, Badge, Select } from '@/components/ui';
@@ -32,6 +33,7 @@ interface JuryStat {
 }
 
 export default function AdminLiveScoring() {
+  usePageTitle('Live Scoring');
   const [feed, setFeed] = useState<LiveScore[]>([]);
   const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
   const [juryStats, setJuryStats] = useState<JuryStat[]>([]);

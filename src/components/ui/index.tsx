@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback, useEffect, useId, useRef } from 'react';
 import { motion, type HTMLMotionProps } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, X } from 'lucide-react';
 
 // ===== Button =====
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'gold';
@@ -62,32 +62,41 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, error, icon, className = '', ...props }, ref) => (
-    <div className="space-y-1.5">
-      {label && (
-        <label className="block text-sm font-medium text-surface-300">
-          {label}
-        </label>
-      )}
-      <div className="relative">
-        {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500">
-            {icon}
-          </div>
+  ({ label, error, icon, className = '', id: propId, ...props }, ref) => {
+    const generatedId = useId();
+    const id = propId || generatedId;
+    const errorId = `${id}-error`;
+
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label htmlFor={id} className="block text-sm font-medium text-surface-300">
+            {label}
+          </label>
         )}
-        <input
-          ref={ref}
-          className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
-            placeholder:text-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-            transition-colors duration-200 ${icon ? 'pl-10' : ''} ${
-            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-          } ${className}`}
-          {...props}
-        />
+        <div className="relative">
+          {icon && (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500">
+              {icon}
+            </div>
+          )}
+          <input
+            ref={ref}
+            id={id}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
+            className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
+              placeholder:text-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
+              transition-colors duration-200 ${icon ? 'pl-10' : ''} ${
+              error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+            } ${className}`}
+            {...props}
+          />
+        </div>
+        {error && <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>}
       </div>
-      {error && <p className="text-sm text-red-400">{error}</p>}
-    </div>
-  )
+    );
+  }
 );
 Input.displayName = 'Input';
 
@@ -99,25 +108,34 @@ interface TextareaProps
 }
 
 export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ label, error, className = '', ...props }, ref) => (
-    <div className="space-y-1.5">
-      {label && (
-        <label className="block text-sm font-medium text-surface-300">
-          {label}
-        </label>
-      )}
-      <textarea
-        ref={ref}
-        className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
-          placeholder:text-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-          transition-colors duration-200 resize-y min-h-[100px] ${
-          error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-        } ${className}`}
-        {...props}
-      />
-      {error && <p className="text-sm text-red-400">{error}</p>}
-    </div>
-  )
+  ({ label, error, className = '', id: propId, ...props }, ref) => {
+    const generatedId = useId();
+    const id = propId || generatedId;
+    const errorId = `${id}-error`;
+
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label htmlFor={id} className="block text-sm font-medium text-surface-300">
+            {label}
+          </label>
+        )}
+        <textarea
+          ref={ref}
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
+            placeholder:text-surface-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
+            transition-colors duration-200 resize-y min-h-[100px] ${
+            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+          } ${className}`}
+          {...props}
+        />
+        {error && <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>}
+      </div>
+    );
+  }
 );
 Textarea.displayName = 'Textarea';
 
@@ -130,36 +148,45 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ label, error, options, placeholder, className = '', ...props }, ref) => (
-    <div className="space-y-1.5">
-      {label && (
-        <label className="block text-sm font-medium text-surface-300">
-          {label}
-        </label>
-      )}
-      <select
-        ref={ref}
-        className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
-          focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
-          transition-colors duration-200 ${
-          error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
-        } ${className}`}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" className="text-surface-500">
-            {placeholder}
-          </option>
+  ({ label, error, options, placeholder, className = '', id: propId, ...props }, ref) => {
+    const generatedId = useId();
+    const id = propId || generatedId;
+    const errorId = `${id}-error`;
+
+    return (
+      <div className="space-y-1.5">
+        {label && (
+          <label htmlFor={id} className="block text-sm font-medium text-surface-300">
+            {label}
+          </label>
         )}
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-      {error && <p className="text-sm text-red-400">{error}</p>}
-    </div>
-  )
+        <select
+          ref={ref}
+          id={id}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className={`w-full rounded-lg bg-surface-900 border border-surface-700 px-4 py-2.5 text-white
+            focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500
+            transition-colors duration-200 ${
+            error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
+          } ${className}`}
+          {...props}
+        >
+          {placeholder && (
+            <option value="" className="text-surface-500">
+              {placeholder}
+            </option>
+          )}
+          {options.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+        {error && <p id={errorId} role="alert" className="text-sm text-red-400">{error}</p>}
+      </div>
+    );
+  }
 );
 Select.displayName = 'Select';
 
@@ -251,6 +278,50 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   size = 'md',
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+
+  // Escape key handler
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    },
+    [onClose],
+  );
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleKeyDown]);
+
+  // Focus first focusable element on open
+  useEffect(() => {
+    if (!isOpen || !modalRef.current) return;
+    const first = modalRef.current.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    first?.focus();
+  }, [isOpen]);
+
+  // Trap focus within modal
+  const handleTabTrap = useCallback((e: React.KeyboardEvent) => {
+    if (e.key !== 'Tab' || !modalRef.current) return;
+    const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }, []);
+
   if (!isOpen) return null;
 
   return (
@@ -263,19 +334,25 @@ export const Modal: React.FC<ModalProps> = ({
         onClick={onClose}
       />
       <motion.div
-        className={`relative w-full ${modalSizes[size]} bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl p-6`}
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        onKeyDown={handleTabTrap}
+        className={`relative w-full ${modalSizes[size]} max-h-[90vh] overflow-y-auto bg-surface-900 border border-surface-700 rounded-2xl shadow-2xl p-6`}
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
       >
         {title && (
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <h3 id={titleId} className="text-lg font-semibold text-white">{title}</h3>
             <button
               onClick={onClose}
-              className="text-surface-400 hover:text-white transition-colors cursor-pointer"
+              aria-label="Close"
+              className="text-surface-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-surface-800"
             >
-              ✕
+              <X className="h-5 w-5" />
             </button>
           </div>
         )}
@@ -331,6 +408,51 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <p className="text-sm text-surface-500 max-w-sm mb-6">{description}</p>
     )}
     {action}
+  </div>
+);
+
+// ===== Skeleton =====
+interface SkeletonProps {
+  className?: string;
+}
+
+export const Skeleton: React.FC<SkeletonProps> = ({ className = '' }) => (
+  <div className={`animate-pulse bg-surface-800 rounded ${className}`} />
+);
+
+export const SkeletonText: React.FC<{ lines?: number }> = ({ lines = 3 }) => (
+  <div className="space-y-2">
+    {Array.from({ length: lines }).map((_, i) => (
+      <Skeleton key={i} className={`h-4 ${i === lines - 1 ? 'w-3/4' : 'w-full'}`} />
+    ))}
+  </div>
+);
+
+export const SkeletonCard: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <div className={`rounded-xl bg-surface-900 border border-surface-800 p-5 space-y-3 ${className}`}>
+    <Skeleton className="h-40 w-full rounded-lg" />
+    <Skeleton className="h-4 w-3/4" />
+    <Skeleton className="h-4 w-1/2" />
+  </div>
+);
+
+export const SkeletonTable: React.FC<{ rows?: number; cols?: number }> = ({
+  rows = 5,
+  cols = 4,
+}) => (
+  <div className="space-y-2">
+    <div className="flex gap-4 p-3">
+      {Array.from({ length: cols }).map((_, i) => (
+        <Skeleton key={i} className="h-4 flex-1" />
+      ))}
+    </div>
+    {Array.from({ length: rows }).map((_, r) => (
+      <div key={r} className="flex gap-4 p-3 border-t border-surface-800">
+        {Array.from({ length: cols }).map((_, c) => (
+          <Skeleton key={c} className="h-4 flex-1" />
+        ))}
+      </div>
+    ))}
   </div>
 );
 

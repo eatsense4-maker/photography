@@ -10,8 +10,11 @@
  *   `getPhotoUrl(key)` resolves a key to the R2 public bucket URL.
  */
 
-const R2_PUBLIC_URL =
-  import.meta.env.VITE_R2_PUBLIC_URL || 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev';
+const R2_PUBLIC_URL = import.meta.env.VITE_R2_PUBLIC_URL || '';
+
+if (!R2_PUBLIC_URL) {
+  console.warn('Missing VITE_R2_PUBLIC_URL environment variable. Image URLs will not work.');
+}
 
 /**
  * Return the public URL for a storage key.

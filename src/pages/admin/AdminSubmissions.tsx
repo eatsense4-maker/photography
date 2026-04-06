@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -14,8 +15,9 @@ import {
   List,
   ChevronDown,
   ChevronRight,
+  ChevronLeft,
 } from 'lucide-react';
-import { Button, Card, Badge, Input, Select, Modal } from '@/components/ui';
+import { Button, Card, Badge, Input, Select, Modal, SkeletonTable } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -39,6 +41,7 @@ interface AdminSubmission {
 
 export default function AdminSubmissions() {
   const { t } = useTranslation();
+  usePageTitle('Submissions');
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
@@ -49,6 +52,8 @@ export default function AdminSubmissions() {
   const [groupBy, setGroupBy] = useState<GroupMode>('none');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [actionModal, setActionModal] = useState<{ sub: AdminSubmission; action: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const fetchSubmissions = async () => {
     setLoading(true);
@@ -276,7 +281,7 @@ export default function AdminSubmissions() {
               <Input
                 placeholder="Search by name or ID..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 icon={<Search className="h-4 w-4" />}
               />
             </div>
@@ -290,13 +295,13 @@ export default function AdminSubmissions() {
               ]}
               placeholder="All statuses"
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
             />
             <Select
               options={categories.map((c) => ({ value: c.id, label: c.name }))}
               placeholder="All categories"
               value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
+              onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
             />
           </div>
 
@@ -326,13 +331,32 @@ export default function AdminSubmissions() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
-        </div>
+        <Card className="p-4"><SkeletonTable rows={8} cols={7} /></Card>
       ) : groupBy === 'none' ? (
-        <Card className="overflow-hidden">
-          {renderTable(filteredSubmissions)}
-        </Card>
+        <>
+          <Card className="overflow-hidden">
+            {renderTable(filteredSubmissions.slice((page - 1) * pageSize, page * pageSize))}
+          </Card>
+          {filteredSubmissions.length > pageSize && (
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-surface-400">
+                {t('common.showing_range', { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, filteredSubmissions.length), total: filteredSubmissions.length })}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} icon={<ChevronLeft className="h-4 w-4" />}>
+                  {t('common.previous')}
+                </Button>
+                <span className="text-sm text-surface-300 tabular-nums">
+                  {page} / {Math.ceil(filteredSubmissions.length / pageSize)}
+                </span>
+                <Button variant="ghost" size="sm" disabled={page >= Math.ceil(filteredSubmissions.length / pageSize)} onClick={() => setPage(p => p + 1)}>
+                  {t('common.next')}
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
       ) : (
         <div className="space-y-4">
           {groups.map((group) => {

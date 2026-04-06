@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Send, MapPin, Mail, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -20,6 +21,7 @@ type ContactForm = z.infer<typeof contactSchema>;
 
 export default function ContactPage() {
   const { t } = useTranslation();
+  usePageTitle('Contact');
   const [sending, setSending] = useState(false);
 
   const {

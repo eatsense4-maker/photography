@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { FileText, Save, Image as ImageIcon } from 'lucide-react';
 import { Button, Card, Input, Textarea } from '@/components/ui';
@@ -18,6 +19,7 @@ const PAGE_SLUGS = ['about', 'theme', 'rules', 'prizes'];
 
 export default function AdminContent() {
   const { t } = useTranslation();
+  usePageTitle('Content');
   const [activeTab, setActiveTab] = useState<'pages' | 'hero'>('pages');
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);

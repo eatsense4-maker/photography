@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Trophy, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -84,6 +85,7 @@ function WinnerCard({ photo, categoryLabel }: { photo: GalleryPhoto; categoryLab
 /* ── component ──────────────────────────────────────────────────── */
 export default function WinnersPage() {
   const { t } = useTranslation();
+  usePageTitle('Winners');
   const [data, setData] = useState<GalleryData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -272,8 +274,10 @@ export default function WinnersPage() {
       <section className="py-12 space-y-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {loading ? (
-            <div className="text-center py-20">
-              <div className="animate-spin h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full mx-auto" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-xl bg-surface-800 h-72" />
+              ))}
             </div>
           ) : (
             editionSections.map(({ edition, cards, isMultiCategory }, sectionIdx) => (

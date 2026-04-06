@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
-import { Search, Shield } from 'lucide-react';
-import { Button, Card, Badge, Input, Select, Modal } from '@/components/ui';
+import { Search, Shield, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button, Card, Badge, Input, Select, Modal, SkeletonTable } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -17,11 +18,14 @@ interface ManagedUser {
 
 export default function AdminUsers() {
   const { t } = useTranslation();
+  usePageTitle('Users');
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [roleModal, setRoleModal] = useState<{ user: ManagedUser; newRole: string } | null>(null);
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
 
   const fetchUsers = async () => {
     const { data } = await supabase
@@ -50,6 +54,9 @@ export default function AdminUsers() {
     return matchSearch && matchRole;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
   const handleRoleChange = async () => {
     if (!roleModal) return;
     const { error } = await supabase
@@ -67,8 +74,11 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500" />
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-white">{t('admin.users')}</h1>
+        </div>
+        <Card className="p-4"><SkeletonTable rows={8} cols={5} /></Card>
       </div>
     );
   }
@@ -89,7 +99,7 @@ export default function AdminUsers() {
             <Input
               placeholder="Search users..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               icon={<Search className="h-4 w-4" />}
             />
           </div>
@@ -101,7 +111,7 @@ export default function AdminUsers() {
             ]}
             placeholder="All roles"
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}
           />
         </div>
       </Card>
@@ -120,7 +130,7 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((user, i) => (
+              {paginated.map((user, i) => (
                 <motion.tr
                   key={user.id}
                   initial={{ opacity: 0 }}
@@ -169,6 +179,27 @@ export default function AdminUsers() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-surface-400">
+            {t('common.showing_range', { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, filtered.length), total: filtered.length })}
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} icon={<ChevronLeft className="h-4 w-4" />}>
+              {t('common.previous')}
+            </Button>
+            <span className="text-sm text-surface-300 tabular-nums">
+              {t('common.page_of', { page, totalPages })}
+            </span>
+            <Button variant="ghost" size="sm" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+              {t('common.next')}
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Role Change Confirm */}
       <Modal isOpen={!!roleModal} onClose={() => setRoleModal(null)} title="Change User Role">

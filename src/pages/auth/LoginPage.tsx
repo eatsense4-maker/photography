@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +10,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores';
+import { getPhotoUrl } from '@/lib/r2';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
@@ -20,6 +22,7 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const { t } = useTranslation();
+  usePageTitle('Login');
   const navigate = useNavigate();
   const { signIn, signInWithGoogle, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -95,7 +98,7 @@ export default function LoginPage() {
           <div>
             <Link to="/" className="flex items-center mb-8">
               <img
-                src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+                src={getPhotoUrl('brand/fokus-logo.png')}
                 alt="FOKUS Award"
                 className="h-12 w-auto object-contain"
               />
@@ -118,7 +121,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <Link to="/" className="lg:hidden flex items-center mb-10">
             <img
-              src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+              src={getPhotoUrl('brand/fokus-logo.png')}
               alt="FOKUS Award"
               className="h-10 w-auto object-contain"
             />

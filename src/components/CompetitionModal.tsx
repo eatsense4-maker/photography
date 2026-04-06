@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
@@ -51,6 +52,7 @@ interface Props {
 
 /* -------------------------------------------------- */
 export default function CompetitionModal({ isOpen, onClose }: Props) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -81,6 +83,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   // -- Derived --
@@ -188,7 +191,9 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
       }).select('id').single();
       if (subError) throw subError;
 
+      setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
+        setUploadProgress({ current: i + 1, total: photos.length });
         const photo = photos[i];
         try {
           const { key } = await uploadPhoto(photo.file, (progress) => {
@@ -211,7 +216,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
       setSubmitSuccess(true);
       toast.success('Submission successful!');
     } catch (err: any) { toast.error(err.message || 'Failed to submit'); }
-    finally { setLoading(false); }
+    finally { setLoading(false); setUploadProgress(null); }
   };
 
   // -- Step navigation --
@@ -264,7 +269,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
             <Award className="h-4 w-4 text-gold-400" />
             <span className="text-sm font-semibold text-white">IFFA 17 · 2026</span>
           </div>
-          <button onClick={onClose} className="text-surface-400 hover:text-white transition-colors cursor-pointer p-1">
+          <button onClick={onClose} aria-label="Close" className="text-surface-400 hover:text-white transition-colors cursor-pointer p-1">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -767,6 +772,19 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                   Submit My Photos
                 </Button>
               </div>
+              {uploadProgress && (
+                <div className="text-center space-y-2 pt-1">
+                  <p className="text-sm text-surface-300">
+                    {t('common.uploading_photos', { current: uploadProgress.current, total: uploadProgress.total })}
+                  </p>
+                  <div className="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                      style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )}
               {!title.trim() && (
                 <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">
                   <HelpCircle className="h-3 w-3" /> Enter a title above

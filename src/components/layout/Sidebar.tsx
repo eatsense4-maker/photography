@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface SidebarLink {
   path: string;
@@ -37,6 +39,7 @@ export default function Sidebar() {
   const { user, signOut } = useAuth();
   const { sidebarOpen } = useUIStore();
   const location = useLocation();
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   if (!user) return null;
 
@@ -121,7 +124,7 @@ export default function Sidebar() {
       {/* Logout */}
       <div className="px-3 py-4 border-t border-surface-800">
         <button
-          onClick={signOut}
+          onClick={() => setShowSignOutConfirm(true)}
           className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-surface-400 hover:text-red-400 hover:bg-surface-800 transition-all duration-200 cursor-pointer"
         >
           <LogOut className="h-5 w-5 flex-shrink-0" />
@@ -136,6 +139,16 @@ export default function Sidebar() {
           )}
         </button>
       </div>
+
+      <ConfirmDialog
+        isOpen={showSignOutConfirm}
+        onCancel={() => setShowSignOutConfirm(false)}
+        onConfirm={() => { setShowSignOutConfirm(false); signOut(); }}
+        title={t('common.sign_out')}
+        message={t('common.sign_out_confirm')}
+        confirmLabel={t('common.sign_out')}
+        confirmVariant="danger"
+      />
     </motion.aside>
   );
 }

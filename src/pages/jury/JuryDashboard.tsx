@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { BarChart3, Image, CheckCircle, Clock, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -16,6 +17,7 @@ interface AssignmentProgress {
 
 export default function JuryDashboard() {
   const { t } = useTranslation();
+  usePageTitle('Jury Dashboard');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState<AssignmentProgress[]>([]);

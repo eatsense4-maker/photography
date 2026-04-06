@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   ArrowRight,
   Camera,
@@ -78,6 +79,7 @@ function formatDate(d: string | null, full = false) {
 /* ---------- component ---------- */
 export default function HomePage() {
   const { t } = useTranslation();
+  usePageTitle();
 
   const [currentEdition, setCurrentEdition] = useState<Edition | null>(null);
   const [homeCategories, setHomeCategories] = useState<Category[]>([]);
@@ -297,12 +299,14 @@ export default function HomePage() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={goPrev}
+                      aria-label="Previous"
                       className="p-2 rounded-full bg-surface-800/60 backdrop-blur-sm text-white hover:bg-surface-700/80 transition-colors"
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button
                       onClick={goNext}
+                      aria-label="Next"
                       className="p-2 rounded-full bg-surface-800/60 backdrop-blur-sm text-white hover:bg-surface-700/80 transition-colors"
                     >
                       <ChevronRight className="h-4 w-4" />

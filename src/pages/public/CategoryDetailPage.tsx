@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { ArrowRight, ArrowLeft, Award, Calendar, Check, X as XIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -212,6 +213,7 @@ const JURY_CRITERIA = [
 export default function CategoryDetailPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
   const { t, i18n } = useTranslation();
+  usePageTitle(categorySlug ? categorySlug.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'Category');
   const { isAuthenticated } = useAuth();
   const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);

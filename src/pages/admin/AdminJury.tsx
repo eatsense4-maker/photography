@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Users, Plus, CheckCircle, Clock } from 'lucide-react';
 import { Button, Card, Badge, Modal, Select } from '@/components/ui';
@@ -17,6 +18,7 @@ interface JuryMember {
 
 export default function AdminJury() {
   const { t } = useTranslation();
+  usePageTitle('Jury Management');
   const [juryMembers, setJuryMembers] = useState<JuryMember[]>([]);
   const [juryProfiles, setJuryProfiles] = useState<{ id: string; full_name: string }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);

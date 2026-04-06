@@ -1,4 +1,4 @@
-import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
+﻿import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const PAYPAL_API = Deno.env.get('PAYPAL_API_URL') || 'https://api-m.paypal.com';
@@ -32,11 +32,13 @@ async function getAccessToken(): Promise<string> {
   return data.access_token;
 }
 
+const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://fokusaward.com';
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
       },
@@ -51,7 +53,7 @@ serve(async (req) => {
     let referenceId: string;
 
     if (body.tierId && body.editionId) {
-      // New flow: tier-based pricing — validate from DB
+      // New flow: tier-based pricing â€” validate from DB
       const tierId = body.tierId as string;
       const editionId = body.editionId as string;
       const categoryIds = (body.categoryIds || []) as string[];
@@ -67,7 +69,7 @@ serve(async (req) => {
       if (tierErr || !tier) {
         return new Response(JSON.stringify({ error: 'Invalid pricing tier' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ALLOWED_ORIGIN },
         });
       }
 
@@ -85,7 +87,7 @@ serve(async (req) => {
         if (paidCount === 0) {
           return new Response(JSON.stringify({ error: 'No paid categories selected' }), {
             status: 400,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ALLOWED_ORIGIN },
           });
         }
         amount = parseFloat(tier.price) * paidCount;
@@ -150,7 +152,7 @@ serve(async (req) => {
         JSON.stringify({ error: `PayPal API error (${orderRes.status})`, details: errBody }),
         {
           status: 502,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': ALLOWED_ORIGIN },
         }
       );
     }
@@ -160,7 +162,7 @@ serve(async (req) => {
     return new Response(JSON.stringify({ orderId: order.id }), {
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
       },
     });
   } catch (error) {
@@ -171,7 +173,7 @@ serve(async (req) => {
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
         },
       }
     );

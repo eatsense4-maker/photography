@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, ExternalLink, GripVertical, Upload, X, Loader2 } from 'lucide-react';
 import { Button, Card, Modal, Input, EmptyState } from '@/components/ui';
@@ -9,6 +10,7 @@ import toast from 'react-hot-toast';
 
 export default function AdminPartners() {
   const { t } = useTranslation();
+  usePageTitle('Partners');
   const [partners, setPartners] = useState<Partner[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -255,6 +257,7 @@ export default function AdminPartners() {
                 <button
                   type="button"
                   onClick={removeImage}
+                  aria-label="Remove image"
                   className="absolute top-2 right-2 p-1 rounded-full bg-surface-900/80 text-surface-400 hover:text-red-400 transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />

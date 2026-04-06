@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { PayPalScriptProvider } from '@paypal/react-paypal-js';
 import { lazy, Suspense } from 'react';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 // Layouts
 import { PublicLayout, DashboardLayout } from '@/components/layout';
@@ -23,11 +24,13 @@ const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'));
+const AuthCallback = lazy(() => import('@/pages/auth/AuthCallback'));
+const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'));
 
 const UserDashboard = lazy(() => import('@/pages/user/UserDashboard'));
 const UserSubmissions = lazy(() => import('@/pages/user/UserSubmissions'));
 const NewSubmission = lazy(() => import('@/pages/user/NewSubmission'));
-const CheckoutPage = lazy(() => import('@/pages/user/CheckoutPage'));
+
 const SubmissionDetail = lazy(() => import('@/pages/user/SubmissionDetail'));
 const ProfilePage = lazy(() => import('@/pages/user/ProfilePage'));
 const CertificatesPage = lazy(() => import('@/pages/user/CertificatesPage'));
@@ -52,6 +55,7 @@ const AdminPosts = lazy(() => import('@/pages/admin/AdminPosts'));
 const AdminPricingTiers = lazy(() => import('@/pages/admin/AdminPricingTiers'));
 const PostDetailPage = lazy(() => import('@/pages/public/PostDetailPage'));
 const NewsArchivePage = lazy(() => import('@/pages/public/NewsArchivePage'));
+const NotFoundPage = lazy(() => import('@/pages/public/NotFoundPage'));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,6 +83,7 @@ export default function App() {
               <div className="animate-spin h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full" />
             </div>
           }>
+          <ErrorBoundary>
           <Routes>
             {/* Public Routes */}
             <Route element={<PublicLayout />}>
@@ -100,6 +105,8 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
 
             {/* User Dashboard Routes */}
             <Route
@@ -112,7 +119,7 @@ export default function App() {
               <Route path="/dashboard" element={<UserDashboard />} />
               <Route path="/dashboard/submissions" element={<UserSubmissions />} />
               <Route path="/dashboard/submissions/new" element={<NewSubmission />} />
-              <Route path="/dashboard/checkout" element={<CheckoutPage />} />
+              <Route path="/dashboard/checkout" element={<Navigate to="/dashboard/submissions/new" replace />} />
               <Route path="/dashboard/submissions/:id" element={<SubmissionDetail />} />
               <Route path="/dashboard/profile" element={<ProfilePage />} />
               <Route path="/dashboard/certificates" element={<CertificatesPage />} />
@@ -156,9 +163,10 @@ export default function App() {
               <Route path="/admin/pricing" element={<AdminPricingTiers />} />
             </Route>
 
-            {/* Catch all */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            {/* 404 */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
+          </ErrorBoundary>
           </Suspense>
         </BrowserRouter>
 

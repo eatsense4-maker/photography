@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Calendar } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -16,6 +17,7 @@ const fadeUp = {
 
 export default function EditionsPage() {
   const { t } = useTranslation();
+  usePageTitle('Editions');
   const [editions, setEditions] = useState<Edition[]>([]);
   const [loading, setLoading] = useState(true);
 

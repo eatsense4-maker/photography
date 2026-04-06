@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Grid, Image, DollarSign, Upload, X } from 'lucide-react';
 import { Button, Card, Modal, Input, Textarea, Select } from '@/components/ui';
@@ -9,6 +10,7 @@ import toast from 'react-hot-toast';
 
 export default function AdminCategories() {
   const { t } = useTranslation();
+  usePageTitle('Manage Categories');
   const [categories, setCategories] = useState<Category[]>([]);
   const [editions, setEditions] = useState<{ id: string; title: string; year: number }[]>([]);
   const [selectedEdition, setSelectedEdition] = useState('');

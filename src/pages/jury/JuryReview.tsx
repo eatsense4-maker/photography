@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star, ChevronLeft, ChevronRight, MessageSquare, Image, ZoomIn,
@@ -24,6 +25,7 @@ interface ReviewPhoto {
 
 export default function JuryReview() {
   const { t } = useTranslation();
+  usePageTitle('Review');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -151,6 +153,18 @@ export default function JuryReview() {
       setComment('');
     }
   }, [filterCategory, filterStatus]);
+
+  // Keyboard navigation: ArrowLeft/ArrowRight to switch submissions
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (e.key === 'ArrowLeft') navigateTo(currentIndex - 1);
+      if (e.key === 'ArrowRight') navigateTo(currentIndex + 1);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentIndex, navigateTo]);
 
   const handleSave = async () => {
     if (!user?.id || !current) return;
@@ -296,7 +310,7 @@ export default function JuryReview() {
                         className="w-full h-full object-contain"
                       />
                     </AnimatePresence>
-                    <button onClick={() => setLightbox(true)} className="absolute top-4 right-4 p-2 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors cursor-pointer">
+                    <button onClick={() => setLightbox(true)} aria-label="Zoom in" className="absolute top-4 right-4 p-2 rounded-lg bg-black/50 text-white hover:bg-black/70 transition-colors cursor-pointer">
                       <ZoomIn className="h-5 w-5" />
                     </button>
                     <div className="absolute top-4 left-4">

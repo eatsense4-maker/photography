@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Trophy, Download, Eye, Award, Medal, Star, Globe } from 'lucide-react';
 import { Button, Card, Badge, Select, Modal } from '@/components/ui';
@@ -29,6 +30,7 @@ interface CategoryWinners {
 
 export default function AdminResults() {
   const { t } = useTranslation();
+  usePageTitle('Results');
   const [editions, setEditions] = useState<Edition[]>([]);
   const [selectedEdition, setSelectedEdition] = useState('');
   const [categoryWinners, setCategoryWinners] = useState<CategoryWinners[]>([]);

@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Camera, Award, Globe2, Heart, MapPin } from 'lucide-react';
+import { getPhotoUrl } from '@/lib/r2';
 
 
 const fadeUp = {
@@ -14,47 +16,48 @@ const fadeUp = {
 
 export default function AboutPage() {
   const { t } = useTranslation();
+  usePageTitle('About');
 
   const curators = [
     {
       name: 'Arben Alliaj',
       country: 'Albania',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/arben-alliaj.jpg',
+      photo: getPhotoUrl('curators/arben-alliaj.jpg'),
       role: 'Founder & Director',
       bio: 'Born in Patos, Fier (1975). Founder of the FOKUS Artistic Photography Competition in 2006, transformed into the FOKUS Award Festival. Photographer, designer and founder of "Benart Print".',
     },
     {
       name: 'Burim Myftiu',
       country: 'Kosovo / USA',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/burim-myftiu.jpg',
+      photo: getPhotoUrl('curators/burim-myftiu.jpg'),
       role: 'Curator',
       bio: 'MA in Visual Arts (b. Prizren, 1961). Albanian American lecturer, art curator, visual artist and photographer. Co-founder of DOKUFEST. Appointed EU Ambassador of Culture of Kosovo in 2011.',
     },
     {
       name: 'Saimir Ahmeti',
       country: 'Albania',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/saimir-ahmeti.jpg',
+      photo: getPhotoUrl('curators/saimir-ahmeti.jpg'),
       role: 'Curator & Manager',
       bio: 'Born in Fier (1973). Graduated in Art Management at the Academy of Fine Arts, Tirana. Chairman of the ANTIK Association. Manager of FOKUS AWARD 2007–2021.',
     },
     {
       name: 'Elton Koritari',
       country: 'Albania',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/elton-koritari.jpg',
+      photo: getPhotoUrl('curators/elton-koritari.jpg'),
       role: 'Curator',
       bio: 'Born in Tirana (1977). Co-founder and administrator of EJAlbum. Represented Albania at La Biennale di Venezia (2018) as curator of the pavilion "Space Zero".',
     },
     {
       name: 'Osman Demiri',
       country: 'North Macedonia',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/osman-demiri.jpg',
+      photo: getPhotoUrl('curators/osman-demiri.jpg'),
       role: 'Curator',
       bio: 'Born in Kumanovo (1965). Photographer, documentary filmmaker and lecturer at the University of Tetova. John Kaverdash School of Photography alumnus. Jury member in competitions across the Balkans.',
     },
     {
       name: 'Vlora Demiri',
       country: 'North Macedonia',
-      photo: 'https://pub-c988af810ab64c9185019688ecf11024.r2.dev/curators/vlora-demiri.jpg',
+      photo: getPhotoUrl('curators/vlora-demiri.jpg'),
       role: 'Curator – 13th Edition',
       bio: 'Born in Gostivar (1994). Art historian — Mimar Sinan Fine Arts University, Istanbul. Artistic director of Kult Gallery. Curator of the 13th Edition "The Other".',
     },

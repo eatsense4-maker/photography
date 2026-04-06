@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -18,6 +19,7 @@ type ForgotForm = z.infer<typeof schema>;
 
 export default function ForgotPasswordPage() {
   const { t } = useTranslation();
+  usePageTitle('Forgot Password');
   const { resetPassword } = useAuth();
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);

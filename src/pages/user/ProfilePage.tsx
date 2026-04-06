@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { User, Camera, MapPin, Globe, Save, Upload, CreditCard, Download, CheckCircle, Clock, XCircle, RotateCcw } from 'lucide-react';
 import { Button, Input, Textarea, Card, Badge } from '@/components/ui';
@@ -22,6 +23,7 @@ interface UserPayment {
 
 export default function ProfilePage() {
   const { t } = useTranslation();
+  usePageTitle('Profile');
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);

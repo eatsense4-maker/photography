@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import {
   Plus,
@@ -17,6 +18,7 @@ import toast from 'react-hot-toast';
 
 export default function AdminEditions() {
   const { t } = useTranslation();
+  usePageTitle('Manage Editions');
   const [editions, setEditions] = useState<Edition[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

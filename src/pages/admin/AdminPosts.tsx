@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import {
   Plus, Edit, Trash2, Eye, EyeOff, Star, StarOff,
@@ -30,6 +31,7 @@ function slugify(text: string) {
 }
 
 export default function AdminPosts() {
+  usePageTitle('Posts');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);

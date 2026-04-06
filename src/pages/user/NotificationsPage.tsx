@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Bell, Check, Trash2, CheckCheck } from 'lucide-react';
 import { Button, Card, EmptyState, Badge } from '@/components/ui';
@@ -8,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 
 export default function NotificationsPage() {
   const { t } = useTranslation();
+  usePageTitle('Notifications');
   const { notifications, markAsRead, markAllAsRead, removeNotification } =
     useNotificationStore();
   const [filter, setFilter] = useState<'all' | 'unread'>('all');

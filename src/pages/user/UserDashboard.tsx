@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Image, PlusCircle, Award, Clock, CheckCircle2, Send } from 'lucide-react';
@@ -26,6 +27,7 @@ interface RecentSub {
 
 export default function UserDashboard() {
   const { t } = useTranslation();
+  usePageTitle('Dashboard');
   const { user } = useAuth();
   const [stats, setStats] = useState({ total: 0, submitted: 0, underReview: 0, awards: 0 });
   const [recent, setRecent] = useState<RecentSub[]>([]);

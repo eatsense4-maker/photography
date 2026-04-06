@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import {
   DollarSign,
@@ -26,6 +27,7 @@ interface PaymentRow {
 
 export default function AdminPayments() {
   const { t } = useTranslation();
+  usePageTitle('Payments');
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');

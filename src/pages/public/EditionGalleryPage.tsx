@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Trophy,
@@ -76,6 +77,7 @@ function PlaceBadge({ place }: { place: number }) {
 /* ── component ────────────────────────────────────────────────── */
 export default function EditionGalleryPage() {
   const { t } = useTranslation();
+  usePageTitle('Gallery');
   const { year } = useParams<{ year: string }>();
   const navigate = useNavigate();
   const [data, setData] = useState<GalleryData | null>(null);
@@ -309,13 +311,14 @@ export default function EditionGalleryPage() {
   /* ── render ──────────────────────────────────────────────────── */
   if (loading) {
     return (
-      <div className="bg-surface-950 min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-full border-2 border-surface-700" />
-            <div className="absolute inset-0 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
+      <div className="bg-surface-950 min-h-screen pt-32 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="animate-pulse h-8 w-48 bg-surface-800 rounded" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-surface-800 rounded-xl aspect-[3/4]" />
+            ))}
           </div>
-          <p className="text-sm text-surface-500">{t('gallery.loading')}</p>
         </div>
       </div>
     );

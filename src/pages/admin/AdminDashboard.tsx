@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import {
   Users,
@@ -34,6 +35,7 @@ interface RecentSub {
 
 export default function AdminDashboard() {
   const { t } = useTranslation();
+  usePageTitle('Admin Dashboard');
   const [stats, setStats] = useState<DashStats>({
     totalSubmissions: 0,
     totalUsers: 0,

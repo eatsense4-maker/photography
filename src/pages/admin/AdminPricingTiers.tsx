@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, CreditCard, Package } from 'lucide-react';
 import { Button, Card, Modal, Input, Textarea, Select } from '@/components/ui';
@@ -7,6 +8,7 @@ import type { PricingTier } from '@/types';
 import toast from 'react-hot-toast';
 
 export default function AdminPricingTiers() {
+  usePageTitle('Pricing');
   const [tiers, setTiers] = useState<PricingTier[]>([]);
   const [editions, setEditions] = useState<{ id: string; title: string; year: number }[]>([]);
   const [selectedEdition, setSelectedEdition] = useState('');

@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Image, PlusCircle, Search, ChevronDown, ChevronRight, FolderOpen, Tag } from 'lucide-react';
@@ -45,6 +46,7 @@ interface GroupedEdition {
 
 export default function UserSubmissions() {
   const { t } = useTranslation();
+  usePageTitle('My Submissions');
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<SubRow[]>([]);
   const [loading, setLoading] = useState(true);

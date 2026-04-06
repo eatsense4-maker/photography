@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Calendar, Tag, Facebook, ChevronLeft, ChevronRight, X, Images } from 'lucide-react';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { supabase } from '@/lib/supabase';
 import type { Post } from '@/types';
 
 export default function PostDetailPage() {
   const { slug } = useParams<{ slug: string }>();
+  usePageTitle('News');
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -61,13 +64,12 @@ export default function PostDetailPage() {
       )}
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back link */}
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm text-surface-400 hover:text-primary-400 transition-colors mb-8"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to home
-        </Link>
+        {/* Breadcrumb */}
+        <Breadcrumb items={[
+          { label: 'Home', to: '/' },
+          { label: 'News', to: '/news' },
+          { label: post.title },
+        ]} />
 
         {/* Meta */}
         <motion.div
@@ -221,6 +223,7 @@ export default function PostDetailPage() {
           >
             <button
               onClick={() => setLightboxIndex(null)}
+              aria-label="Close lightbox"
               className="absolute top-4 right-4 p-2 rounded-full bg-surface-800/80 text-surface-300 hover:text-white transition-colors z-10 cursor-pointer"
             >
               <X className="h-6 w-6" />
@@ -233,6 +236,7 @@ export default function PostDetailPage() {
             {lightboxIndex > 0 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+                aria-label="Previous image"
                 className="absolute left-4 p-2 rounded-full bg-surface-800/80 text-surface-300 hover:text-white transition-colors z-10 cursor-pointer"
               >
                 <ChevronLeft className="h-6 w-6" />
@@ -242,6 +246,7 @@ export default function PostDetailPage() {
             {lightboxIndex < post.gallery_images.length - 1 && (
               <button
                 onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+                aria-label="Next image"
                 className="absolute right-4 p-2 rounded-full bg-surface-800/80 text-surface-300 hover:text-white transition-colors z-10 cursor-pointer"
               >
                 <ChevronRight className="h-6 w-6" />

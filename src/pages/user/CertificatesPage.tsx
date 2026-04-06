@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Award, Download, Calendar } from 'lucide-react';
 import { Card, Button } from '@/components/ui';
@@ -16,6 +17,7 @@ interface CertificateRow {
 
 export default function CertificatesPage() {
   const { t } = useTranslation();
+  usePageTitle('Certificates');
   const { user } = useAuth();
   const [certificates, setCertificates] = useState<CertificateRow[]>([]);
   const [loading, setLoading] = useState(true);

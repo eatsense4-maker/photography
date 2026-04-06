@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -38,6 +39,7 @@ function formatDate(d: string | null) {
 }
 
 export default function NewsArchivePage() {
+  usePageTitle('News');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<PostCategory | 'all'>('all');
@@ -129,8 +131,10 @@ export default function NewsArchivePage() {
       <section className="py-10">
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-10">
           {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <div className="animate-spin h-8 w-8 border-2 border-primary-500 border-t-transparent rounded-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="animate-pulse rounded-xl bg-surface-800 h-64" />
+              ))}
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-20">

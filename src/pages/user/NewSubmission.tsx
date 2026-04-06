@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
@@ -38,10 +39,12 @@ interface UploadedPhoto {
 
 export default function NewSubmission() {
   const { t } = useTranslation();
+  usePageTitle('New Submission');
   const navigate = useNavigate();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Edition
   const [editionId, setEditionId] = useState('');
@@ -254,7 +257,9 @@ export default function NewSubmission() {
 
       if (subError) throw subError;
 
+      setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
+        setUploadProgress({ current: i + 1, total: photos.length });
         const photo = photos[i];
         try {
           const { key } = await uploadPhoto(photo.file, (progress) => {
@@ -297,6 +302,7 @@ export default function NewSubmission() {
       toast.error(err.message || 'Failed to submit');
     } finally {
       setLoading(false);
+      setUploadProgress(null);
     }
   };
 
@@ -979,6 +985,20 @@ export default function NewSubmission() {
               </Button>
             </div>
           </div>
+
+          {uploadProgress && (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-surface-300">
+                {t('common.uploading_photos', { current: uploadProgress.current, total: uploadProgress.total })}
+              </p>
+              <div className="h-1.5 w-full bg-surface-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary-500 rounded-full transition-all duration-300"
+                  style={{ width: `${(uploadProgress.current / uploadProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
 
           {(!title.trim() || photos.some(p => !p.title.trim())) && (
             <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">

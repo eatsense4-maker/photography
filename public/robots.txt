@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fokusaward.com/sitemap.xml
+
+# Disallow dashboard/admin areas (SPA routes, but good practice)
+Disallow: /dashboard/
+Disallow: /admin/
+Disallow: /jury/

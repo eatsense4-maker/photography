@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { Trophy, Save, Image } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
@@ -21,6 +22,7 @@ interface RankedSubmission {
 
 export default function JuryRanking() {
   const { t } = useTranslation();
+  usePageTitle('Rankings');
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -274,6 +276,7 @@ export default function JuryRanking() {
                   <button
                     onClick={() => moveItem(index, 'up')}
                     disabled={index === 0}
+                    aria-label="Move up"
                     className="p-1 rounded text-surface-400 hover:text-white hover:bg-surface-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" /></svg>
@@ -281,6 +284,7 @@ export default function JuryRanking() {
                   <button
                     onClick={() => moveItem(index, 'down')}
                     disabled={index === ranked.length - 1}
+                    aria-label="Move down"
                     className="p-1 rounded text-surface-400 hover:text-white hover:bg-surface-700 disabled:opacity-30 cursor-pointer disabled:cursor-not-allowed transition-colors"
                   >
                     <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>

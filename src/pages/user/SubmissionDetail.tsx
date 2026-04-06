@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageTitle } from '@/hooks/usePageTitle';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   Image as ImageIcon,
   Calendar,
   Tag,
@@ -62,6 +63,7 @@ interface SubmissionData {
 
 export default function SubmissionDetail() {
   const { t } = useTranslation();
+  usePageTitle('Submission');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -244,14 +246,12 @@ export default function SubmissionDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Back link */}
-      <Link
-        to={backPath}
-        className="inline-flex items-center gap-1.5 text-sm text-surface-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('user.submissions')}
-      </Link>
+      {/* Breadcrumb */}
+      <Breadcrumb items={[
+        { label: t('nav.dashboard'), to: '/dashboard' },
+        { label: t('user.submissions'), to: backPath },
+        { label: submission.title || 'Submission' },
+      ]} />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
