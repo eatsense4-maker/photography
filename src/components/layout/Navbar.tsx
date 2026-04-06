@@ -11,17 +11,9 @@ export default function Navbar() {
   const { user, isAuthenticated, signOut } = useAuth();
   const { unreadCount } = useNotificationStore();
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUIStore();
-  const [scrolled, setScrolled] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const location = useLocation();
 
-  const isLanding = location.pathname === '/' || location.pathname === '/en' || location.pathname === '/al';
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     closeMobileMenu();
@@ -53,11 +45,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled || !isLanding
-          ? 'glass shadow-lg shadow-black/10'
-          : 'bg-transparent'
-      }`}
+      className="fixed top-0 left-0 right-0 z-50 bg-[#bd3020] shadow-lg shadow-black/20"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
@@ -207,7 +195,7 @@ export default function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden glass border-t border-surface-800 overflow-hidden"
+            className="lg:hidden bg-[#a8291a] border-t border-[#8c2215] overflow-hidden"
           >
             <div className="px-4 py-6 space-y-1">
               {navLinks.map((link) => (

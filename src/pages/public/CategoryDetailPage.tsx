@@ -142,7 +142,7 @@ const JURY_CRITERIA = [
 
 export default function CategoryDetailPage() {
   const { categorySlug } = useParams<{ categorySlug: string }>();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated } = useAuth();
   const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);
@@ -178,96 +178,88 @@ export default function CategoryDetailPage() {
   const conceptParagraphs = lang === 'en' ? CONCEPT_EN : CONCEPT_AL;
 
   return (
-    <div>
-      {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={cat.heroImage} alt={cat.title} className="w-full h-full object-cover opacity-15" />
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-950/95 to-surface-950" />
-        </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <Link to="/apply" className="inline-flex items-center gap-2 text-sm text-surface-400 hover:text-primary-400 transition-colors mb-6">
-            <ArrowLeft className="h-4 w-4" /> {lang === 'en' ? 'All Categories' : 'Të gjitha Kategoritë'}
-          </Link>
+    <div className="pb-24">
+      {/* ── Hero with prominent image ── */}
+      <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
+        <img src={cat.heroImage} alt={lang === 'al' ? cat.titleAl : cat.title} className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-surface-950/30" />
+        <div className="absolute inset-0 flex flex-col justify-end">
+          <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-10">
+            <Link to="/apply" className="inline-flex items-center gap-2 text-sm text-surface-300 hover:text-primary-400 transition-colors mb-4">
+              <ArrowLeft className="h-4 w-4" /> {t('apply.all_categories')}
+            </Link>
 
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className={`inline-block text-xs font-semibold uppercase tracking-[0.3em] ${cat.textColor} mb-3 border ${cat.borderColor} px-4 py-1.5 rounded-full`}
-          >
-            IFFA 17 · 2026
-          </motion.span>
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className={`inline-block text-xs font-semibold uppercase tracking-[0.3em] ${cat.textColor} mb-3 border ${cat.borderColor} px-4 py-1.5 rounded-full`}
+            >
+              IFFA 17 · 2026
+            </motion.span>
 
-          {isTheme ? (
-            <>
+            {isTheme ? (
+              <>
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  className="text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
+                >
+                  FRYMË
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-primary-400">
+                    BREATH
+                  </span>
+                </motion.h1>
+              </>
+            ) : (
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="text-5xl md:text-6xl font-display font-bold text-white leading-none tracking-tight"
+                className="text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
               >
-                FRYMË
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-primary-400">
-                  BREATH
-                </span>
+                {lang === 'al' ? cat.titleAl : cat.title}
               </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-xl text-surface-300 font-display italic max-w-2xl leading-relaxed mt-4"
-              >
-                "the invisible rhythm of being, the conditions of life, the politics of air"
-              </motion.p>
-            </>
-          ) : (
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="text-5xl md:text-6xl font-display font-bold text-white leading-none tracking-tight"
-            >
-              {lang === 'al' ? cat.titleAl : cat.title}
-            </motion.h1>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.45 }}
-            className="mt-6 flex items-center gap-4 flex-wrap text-sm text-surface-400"
-          >
-            {isOpen && (
-              <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                {lang === 'en' ? 'Submissions Open' : 'Aplikimet Hapur'}
-              </span>
             )}
-            <span className="flex items-center gap-2">
-              <Award className={`h-4 w-4 ${cat.textColor}`} />
-              <strong className="text-white">{cat.prize}</strong> {cat.prizeLabel}
-            </span>
-            <span className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-primary-400" />
-              {lang === 'en' ? 'Deadline:' : 'Afati:'} <strong className="text-white">30 June 2026</strong>
-            </span>
-          </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-4 flex items-center gap-4 flex-wrap text-sm text-surface-300"
+            >
+              {isOpen && (
+                <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                  {t('apply.submissions_open')}
+                </span>
+              )}
+              <span className="flex items-center gap-2">
+                <Award className={`h-4 w-4 ${cat.textColor}`} />
+                <strong className="text-white">{cat.prize}</strong> {cat.prizeLabel}
+              </span>
+              <span className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary-400" />
+                {t('apply.deadline')}: <strong className="text-white">30 June 2026</strong>
+              </span>
+            </motion.div>
+          </div>
         </div>
       </section>
 
       {/* ── Description ── */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-display font-bold text-white mb-6">
-            {lang === 'en' ? 'About this Category' : 'Rreth kësaj Kategorie'}
+      <section className="py-14">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-display font-bold text-white mb-5">
+            {t('apply.about_category')}
           </h2>
-          <p className="text-lg text-surface-200 leading-relaxed">
+          <p className="text-base text-surface-200 leading-relaxed">
             {lang === 'al' ? cat.descriptionAl : cat.description}
           </p>
 
           {/* Subcategories */}
           {cat.subcategories && (
-            <div className="mt-8 grid sm:grid-cols-2 gap-4">
+            <div className="mt-6 grid sm:grid-cols-2 gap-4">
               {cat.subcategories.map((sub, i) => (
                 <motion.div
                   key={sub.name}
@@ -289,14 +281,14 @@ export default function CategoryDetailPage() {
           )}
 
           {/* Format & rules summary */}
-          <div className="mt-8 grid sm:grid-cols-2 gap-4">
+          <div className="mt-6 grid sm:grid-cols-2 gap-4">
             <div className="p-5 rounded-xl bg-surface-900 border border-surface-800">
-              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-2">Format</h3>
+              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-2">{t('apply.format')}</h3>
               <p className="text-sm text-surface-300">{cat.format}</p>
             </div>
             <div className="p-5 rounded-xl bg-surface-900 border border-surface-800">
               <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-2">
-                {lang === 'en' ? 'Technical Requirements' : 'Kërkesat Teknike'}
+                {t('apply.tech_requirements')}
               </h3>
               <p className="text-sm text-surface-300">{cat.photoRules}</p>
             </div>
@@ -308,11 +300,11 @@ export default function CategoryDetailPage() {
       {isTheme && (
         <>
           {/* Opening quote */}
-          <section className="py-12">
+          <section className="py-10">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <blockquote className="relative">
                 <span className="absolute -top-6 left-0 text-7xl text-primary-400/20 font-display leading-none select-none">"</span>
-                <p className="text-2xl md:text-3xl font-display italic text-surface-100 leading-relaxed px-8">
+                <p className="text-xl md:text-2xl font-display italic text-surface-100 leading-relaxed px-8">
                   {lang === 'en'
                     ? 'BREATH is the most ordinary miracle: constant, unconscious, and taken for granted until the loss of a single breath changes everything.'
                     : 'FRYMË / BREATH është mrekullia më e zakonshme: e pandërprerë, e pavetëdijshme dhe e marrë si e mirëqenë, derisa humbja e një fryme të vetme ndryshon gjithçka.'}
@@ -323,17 +315,17 @@ export default function CategoryDetailPage() {
           </section>
 
           {/* Essay */}
-          <section className="py-16">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-2xl font-display font-bold text-white mb-10">{lang === 'en' ? 'The Concept' : 'Koncepti'}</h2>
-              <div className="space-y-6">
+          <section className="py-14">
+            <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+              <h2 className="text-2xl font-display font-bold text-white mb-8">{t('apply.the_concept')}</h2>
+              <div className="space-y-5">
                 {conceptParagraphs.map((paragraph, i) => (
                   <motion.p
                     key={`${lang}-${i}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08, duration: 0.5 }}
-                    className="text-lg text-surface-200 leading-relaxed"
+                    className="text-base text-surface-200 leading-relaxed"
                   >
                     {paragraph}
                   </motion.p>
@@ -343,12 +335,12 @@ export default function CategoryDetailPage() {
           </section>
 
           {/* Five entry doors */}
-          <section className="py-20 bg-surface-900/40">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="text-center mb-14">
-                <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{lang === 'en' ? 'Thematic directions' : 'Drejtimet tematike'}</span>
+          <section className="py-16 bg-surface-900/40">
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center mb-12">
+                <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{t('apply.thematic_directions')}</span>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-3">
-                  {lang === 'en' ? 'Five Doors into the Theme' : 'Pesë Dyer në Temë'}
+                  {t('apply.five_doors')}
                 </h2>
               </div>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -381,53 +373,53 @@ export default function CategoryDetailPage() {
       )}
 
       {/* ── Submission Guidelines ── */}
-      <section className="py-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{lang === 'en' ? 'How to apply' : 'Si të aplikoni'}</span>
-            <h2 className="text-3xl font-display font-bold text-white mt-3">{lang === 'en' ? 'Submission Guidelines' : 'Udhëzimet e Aplikimit'}</h2>
+      <section className="py-16">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10">
+            <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{t('apply.how_to_apply')}</span>
+            <h2 className="text-3xl font-display font-bold text-white mt-3">{t('apply.submission_guidelines')}</h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-6 rounded-2xl bg-surface-900 border border-surface-800">
-              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-4">{lang === 'en' ? 'Who can apply' : 'Kush mund të aplikojë'}</h3>
+          <div className="grid md:grid-cols-2 gap-5">
+            <div className="p-5 rounded-2xl bg-surface-900 border border-surface-800">
+              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-3">{t('apply.who_can_apply')}</h3>
               <ul className="space-y-2 text-surface-300 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{lang === 'en' ? 'Professional and emerging photographers (18+)' : 'Fotografë profesionistë dhe në zhvillim (18+)'}</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{lang === 'en' ? 'Projects may be previously produced or new' : 'Projektet mund të jenë të prodhuara më parë ose të reja'}</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{t('apply.pro_photographers')}</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{t('apply.previously_produced')}</li>
               </ul>
             </div>
-            <div className="p-6 rounded-2xl bg-surface-900 border border-surface-800">
-              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-4">{lang === 'en' ? 'Copyright & Usage' : 'E drejta e autorit'}</h3>
+            <div className="p-5 rounded-2xl bg-surface-900 border border-surface-800">
+              <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-3">{t('apply.copyright_usage')}</h3>
               <ul className="space-y-2 text-surface-300 text-sm">
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{lang === 'en' ? 'Author retains full rights to their work' : 'Autori ruan të drejtat e plota mbi punën e tij'}</li>
-                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{lang === 'en' ? 'Non-exclusive use for exhibition/communication only' : 'Përdorim jo-ekskluziv vetëm për ekspozitë/komunikim'}</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{t('apply.author_retains')}</li>
+                <li className="flex gap-2"><Check className="h-4 w-4 text-emerald-400 mt-0.5 flex-shrink-0" />{t('apply.non_exclusive')}</li>
               </ul>
             </div>
-            <div className="p-6 rounded-2xl bg-surface-900 border border-surface-800">
+            <div className="p-5 rounded-2xl bg-surface-900 border border-surface-800">
               <h3 className="text-sm font-semibold text-emerald-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Check className="h-4 w-4" /> {lang === 'en' ? 'Accepted' : 'E pranueshme'}
+                <Check className="h-4 w-4" /> {t('apply.accepted')}
               </h3>
               <ul className="space-y-1.5 text-sm text-surface-300">
-                {['Cropping', 'Contrast and exposure changes', 'Color correction', 'Desaturation', 'Minimal retouching'].map((item) => (
-                  <li key={item} className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" /> {item}
+                {['accepted_cropping', 'accepted_contrast', 'accepted_color', 'accepted_desat', 'accepted_retouch'].map((key) => (
+                  <li key={key} className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" /> {t(`apply.${key}`)}
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="p-6 rounded-2xl bg-surface-900 border border-surface-800">
+            <div className="p-5 rounded-2xl bg-surface-900 border border-surface-800">
               <h3 className="text-sm font-semibold text-red-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <XIcon className="h-4 w-4" /> {lang === 'en' ? 'Not accepted' : 'E papranueshme'}
+                <XIcon className="h-4 w-4" /> {t('apply.not_accepted')}
               </h3>
               <ul className="space-y-1.5 text-sm text-surface-300">
-                {['Importing elements from other photos', 'Cloning and deleting parts', 'AI-generated images'].map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <XIcon className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {item}
+                {['rejected_import', 'rejected_clone', 'rejected_ai'].map((key) => (
+                  <li key={key} className="flex items-start gap-2">
+                    <XIcon className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {t(`apply.${key}`)}
                   </li>
                 ))}
               </ul>
               <div className="mt-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-red-300">AI-generated images are strictly excluded.</p>
+                <p className="text-xs text-red-300">{t('apply.ai_excluded')}</p>
               </div>
             </div>
           </div>
@@ -436,9 +428,9 @@ export default function CategoryDetailPage() {
 
       {/* ── Jury Criteria (theme only) ── */}
       {isTheme && (
-        <section className="py-20 bg-surface-900/40">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-display font-bold text-white mb-8">{lang === 'en' ? 'Jury Criteria' : 'Kriteret e Jurisë'}</h2>
+        <section className="py-16 bg-surface-900/40">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-2xl font-display font-bold text-white mb-6">{t('apply.jury_criteria')}</h2>
             <div className="space-y-4">
               {JURY_CRITERIA.map((c, i) => (
                 <div key={i} className="flex gap-3">
@@ -456,27 +448,19 @@ export default function CategoryDetailPage() {
         </section>
       )}
 
-      {/* ── CTA ── */}
+      {/* ── Floating Apply Button ── */}
       {isOpen && (
-        <section className="py-16">
-          <div className="max-w-2xl mx-auto px-4 text-center">
-            <h2 className="text-3xl font-display font-bold text-white mb-4">
-              {lang === 'en' ? 'Ready to Submit?' : 'Gati për të Dërguar?'}
-            </h2>
-            <p className="text-surface-400 mb-6">
-              {lang === 'en'
-                ? 'Create your account and submit your work before the deadline.'
-                : 'Krijoni llogarinë tuaj dhe dërgoni punën para afatit.'}
-            </p>
-            <Link to={isAuthenticated ? '/dashboard/submissions/new' : '/register'}>
-              <Button variant="gold" size="lg" icon={<ArrowRight className="h-5 w-5" />}>
+        <div className="fixed bottom-0 left-0 right-0 z-40 pointer-events-none">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 pb-5">
+            <Link to={isAuthenticated ? '/dashboard/submissions/new' : '/register'} className="pointer-events-auto block">
+              <Button variant="gold" size="lg" className="w-full shadow-lg shadow-gold-500/20" icon={<ArrowRight className="h-5 w-5" />}>
                 {isAuthenticated
-                  ? (lang === 'en' ? 'Submit Your Work' : 'Dërgo Punën Tënde')
-                  : (lang === 'en' ? 'Register & Submit' : 'Regjistrohu & Dërgo')}
+                  ? t('apply.submit_your_work')
+                  : t('apply.register_submit')}
               </Button>
             </Link>
           </div>
-        </section>
+        </div>
       )}
     </div>
   );

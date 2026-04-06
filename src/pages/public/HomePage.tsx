@@ -22,7 +22,7 @@ import {
 import { Button } from '@/components/ui';
 import CompetitionModal from '@/components/CompetitionModal';
 import { supabase } from '@/lib/supabase';
-import type { Edition, Partner, Post } from '@/types';
+import type { Edition, Partner, Post, Category } from '@/types';
 
 /* ---------- static data ---------- */
 const CATEGORY_COLORS: Record<string, string> = {
@@ -36,6 +36,20 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   event: <Calendar className="h-3 w-3" />,
   announcement: <Megaphone className="h-3 w-3" />,
 };
+
+const CAT_COLORS = [
+  { color: 'text-gold-400', border: 'hover:border-gold-500/40' },
+  { color: 'text-blue-400', border: 'hover:border-blue-500/40' },
+  { color: 'text-emerald-400', border: 'hover:border-emerald-500/40' },
+  { color: 'text-sky-400', border: 'hover:border-sky-500/40' },
+  { color: 'text-violet-400', border: 'hover:border-violet-500/40' },
+  { color: 'text-rose-400', border: 'hover:border-rose-500/40' },
+];
+
+// slug derived from category name if not stored in DB
+function derivedSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -66,6 +80,7 @@ export default function HomePage() {
   const { t } = useTranslation();
 
   const [currentEdition, setCurrentEdition] = useState<Edition | null>(null);
+  const [homeCategories, setHomeCategories] = useState<Category[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const [sliderPosts, setSliderPosts] = useState<Post[]>([]);
@@ -107,6 +122,12 @@ export default function HomePage() {
       .limit(1)
       .single()
       .then(({ data }) => { if (data) setCurrentEdition(data); });
+
+    supabase
+      .from('categories')
+      .select('*')
+      .order('sort_order')
+      .then(({ data }) => { if (data) setHomeCategories(data); });
 
     supabase
       .from('partners')
@@ -158,23 +179,8 @@ export default function HomePage() {
   // Split posts into groups — use ALL posts for category sections (not just grid)
   const events = allPosts.filter(p => p.category === 'event');
   const news = allPosts.filter(p => p.category === 'news');
-  const announcements = allPosts.filter(p => p.category === 'announcement');
-
-  // Bento grid: pick one from each category for diversity
-  const bentoPosts = (() => {
-    const picks: Post[] = [];
-    const pools = [announcements, news, events];
-    for (const pool of pools) {
-      const next = pool.find(p => !picks.some(pp => pp.id === p.id));
-      if (next) picks.push(next);
-    }
-    // Fill remaining slots from allPosts if needed
-    for (const p of allPosts) {
-      if (picks.length >= 3) break;
-      if (!picks.some(pp => pp.id === p.id)) picks.push(p);
-    }
-    return picks;
-  })();
+  // announcements kept for potential future use
+  // const announcements = ...
 
   const stats = [
     { icon: <Camera className="h-5 w-5" />, value: '17', label: 'Editions' },
@@ -207,6 +213,8 @@ export default function HomePage() {
                   src={currentSlide.cover_image_url}
                   alt={currentSlide.title}
                   className="w-full h-full object-cover"
+                  fetchPriority="high"
+                  sizes="100vw"
                 />
               ) : (
                 <div className="w-full h-full bg-surface-900 flex items-center justify-center">
@@ -239,12 +247,12 @@ export default function HomePage() {
                     )}
                     {currentSlide?.pinned && (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-gold-400">
-                        <Pin className="h-3 w-3" /> Pinned
+                        <Pin className="h-3 w-3" /> {t('home.pinned')}
                       </span>
                     )}
                     {currentSlide?.featured && !currentSlide?.pinned && (
                       <span className="flex items-center gap-1 text-[11px] font-semibold text-primary-400">
-                        <Sparkles className="h-3 w-3" /> Featured
+                        <Sparkles className="h-3 w-3" /> {t('home.featured')}
                       </span>
                     )}
                     {currentSlide?.published_at && (
@@ -265,7 +273,7 @@ export default function HomePage() {
                     to={`/news/${currentSlide?.slug}`}
                     className="inline-flex items-center gap-2 mt-5 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
                   >
-                    Read More <ArrowRight className="h-4 w-4" />
+                    {t('home.read_more')} <ArrowRight className="h-4 w-4" />
                   </Link>
                 </motion.div>
               </AnimatePresence>
@@ -346,42 +354,47 @@ export default function HomePage() {
       </section>
 
       {/* ===== COMPETITION CATEGORIES — shown when open ===== */}
-      {currentEdition?.status === 'open' && (
+      {currentEdition?.status === 'open' && homeCategories.length > 0 && (
         <section className="py-10 sm:py-14 border-b border-surface-800">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 block mb-1">IFFA 17 · Open Call</span>
-                <h2 className="text-xl font-display font-bold text-white">Competition Categories</h2>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 block mb-1">{currentEdition.title} · {t('home.open_call')}</span>
+                <h2 className="text-xl font-display font-bold text-white">{t('home.categories')}</h2>
               </div>
               <Link to="/apply" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
-                View All <ArrowRight className="h-3 w-3" />
+                {t('home.view_all')} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {[
-                { slug: 'theme', title: 'Theme — BREATH', prize: '€1,000', img: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=400&h=300&fit=crop', color: 'text-gold-400', border: 'hover:border-gold-500/40' },
-                { slug: 'press-news', title: 'Press & News', prize: '€1,000', img: 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=400&h=300&fit=crop', color: 'text-blue-400', border: 'hover:border-blue-500/40' },
-                { slug: 'life', title: 'Life', prize: '2 × €500', img: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=400&h=300&fit=crop', color: 'text-emerald-400', border: 'hover:border-emerald-500/40' },
-                { slug: 'land', title: 'Land', prize: '2 × €500', img: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=400&h=300&fit=crop', color: 'text-sky-400', border: 'hover:border-sky-500/40' },
-              ].map((cat, i) => (
-                <motion.div
-                  key={cat.slug}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.08 }}
-                >
-                  <Link to={`/apply/${cat.slug}`} className={`group block relative rounded-xl overflow-hidden h-44 border border-surface-800 ${cat.border} transition-all`}>
-                    <img src={cat.img} alt={cat.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-3">
-                      <p className={`text-xs font-bold ${cat.color}`}>{cat.prize}</p>
-                      <h3 className="text-sm font-semibold text-white leading-tight">{cat.title}</h3>
-                    </div>
-                  </Link>
-                </motion.div>
-              ))}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {homeCategories.slice(0, 6).map((cat, i) => {
+                const style = CAT_COLORS[i % CAT_COLORS.length];
+                const slug = derivedSlug(cat.name);
+                return (
+                  <motion.div
+                    key={cat.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                  >
+                    <Link to={`/apply/${slug}`} className={`group block relative rounded-xl overflow-hidden h-44 border border-surface-800 ${style.border} transition-all`}>
+                      {cat.image_url ? (
+                        <img src={cat.image_url} alt={cat.name}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          loading="lazy" sizes="(max-width: 1024px) 50vw, 33vw" />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-surface-800 to-surface-900" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-transparent" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        {cat.price > 0 && <p className={`text-xs font-bold ${style.color}`}>€{cat.price.toLocaleString()}</p>}
+                        <h3 className="text-sm font-semibold text-white leading-tight">{cat.name}</h3>
+                      </div>
+                    </Link>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>
@@ -391,154 +404,13 @@ export default function HomePage() {
       <section className="py-10 sm:py-14">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
 
-          {/* ── Row 1: Full-width accent banner (Theme CTA) + Category strip ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-10">
-            {/* Theme banner — spans 3 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-3 relative rounded-2xl overflow-hidden bg-gradient-to-br from-primary-950 via-surface-900 to-surface-950 border border-surface-800"
-            >
-              <div
-                className="absolute inset-0 bg-cover bg-center opacity-15"
-                style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1513002749550-c59d786b8e6c?w=800&h=400&fit=crop)' }}
-              />
-              <div className="relative p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-5">
-                <div className="flex-1">
-                  <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 mb-2 block">2026 Theme</span>
-                  <h3 className="text-4xl font-display font-bold text-white leading-none">FRYMË</h3>
-                  <p className="text-gold-400 font-display italic text-xl mt-1">BREATH</p>
-                  <p className="text-sm text-surface-300 leading-relaxed mt-3 max-w-md">
-                    Breath is the most ordinary miracle — constant, unconscious, taken for granted until it changes everything.
-                  </p>
-                  {currentEdition?.status === 'open' && (
-                    <div className="flex items-center gap-2 mt-3">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                      <span className="text-xs text-emerald-400 font-semibold">Submissions Open</span>
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2 shrink-0 md:w-44">
-                  <div className="flex items-center gap-2 text-xs text-surface-500 mb-1">
-                    <Calendar className="h-3.5 w-3.5" />
-                    Deadline: <strong className="text-white">30 June 2026</strong>
-                  </div>
-                  <Link to="/apply/theme">
-                    <Button variant="secondary" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
-                      Explore Theme
-                    </Button>
-                  </Link>
-                  <Button variant="gold" size="sm" className="w-full" onClick={() => setShowCompetitionModal(true)}>Submit Your Work</Button>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Announcements column — spans 2 */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              className="lg:col-span-2 rounded-2xl border border-surface-800 bg-surface-900 p-5"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Megaphone className="h-4 w-4 text-amber-400" />
-                <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider">Announcements</h3>
-              </div>
-              <div className="space-y-4">
-                {announcements.length > 0 ? announcements.slice(0, 3).map(post => (
-                  <Link key={post.id} to={`/news/${post.slug}`} className="group block border-l-2 border-amber-500/30 pl-3 hover:border-amber-400 transition-colors">
-                    <p className="text-sm text-white font-medium group-hover:text-amber-300 transition-colors leading-snug line-clamp-2">
-                      {post.title}
-                    </p>
-                    <span className="text-[10px] text-surface-500 mt-0.5 block">{formatDate(post.published_at)}</span>
-                  </Link>
-                )) : (
-                  <p className="text-sm text-surface-600">No announcements yet</p>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
-          {/* ── Row 2: Asymmetric 3-column bento grid ── */}
-          {bentoPosts.length > 0 && (
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={stagger}
-              className="grid grid-cols-1 md:grid-cols-12 gap-4 mb-10"
-            >
-              {/* Large card — spans 7 cols */}
-              {bentoPosts[0] && (
-                <motion.div custom={0} variants={fadeUp} className="md:col-span-7">
-                  <Link to={`/news/${bentoPosts[0].slug}`} className="group block h-full">
-                    <div className="relative rounded-2xl overflow-hidden h-full min-h-[320px] md:min-h-[400px] bg-surface-800">
-                      {bentoPosts[0].cover_image_url ? (
-                        <img src={bentoPosts[0].cover_image_url} alt={bentoPosts[0].title}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" loading="lazy" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center"><Newspaper className="h-12 w-12 text-surface-600" /></div>
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-surface-950/90 via-surface-950/40 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-5 md:p-7">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${CATEGORY_COLORS[bentoPosts[0].category]}`}>
-                            {CATEGORY_ICONS[bentoPosts[0].category]} {bentoPosts[0].category}
-                          </span>
-                          <span className="text-xs text-surface-400">{formatDate(bentoPosts[0].published_at)}</span>
-                        </div>
-                        <h2 className="text-xl md:text-2xl font-display font-bold text-white group-hover:text-primary-300 transition-colors leading-tight line-clamp-2">
-                          {bentoPosts[0].title}
-                        </h2>
-                        {bentoPosts[0].excerpt && (
-                          <p className="text-surface-300 text-sm mt-2 line-clamp-2 hidden md:block">{bentoPosts[0].excerpt}</p>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              )}
-
-              {/* Stack of 2 medium cards — spans 5 cols */}
-              <div className="md:col-span-5 flex flex-col gap-4">
-                {bentoPosts.slice(1, 3).map((post, i) => (
-                  <motion.div key={post.id} custom={i + 1} variants={fadeUp} className="flex-1">
-                    <Link to={`/news/${post.slug}`} className="group block h-full">
-                      <div className="relative rounded-xl overflow-hidden h-full min-h-[160px] bg-surface-800">
-                        {post.cover_image_url ? (
-                          <img src={post.cover_image_url} alt={post.title}
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center"><Newspaper className="h-8 w-8 text-surface-600" /></div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-surface-950/90 via-surface-950/30 to-transparent" />
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${CATEGORY_COLORS[post.category]}`}>
-                              {CATEGORY_ICONS[post.category]} {post.category}
-                            </span>
-                            <span className="text-[10px] text-surface-400">{formatDate(post.published_at)}</span>
-                          </div>
-                          <h3 className="text-base font-semibold text-white group-hover:text-primary-300 transition-colors leading-snug line-clamp-2">
-                            {post.title}
-                          </h3>
-                        </div>
-                      </div>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* ── Row 3: Horizontal scroll card row (events) ── */}
+          {/* ── Events ── */}
           {events.length > 0 && (
             <div className="mb-10">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400" />
-                  <h2 className="text-lg font-display font-bold text-white">Upcoming Events</h2>
+                  <h2 className="text-lg font-display font-bold text-white">{t('home.upcoming_events')}</h2>
                 </div>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 snap-x snap-mandatory scrollbar-hide">
@@ -556,7 +428,8 @@ export default function HomePage() {
                         <div className="aspect-[16/9] bg-surface-800 overflow-hidden relative">
                           {post.cover_image_url ? (
                             <img src={post.cover_image_url} alt={post.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy" decoding="async" sizes="(max-width: 640px) 288px, 320px" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center"><Calendar className="h-8 w-8 text-surface-600" /></div>
                           )}
@@ -588,7 +461,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Newspaper className="h-4 w-4 text-blue-400" />
-                  <h2 className="text-lg font-display font-bold text-white">Latest News</h2>
+                  <h2 className="text-lg font-display font-bold text-white">{t('home.latest_news')}</h2>
                 </div>
                 <Link to="/news" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
                   View All <ArrowRight className="h-3 w-3" />
@@ -610,7 +483,8 @@ export default function HomePage() {
                         <div className="shrink-0 w-28 h-20 sm:w-36 sm:h-24 rounded-lg overflow-hidden bg-surface-800 relative">
                           {post.cover_image_url ? (
                             <img src={post.cover_image_url} alt={post.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              loading="lazy" decoding="async" sizes="(max-width: 640px) 112px, 144px" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center"><Newspaper className="h-6 w-6 text-surface-600" /></div>
                           )}
@@ -642,7 +516,7 @@ export default function HomePage() {
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-surface-600">No news articles yet</p>
+                <p className="text-sm text-surface-600">{t('home.no_news')}</p>
               )}
             </div>
 

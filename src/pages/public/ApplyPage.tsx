@@ -84,7 +84,7 @@ const CATEGORIES = [
 ];
 
 export default function ApplyPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { isAuthenticated } = useAuth();
   const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);
@@ -141,7 +141,7 @@ export default function ApplyPage() {
             transition={{ delay: 0.15 }}
             className="text-5xl md:text-6xl font-display font-bold text-white leading-none tracking-tight"
           >
-            {lang === 'en' ? 'Open Call' : 'Thirrje e Hapur'}
+            {t('apply.open_call')}
           </motion.h1>
 
           <motion.p
@@ -150,9 +150,7 @@ export default function ApplyPage() {
             transition={{ delay: 0.3 }}
             className="text-lg text-surface-300 mt-4 max-w-2xl mx-auto leading-relaxed"
           >
-            {lang === 'en'
-              ? 'Four categories, €4,000 in prizes, one shared vision. Choose your category and submit your work.'
-              : 'Katër kategori, €4,000 çmime, një vizion i përbashkët. Zgjidhni kategorinë tuaj dhe dërgoni punën tuaj.'}
+            {t('apply.open_call_desc')}
           </motion.p>
 
           <motion.div
@@ -164,12 +162,12 @@ export default function ApplyPage() {
             {isOpen && (
               <span className="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
                 <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                {lang === 'en' ? 'Submissions Open' : 'Aplikimet Hapur'}
+                {t('apply.submissions_open')}
               </span>
             )}
             <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary-400" />
-              {lang === 'en' ? 'Deadline:' : 'Afati:'} <strong className="text-white">30 June 2026</strong>
+              {t('apply.deadline')}: <strong className="text-white">30 June 2026</strong>
             </span>
           </motion.div>
         </div>
@@ -220,7 +218,7 @@ export default function ApplyPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-surface-500">{cat.format}</span>
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-400 group-hover:text-primary-300 transition-colors">
-                        {lang === 'en' ? 'View Details' : 'Shiko Detajet'} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                        {t('apply.view_details')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </span>
                     </div>
                   </div>
@@ -242,7 +240,7 @@ export default function ApplyPage() {
           >
             <Award className="h-8 w-8 text-gold-400 mx-auto mb-3" />
             <h2 className="text-3xl font-display font-bold text-white">
-              {lang === 'en' ? 'Total Prize Pool' : 'Fondi Total i Çmimeve'}
+              {t('apply.prize_pool')}
             </h2>
             <p className="text-5xl font-bold text-gold-400 mt-3">€4,000</p>
             <p className="text-sm text-surface-400 mt-2">
@@ -283,8 +281,8 @@ export default function ApplyPage() {
               <Link to={isAuthenticated ? '/dashboard/submissions/new' : '/register'}>
                 <Button variant="gold" size="lg" icon={<ArrowRight className="h-5 w-5" />}>
                   {isAuthenticated
-                    ? (lang === 'en' ? 'Submit Your Work' : 'Dërgo Punën Tënde')
-                    : (lang === 'en' ? 'Register & Submit' : 'Regjistrohu & Dërgo')}
+                    ? t('apply.submit_your_work')
+                    : t('apply.register_submit')}
                 </Button>
               </Link>
               <p className="text-xs text-surface-500 mt-3">

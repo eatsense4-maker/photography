@@ -43,7 +43,55 @@
       "button": "Fillo Dorëzimin"
     },
     "deadline": "Afati i Dorëzimit",
-    "days_left": "ditë të mbetura"
+    "days_left": "ditë të mbetura",
+    "pinned": "Fijuar",
+    "featured": "I veçantë",
+    "read_more": "Lexo Më Shumë",
+    "upcoming_events": "Ngjarjet e Ardhshme",
+    "latest_news": "Lajmet e Fundit",
+    "no_news": "Nuk ka lajme ende",
+    "open_call": "Thirrje e Hapur",
+    "view_all": "Shiko të Gjitha"
+  },
+  "apply": {
+    "all_categories": "Të gjitha Kategoritë",
+    "submissions_open": "Aplikimet Hapur",
+    "deadline": "Afati",
+    "about_category": "Rreth kësaj Kategorie",
+    "format": "Formati",
+    "tech_requirements": "Kërkesat Teknike",
+    "the_concept": "Koncepti",
+    "thematic_directions": "Drejtimet tematike",
+    "five_doors": "Pesë Dyer në Temë",
+    "how_to_apply": "Si të aplikoni",
+    "submission_guidelines": "Udhëzimet e Aplikimit",
+    "who_can_apply": "Kush mund të aplikojë",
+    "pro_photographers": "Fotografë profesionistë dhe në zhvillim (18+)",
+    "previously_produced": "Projektet mund të jenë të prodhuara më parë ose të reja",
+    "copyright_usage": "E drejta e autorit",
+    "author_retains": "Autori ruan të drejtat e plota mbi punën e tij",
+    "non_exclusive": "Përdorim jo-ekskluziv vetëm për ekspozitë/komunikim",
+    "accepted": "E pranueshme",
+    "not_accepted": "E papranueshme",
+    "accepted_cropping": "Prerja",
+    "accepted_contrast": "Ndryshime kontrasti dhe ekspozimi",
+    "accepted_color": "Korrigjim ngjyre",
+    "accepted_desat": "Deaturim",
+    "accepted_retouch": "Retushim minimal",
+    "rejected_import": "Importimi i elementeve nga foto të tjera",
+    "rejected_clone": "Klonimi dhe fshirja e pjesëve",
+    "rejected_ai": "Imazhe të gjeneruara nga IA",
+    "ai_excluded": "Imazhet e gjeneruara nga IA janë të përjashtuara.",
+    "jury_criteria": "Kriteret e Jurisë",
+    "ready_submit": "Gati për të Dërguar?",
+    "create_account_submit": "Krijoni llogarinë tuaj dhe dërgoni punën para afatit.",
+    "submit_your_work": "Dërgo Punën Tënde",
+    "register_submit": "Regjistrohu & Dërgo",
+    "apply_now": "Apliko Tani",
+    "open_call": "Thirrje e Hapur",
+    "open_call_desc": "Katër kategori, €4,000 çmime, një vizion i përbashkët. Zgjidhni kategorinë tuaj dhe dërgoni punën tuaj.",
+    "view_details": "Shiko Detajet",
+    "prize_pool": "Fondi i Çmimeve"
   },
   "about": {
     "title": "Rreth FOKUS Award",
@@ -112,7 +160,12 @@
     "reset_button": "Dërgo Lidhjen e Rivendosjes",
     "reset_success": "Kontrolloni emailin tuaj për lidhjen e rivendosjes së fjalëkalimit",
     "or_continue": "Ose vazhdoni me",
-    "google": "Google"
+    "google": "Google",
+    "welcome_back_toast": "Mirë se u kthyet!",
+    "login_failed_toast": "Hyrja dështoi",
+    "google_failed_toast": "Hyrja me Google dështoi",
+    "registered_toast": "Llogaria u krijua! Kontrolloni emailin tuaj për konfirmim.",
+    "registration_failed_toast": "Regjistrimi dështoi"
   },
   "user": {
     "dashboard": "Paneli Im",
@@ -128,14 +181,19 @@
       "shortlisted": "Listë e Ngushtë",
       "finalist": "Finalist",
       "winner": "Fitues",
-      "rejected": "Refuzuar"
+      "rejected": "Refuzuar",
+      "accepted": "Pranuar",
+      "disqualified": "Diskualifikuar"
     },
     "payment_status": {
       "not_required": "Falas",
       "pending": "Pagesa në Pritje",
       "paid": "Paguar",
-      "refunded": "Rimbursuar"
-    }
+      "refunded": "Rimbursuar",
+      "failed": "Dështoi"
+    },
+    "manage_entries": "Menaxhoni hyrjet tuaja në garë",
+    "submit_to_participate": "Dorëzoni fotot tuaja për të marrë pjesë në garë."
   },
   "submission": {
     "select_edition": "Zgjidhni Edicionin",
@@ -154,7 +212,14 @@
     "confirm_submit": "Jeni i sigurt që doni të dorëzoni? Nuk do të mund të redaktoni pas dorëzimit.",
     "submitted_success": "Dorëzimi juaj u pranua!",
     "upload_progress": "Duke ngarkuar... {{percent}}%",
-    "remove_photo": "Hiq"
+    "remove_photo": "Hiq",
+    "step_categories": "Zgjidhni Kategoritë",
+    "step_payment": "Pagesa",
+    "step_upload": "Ngarko Fotot",
+    "step_review": "Kontrollo & Dorëzo",
+    "paid_badge": "Me Pagesë",
+    "free_badge": "Falas",
+    "follow_steps": "Ndiqni hapat më poshtë për të dorëzuar fotot"
   },
   "payment": {
     "title": "Përfundo Pagesën",
@@ -183,7 +248,21 @@
     "unscored": "Pa Vlerësuar",
     "all": "Të gjitha",
     "no_submissions": "Nuk ka dorëzime për shqyrtim.",
-    "comparison_view": "Krahaso Krah për Krah"
+    "comparison_view": "Krahaso Krah për Krah",
+    "review": "Vlerëso Fotot",
+    "no_approved_title": "Nuk ka foto të aprovuara për vlerësim",
+    "no_approved_desc": "Kontrolloni pasi admini aprovojë fotot në kategoritë tuaja.",
+    "all_done": "Të gjitha janë vlerësuar!",
+    "no_matching": "Nuk ka foto që përputhen me këtë filtër.",
+    "score_locked": "Nota e bllokuar — nuk lejohen ndryshime",
+    "score_final": "Nota është finale dhe nuk mund të ndryshohet",
+    "your_score_label": "Nota Juaj",
+    "comment_label": "Koment",
+    "comment_optional": "(opsionale)",
+    "all_categories": "Të gjitha kategoritë",
+    "score_range_hint": "Vlerësoni çdo foto nga 50 në 100",
+    "submit_score": "Dorëzo Notën",
+    "progress": "Progresi"
   },
   "admin": {
     "dashboard": "Paneli i Administratorit",
@@ -250,6 +329,7 @@
     "follow_us": "Na Ndiqni",
     "rights": "Të gjitha të drejtat e rezervuara.",
     "privacy": "Politika e Privatësisë",
-    "terms": "Kushtet & Rregullat"
+    "terms": "Kushtet & Rregullat",
+    "location": "Tiranë, Shqipëri"
   }
 }

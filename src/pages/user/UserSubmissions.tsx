@@ -9,20 +9,20 @@ import { useAuth } from '@/hooks/useAuth';
 import { getPhotoUrl } from '@/lib/r2';
 import type { SubmissionStatus, PaymentStatus } from '@/types';
 
-const statusBadge: Record<SubmissionStatus, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gold' }> = {
-  draft: { label: 'Draft', variant: 'default' },
-  submitted: { label: 'Submitted', variant: 'info' },
-  under_review: { label: 'Under Review', variant: 'warning' },
-  accepted: { label: 'Accepted', variant: 'success' },
-  rejected: { label: 'Rejected', variant: 'danger' },
-  disqualified: { label: 'Disqualified', variant: 'danger' },
+const statusBadge: Record<SubmissionStatus, { labelKey: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gold' }> = {
+  draft: { labelKey: 'user.submission_status.draft', variant: 'default' },
+  submitted: { labelKey: 'user.submission_status.submitted', variant: 'info' },
+  under_review: { labelKey: 'user.submission_status.under_review', variant: 'warning' },
+  accepted: { labelKey: 'user.submission_status.accepted', variant: 'success' },
+  rejected: { labelKey: 'user.submission_status.rejected', variant: 'danger' },
+  disqualified: { labelKey: 'user.submission_status.disqualified', variant: 'danger' },
 };
 
-const paymentBadge: Record<PaymentStatus, { label: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gold' }> = {
-  pending: { label: 'Payment Pending', variant: 'warning' },
-  completed: { label: 'Paid', variant: 'success' },
-  refunded: { label: 'Refunded', variant: 'info' },
-  failed: { label: 'Failed', variant: 'danger' },
+const paymentBadge: Record<PaymentStatus, { labelKey: string; variant: 'default' | 'success' | 'warning' | 'danger' | 'info' | 'gold' }> = {
+  pending: { labelKey: 'user.payment_status.pending', variant: 'warning' },
+  completed: { labelKey: 'user.payment_status.paid', variant: 'success' },
+  refunded: { labelKey: 'user.payment_status.refunded', variant: 'info' },
+  failed: { labelKey: 'user.payment_status.failed', variant: 'danger' },
 };
 
 interface SubRow {
@@ -146,7 +146,7 @@ export default function UserSubmissions() {
             {t('user.submissions')}
           </h1>
           <p className="text-surface-400 text-sm mt-1">
-            Manage your competition entries
+            {t('user.manage_entries')}
           </p>
         </div>
         <Link to="/dashboard/submissions/new">
@@ -177,7 +177,7 @@ export default function UserSubmissions() {
         <EmptyState
           icon={<Image className="h-16 w-16" />}
           title={t('user.no_submissions')}
-          description="Submit your photos to participate in the competition."
+          description={t('user.submit_to_participate')}
           action={
             <Link to="/dashboard/submissions/new">
               <Button variant="primary" icon={<PlusCircle className="h-4 w-4" />}>
@@ -272,11 +272,11 @@ export default function UserSubmissions() {
                                         </div>
                                         <div className="flex items-center gap-2 flex-shrink-0">
                                           <Badge variant={statusBadge[sub.status]?.variant || 'default'}>
-                                            {statusBadge[sub.status]?.label || sub.status}
+                                            {t(statusBadge[sub.status]?.labelKey || sub.status)}
                                           </Badge>
                                           {sub.payment_status && (
                                             <Badge variant={paymentBadge[sub.payment_status]?.variant || 'default'}>
-                                              {paymentBadge[sub.payment_status]?.label || sub.payment_status}
+                                              {t(paymentBadge[sub.payment_status]?.labelKey || sub.payment_status)}
                                             </Badge>
                                           )}
                                         </div>

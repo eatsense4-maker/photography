@@ -50,7 +50,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signIn(data.email, data.password);
-      toast.success('Welcome back!');
+      toast.success(t('auth.welcome_back_toast'));
 
       // Navigate immediately using store state — don't wait for useEffect
       const currentUser = useAuthStore.getState().user;
@@ -64,7 +64,7 @@ export default function LoginPage() {
         navigate(dashPath, { replace: true });
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Login failed';
+      const message = err instanceof Error ? err.message : t('auth.login_failed_toast');
       toast.error(message);
     } finally {
       setLoading(false);
@@ -75,7 +75,7 @@ export default function LoginPage() {
     try {
       await signInWithGoogle();
     } catch {
-      toast.error('Google sign-in failed');
+      toast.error(t('auth.google_failed_toast'));
     }
   };
 

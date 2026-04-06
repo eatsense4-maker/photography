@@ -43,7 +43,55 @@
       "button": "Start Submission"
     },
     "deadline": "Submission Deadline",
-    "days_left": "days left"
+    "days_left": "days left",
+    "pinned": "Pinned",
+    "featured": "Featured",
+    "read_more": "Read More",
+    "upcoming_events": "Upcoming Events",
+    "latest_news": "Latest News",
+    "no_news": "No news articles yet",
+    "open_call": "Open Call",
+    "view_all": "View All"
+  },
+  "apply": {
+    "all_categories": "All Categories",
+    "submissions_open": "Submissions Open",
+    "deadline": "Deadline",
+    "about_category": "About this Category",
+    "format": "Format",
+    "tech_requirements": "Technical Requirements",
+    "the_concept": "The Concept",
+    "thematic_directions": "Thematic directions",
+    "five_doors": "Five Doors into the Theme",
+    "how_to_apply": "How to apply",
+    "submission_guidelines": "Submission Guidelines",
+    "who_can_apply": "Who can apply",
+    "pro_photographers": "Professional and emerging photographers (18+)",
+    "previously_produced": "Projects may be previously produced or new",
+    "copyright_usage": "Copyright & Usage",
+    "author_retains": "Author retains full rights to their work",
+    "non_exclusive": "Non-exclusive use for exhibition/communication only",
+    "accepted": "Accepted",
+    "not_accepted": "Not accepted",
+    "accepted_cropping": "Cropping",
+    "accepted_contrast": "Contrast and exposure changes",
+    "accepted_color": "Color correction",
+    "accepted_desat": "Desaturation",
+    "accepted_retouch": "Minimal retouching",
+    "rejected_import": "Importing elements from other photos",
+    "rejected_clone": "Cloning and deleting parts",
+    "rejected_ai": "AI-generated images",
+    "ai_excluded": "AI-generated images are strictly excluded.",
+    "jury_criteria": "Jury Criteria",
+    "ready_submit": "Ready to Submit?",
+    "create_account_submit": "Create your account and submit your work before the deadline.",
+    "submit_your_work": "Submit Your Work",
+    "register_submit": "Register & Submit",
+    "apply_now": "Apply Now",
+    "open_call": "Open Call",
+    "open_call_desc": "Four categories, \u20ac4,000 in prizes, one shared vision. Choose your category and submit your work.",
+    "view_details": "View Details",
+    "prize_pool": "Prize Pool"
   },
   "about": {
     "title": "About FOKUS Award",
@@ -112,7 +160,12 @@
     "reset_button": "Send Reset Link",
     "reset_success": "Check your email for a password reset link",
     "or_continue": "Or continue with",
-    "google": "Google"
+    "google": "Google",
+    "welcome_back_toast": "Welcome back!",
+    "login_failed_toast": "Login failed",
+    "google_failed_toast": "Google sign-in failed",
+    "registered_toast": "Account created! Please check your email to confirm.",
+    "registration_failed_toast": "Registration failed"
   },
   "user": {
     "dashboard": "My Dashboard",
@@ -128,14 +181,19 @@
       "shortlisted": "Shortlisted",
       "finalist": "Finalist",
       "winner": "Winner",
-      "rejected": "Rejected"
+      "rejected": "Rejected",
+      "accepted": "Accepted",
+      "disqualified": "Disqualified"
     },
     "payment_status": {
       "not_required": "Free",
       "pending": "Payment Pending",
       "paid": "Paid",
-      "refunded": "Refunded"
-    }
+      "refunded": "Refunded",
+      "failed": "Failed"
+    },
+    "manage_entries": "Manage your competition entries",
+    "submit_to_participate": "Submit your photos to participate in the competition."
   },
   "submission": {
     "select_edition": "Select Edition",
@@ -154,7 +212,14 @@
     "confirm_submit": "Are you sure you want to submit? You won't be able to edit after submission.",
     "submitted_success": "Your submission has been received!",
     "upload_progress": "Uploading... {{percent}}%",
-    "remove_photo": "Remove"
+    "remove_photo": "Remove",
+    "step_categories": "Choose Categories",
+    "step_payment": "Payment",
+    "step_upload": "Upload Photos",
+    "step_review": "Review & Submit",
+    "paid_badge": "Paid",
+    "free_badge": "Free",
+    "follow_steps": "Follow the steps below to submit your photos"
   },
   "payment": {
     "title": "Complete Payment",
@@ -183,7 +248,21 @@
     "unscored": "Unscored",
     "all": "All",
     "no_submissions": "No submissions to review.",
-    "comparison_view": "Compare Side by Side"
+    "comparison_view": "Compare Side by Side",
+    "review": "Review Photos",
+    "no_approved_title": "No approved photos to score",
+    "no_approved_desc": "Check back once the admin has approved photos in your assigned categories.",
+    "all_done": "All done!",
+    "no_matching": "No photos matching this filter.",
+    "score_locked": "Score locked — no changes allowed",
+    "score_final": "Score is final and cannot be changed",
+    "your_score_label": "Your Score",
+    "comment_label": "Comment",
+    "comment_optional": "(optional)",
+    "all_categories": "All categories",
+    "score_range_hint": "Score each photo from 50 to 100",
+    "submit_score": "Submit Score",
+    "progress": "Progress"
   },
   "admin": {
     "dashboard": "Admin Dashboard",
@@ -250,6 +329,7 @@
     "follow_us": "Follow Us",
     "rights": "All rights reserved.",
     "privacy": "Privacy Policy",
-    "terms": "Terms & Conditions"
+    "terms": "Terms & Conditions",
+    "location": "Tirana, Albania"
   }
 }

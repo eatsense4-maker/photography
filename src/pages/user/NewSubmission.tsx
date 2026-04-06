@@ -359,8 +359,8 @@ export default function NewSubmission() {
 
   // ─── Progress bar ───
   const progressSteps = needsPayment
-    ? ['Choose Categories', 'Payment', 'Upload Photos', 'Review & Submit']
-    : ['Choose Categories', 'Upload Photos', 'Review & Submit'];
+    ? [t('submission.step_categories'), t('submission.step_payment'), t('submission.step_upload'), t('submission.step_review')]
+    : [t('submission.step_categories'), t('submission.step_upload'), t('submission.step_review')];
 
   const currentProgressIdx = needsPayment
     ? step - 1
@@ -373,7 +373,7 @@ export default function NewSubmission() {
           {t('user.new_submission')}
         </h1>
         <p className="text-surface-300 text-xs mt-1">
-          Follow the steps below to submit your photos
+          {t('submission.follow_steps')}
         </p>
       </div>
 
@@ -493,11 +493,11 @@ export default function NewSubmission() {
                           {isPaid ? (
                             <span className="inline-flex items-center gap-1 text-xs font-medium text-gold-400 bg-gold-500/10 px-2 py-0.5 rounded-full">
                               <CreditCard className="h-3 w-3" />
-                              Paid
+                              {t('submission.paid_badge')}
                             </span>
                           ) : (
                             <span className="inline-flex items-center text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                              Free
+                              {t('submission.free_badge')}
                             </span>
                           )}
                         </div>

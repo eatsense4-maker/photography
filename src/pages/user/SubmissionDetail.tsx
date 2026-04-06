@@ -561,7 +561,7 @@ export default function SubmissionDetail() {
               onClick={() => setLightboxIndex(lightboxIndex - 1)}
               className="absolute left-4 text-white/70 hover:text-white z-10 cursor-pointer"
             >
-              <ChevronLeft className="h-10 w-10" />
+              <ChevronLeft className="h-6 w-6" />
             </button>
           )}
 
@@ -571,7 +571,7 @@ export default function SubmissionDetail() {
               onClick={() => setLightboxIndex(lightboxIndex + 1)}
               className="absolute right-4 text-white/70 hover:text-white z-10 cursor-pointer"
             >
-              <ChevronRight className="h-10 w-10" />
+              <ChevronRight className="h-6 w-6" />
             </button>
           )}
 

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Grid, Image, DollarSign } from 'lucide-react';
+import { Plus, Edit, Trash2, Grid, Image, DollarSign, Upload, X } from 'lucide-react';
 import { Button, Card, Modal, Input, Textarea, Select } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
@@ -24,6 +24,10 @@ export default function AdminCategories() {
   const [price, setPrice] = useState('0');
   const [sortOrder, setSortOrder] = useState('0');
   const [editionId, setEditionId] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase
@@ -61,6 +65,8 @@ export default function AdminCategories() {
     setPrice('0');
     setSortOrder((categories.length + 1).toString());
     setEditionId(selectedEdition);
+    setImageUrl('');
+    setPreviewUrl('');
     setShowModal(true);
   };
 
@@ -72,7 +78,24 @@ export default function AdminCategories() {
     setPrice(cat.price.toString());
     setSortOrder(cat.sort_order.toString());
     setEditionId(cat.edition_id);
+    setImageUrl(cat.image_url || '');
+    setPreviewUrl(cat.image_url || '');
     setShowModal(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5 MB'); return; }
+    setUploading(true);
+    const ext = file.name.split('.').pop();
+    const path = `categories/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from('partners').upload(path, file, { upsert: true });
+    if (error) { toast.error(error.message); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from('partners').getPublicUrl(path);
+    setImageUrl(urlData.publicUrl);
+    setPreviewUrl(urlData.publicUrl);
+    setUploading(false);
   };
 
   const handleSave = async () => {
@@ -80,6 +103,7 @@ export default function AdminCategories() {
       edition_id: editionId || selectedEdition,
       name,
       description: description || null,
+      image_url: imageUrl || null,
       max_photos: parseInt(maxPhotos),
       price: parseFloat(price),
       sort_order: parseInt(sortOrder),
@@ -153,7 +177,17 @@ export default function AdminCategories() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="p-6">
+              <Card className="p-0 overflow-hidden">
+                {cat.image_url ? (
+                  <div className="aspect-[3/1] overflow-hidden">
+                    <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="aspect-[3/1] bg-surface-800 flex items-center justify-center">
+                    <Image className="h-8 w-8 text-surface-700" />
+                  </div>
+                )}
+                <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-primary-500/10">
@@ -180,6 +214,7 @@ export default function AdminCategories() {
                     €{cat.price}
                   </div>
                 </div>
+                </div>
               </Card>
             </motion.div>
           ))}
@@ -191,6 +226,35 @@ export default function AdminCategories() {
         <div className="space-y-4">
           <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Category name" />
           <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+
+          {/* Image upload */}
+          <div>
+            <label className="block text-sm font-medium text-surface-300 mb-1.5">Cover Image</label>
+            {previewUrl ? (
+              <div className="relative rounded-lg overflow-hidden aspect-[3/1]">
+                <img src={previewUrl} alt="preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setImageUrl(''); setPreviewUrl(''); if (fileRef.current) fileRef.current.value = ''; }}
+                  className="absolute top-2 right-2 p-1 rounded-full bg-surface-950/70 text-white hover:bg-red-600 transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="w-full flex flex-col items-center justify-center gap-2 py-8 rounded-lg border-2 border-dashed border-surface-700 hover:border-primary-500 text-surface-400 hover:text-primary-400 transition-colors"
+              >
+                <Upload className="h-6 w-6" />
+                <span className="text-sm">{uploading ? 'Uploading…' : 'Click to upload image'}</span>
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+          </div>
+
           <div className="grid grid-cols-3 gap-4">
             <Input label="Max Photos" type="number" value={maxPhotos} onChange={(e) => setMaxPhotos(e.target.value)} />
             <Input label="Price (€)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />

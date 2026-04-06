@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Facebook, Instagram, Mail, MapPin } from 'lucide-react';
+import { Facebook, Instagram, Mail, MapPin, Youtube } from 'lucide-react';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -47,6 +47,14 @@ export default function Footer() {
               >
                 <Instagram className="h-4 w-4" />
               </a>
+              <a
+                href="https://www.youtube.com/@FOKUSaward"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-all"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
             </div>
           </div>
 
@@ -83,7 +91,7 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-3 text-sm text-surface-400">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-400" />
-                <span>Tirana, Albania</span>
+                <span>{t('footer.location')}</span>
               </li>
             </ul>
           </div>

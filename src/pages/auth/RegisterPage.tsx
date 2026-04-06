@@ -44,10 +44,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await signUp(data.email, data.password, data.full_name, data.country);
-      toast.success('Account created! Please check your email to confirm.');
+      toast.success(t('auth.registered_toast'));
       navigate('/login');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
+      const message = err instanceof Error ? err.message : t('auth.registration_failed_toast');
       toast.error(message);
     } finally {
       setLoading(false);
@@ -58,7 +58,7 @@ export default function RegisterPage() {
     try {
       await signInWithGoogle();
     } catch {
-      toast.error('Google sign-in failed');
+      toast.error(t('auth.google_failed_toast'));
     }
   };
 
