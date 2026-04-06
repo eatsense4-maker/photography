@@ -53,28 +53,44 @@ interface CategoryData {
   borderColor: string;
   prize: string;
   prizeLabel: string;
+  prizeLabelAl: string;
   format: string;
+  formatAl: string;
   subcategories?: { name: string; nameAl: string; prize: string }[];
+  objective: string;
+  objectiveAl: string;
   description: string;
   descriptionAl: string;
   photoRules: string;
+  photoRulesAl: string;
+  extraRequirement?: string;
+  extraRequirementAl?: string;
+  customAccepted?: string[];
+  customAcceptedAl?: string[];
+  customRejected?: string[];
+  customRejectedAl?: string[];
 }
 
 const CATEGORY_DATA: Record<string, CategoryData> = {
-  theme: {
-    slug: 'theme',
-    title: 'Theme — BREATH',
-    titleAl: 'Tema — FRYMË',
+  'main-theme-breath': {
+    slug: 'main-theme-breath',
+    title: 'Main Theme — BREATH',
+    titleAl: 'Tema Kryesore — FRYMË',
     heroImage: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=1920&h=800&fit=crop',
     accent: 'gold',
     textColor: 'text-gold-400',
     borderColor: 'border-gold-500/40',
     prize: '€1,000',
     prizeLabel: 'Cash prize + Trophy',
-    format: 'Series (6–12 images) or Single (1–3 images)',
-    description: 'The main theme category invites photographers to explore BREATH / FRYMË — the invisible rhythm of being, the conditions of life, the politics of air, and the human capacity to breathe life into the world. Submissions should address at least one of five thematic entry doors.',
-    descriptionAl: 'Kategoria kryesore fton fotografët të eksplorojnë FRYMË / BREATH — ritmin e padukshëm të qenies, kushtet e jetës, politikën e ajrit, dhe aftësinë njerëzore për t\'i dhënë frymë botës. Aplikimet duhet të adresojnë të paktën një nga pesë drejtimet tematike.',
+    prizeLabelAl: 'Çmim monetar + Trofe',
+    format: '1 image',
+    formatAl: '1 imazh',
+    objective: 'To identify and recognize the photograph that most powerfully and originally interprets the theme BREATH — through intimate, social, ecological, or creative dimensions of breathing and being alive.',
+    objectiveAl: 'Të identifikojë dhe njohë fotografinë që interpreton më fuqishëm dhe origjinalisht temën FRYMË — përmes dimensioneve intime, sociale, ekologjike ose krijuese të frymëmarrjes dhe të qenies gjallë.',
+    description: 'The main theme category invites photographers to explore BREATH / FRYMË — the invisible rhythm of being, the conditions of life, the politics of air, and the human capacity to breathe life into the world. Submissions should address at least one of five thematic entry doors: Intimate Breath, Invisible Traces, Animated Memory, Air as Commons, or The Living Image.',
+    descriptionAl: 'Kategoria kryesore fton fotografët të eksplorojnë FRYMË / BREATH — ritmin e padukshëm të qenies, kushtet e jetës, politikën e ajrit, dhe aftësinë njerëzore për t\'i dhënë frymë botës. Aplikimet duhet të adresojnë të paktën një nga pesë drejtimet tematike: Fryma Intime, Gjurmët e Padukshme, Kujtesa e Gjallëruar, Ajri si E Përbashkët, ose Imazhi i Gjallë.',
     photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2026. JPEG, sRGB, 2500–4000 px ana e gjatë.',
   },
   'press-news': {
     slug: 'press-news',
@@ -86,58 +102,111 @@ const CATEGORY_DATA: Record<string, CategoryData> = {
     borderColor: 'border-blue-500/40',
     prize: '€1,000',
     prizeLabel: 'Cash prize + Trophy',
-    format: 'Series (6–12 images) or Single (1–3 images)',
-    description: 'Photos with informative and social value from news-worthy events, sports, daily life moments, and social phenomena captured between 2022–2025. This category celebrates photojournalism and documentary photography — images that inform, challenge, and bear witness to the world around us.',
-    descriptionAl: 'Foto me vlerë informative dhe shoqërore nga ngjarje të rëndësishme lajmesh, sport, momente të jetës së përditshme dhe fenomene sociale të kapura mes 2022–2025. Kjo kategori feston fotojournalizmin dhe fotografinë dokumentare.',
+    prizeLabelAl: 'Çmim monetar + Trofe',
+    format: '1 image',
+    formatAl: '1 imazh',
+    objective: 'To identify and recognize a picture which holds the best informative and social value. This category includes all pictures taken in news-worthy events, sports, and pictures that hold a social meaning produced by media professionals.',
+    objectiveAl: 'Të identifikojë dhe njohë një fotografi që mban vlerën më të mirë informative dhe sociale. Kjo kategori përfshin të gjitha fotografitë e realizuara në ngjarje me vlerë lajmi, sport, dhe fotografi që mbajnë një kuptim social të prodhuara nga profesionistë të medias.',
+    description: 'Photos with informative and social value from news-worthy events, sports, daily life moments, and social phenomena captured between 2022–2025. The picture must be accompanied by a short written explanation specifying the date, location, and description of the event. This category celebrates photojournalism and documentary photography — images that inform, challenge, and bear witness to the world around us.',
+    descriptionAl: 'Foto me vlerë informative dhe shoqërore nga ngjarje me vlerë lajmi, sport, momente të jetës së përditshme dhe fenomene sociale të kapura mes 2022–2025. Fotografia duhet të shoqërohet me një shpjegim të shkurtër me shkrim duke specifikuar datën, vendndodhjen dhe përshkrimin e ngjarjes. Kjo kategori feston fotojournalizmin dhe fotografinë dokumentare — imazhe që informojnë, sfidojnë dhe dëshmojnë botën rreth nesh.',
     photoRules: 'Photos taken between 2022–2025. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2025. JPEG, sRGB, 2500–4000 px ana e gjatë.',
+    extraRequirement: 'In the application process, the event must be specified by providing the date, location, and a description of it.',
+    extraRequirementAl: 'Në procesin e aplikimit, ngjarja duhet të specifikohet duke dhënë datën, vendndodhjen dhe një përshkrim të saj.',
+    customAccepted: ['Cropping', 'Contrast and exposure changes', 'Color correction', 'Desaturation', 'HDR', 'Mixing two or three frames into one (same country, same time frame)'],
+    customAcceptedAl: ['Prerja', 'Ndryshime kontrasti dhe ekspozimi', 'Korrigjim ngjyre', 'Deaturim', 'HDR', 'Bashkimi i dy ose tri kornizave në një (i njëjti vend, i njëjti interval kohor)'],
+    customRejected: ['Importing elements from other photos', 'Importing from the same scene on another day', 'Any technique not in the allowed list', 'AI-generated images'],
+    customRejectedAl: ['Importimi i elementeve nga foto të tjera', 'Importimi nga e njëjta skenë në një ditë tjetër', 'Çdo teknikë që nuk është në listën e lejuar', 'Imazhe të gjeneruara nga IA'],
   },
-  life: {
-    slug: 'life',
-    title: 'Life',
-    titleAl: 'Jeta',
+  'life-best-street-photography': {
+    slug: 'life-best-street-photography',
+    title: 'Life — Best Street Photography',
+    titleAl: 'Jeta — Fotografia më e Mirë e Rrugës',
     heroImage: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=1920&h=800&fit=crop',
     accent: 'emerald',
     textColor: 'text-emerald-400',
     borderColor: 'border-emerald-500/40',
-    prize: '2 × €500',
-    prizeLabel: 'Cash prize per sub-category',
-    format: 'Up to 6 images per sub-category',
-    subcategories: [
-      { name: 'Best Street Photography', nameAl: 'Fotografia më e Mirë e Rrugës', prize: '€500' },
-      { name: 'Best Portrait', nameAl: 'Portreti më i Mirë', prize: '€500' },
-    ],
-    description: 'Style, fashion, objects, products, people, weddings, architecture — the beauty of everyday life captured through the lens. This category is divided into two sub-awards: Street Photography and Portrait, each recognizing distinct approaches to photographing human life and culture.',
-    descriptionAl: 'Stili, moda, objekte, produkte, njerëz, dasma, arkitektura — bukuria e jetës së përditshme e kapur përmes objektivit. Kjo kategori ndahet në dy nën-çmime: Fotografia e Rrugës dhe Portreti.',
-    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side. 1 photo per sub-category entry.',
+    prize: '€500',
+    prizeLabel: 'Cash prize',
+    prizeLabelAl: 'Çmim monetar',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    objective: 'To celebrate the art of street photography — the ability to observe, anticipate, and capture the unscripted beauty of everyday life in public spaces, revealing the extraordinary within the ordinary.',
+    objectiveAl: 'Të festojë artin e fotografisë së rrugës — aftësinë për të vëzhguar, parashikuar dhe kapur bukurinë e pa-skriptuar të jetës së përditshme në hapësira publike, duke zbuluar të jashtëzakonshmen brenda të zakonshmes.',
+    description: 'Candid and authentic moments captured in public spaces — the art of observing and freezing everyday life as it unfolds on the streets. This category honors photographers with the patience and instinct to find striking compositions, human interactions, humor, drama, or quiet poetry in the rhythms of urban and rural life.',
+    descriptionAl: 'Momente autentike të kapura në hapësira publike — arti i vëzhgimit dhe ngrirjes së jetës së përditshme siç zhvillohet në rrugë. Kjo kategori nderon fotografët me durimin dhe instinktin për të gjetur kompozicione mahnitëse, ndërveprime njerëzore, humor, dramë ose poezi të qetë në ritmet e jetës urbane dhe rurale.',
+    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2026. JPEG, sRGB, 2500–4000 px ana e gjatë.',
   },
-  land: {
-    slug: 'land',
-    title: 'Land',
-    titleAl: 'Toka',
+  'life-best-portrait': {
+    slug: 'life-best-portrait',
+    title: 'Life — Best Portrait',
+    titleAl: 'Jeta — Portreti më i Mirë',
+    heroImage: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1920&h=800&fit=crop',
+    accent: 'violet',
+    textColor: 'text-violet-400',
+    borderColor: 'border-violet-500/40',
+    prize: '€500',
+    prizeLabel: 'Cash prize',
+    prizeLabelAl: 'Çmim monetar',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    objective: 'To recognize outstanding portrait photography that goes beyond surface appearance — capturing character, emotion, vulnerability, strength, and the depth of human identity through a single frame or a series.',
+    objectiveAl: 'Të njohë fotografinë e jashtëzakonshme të portretit që shkon përtej pamjes sipërfaqësore — duke kapur karakterin, emocionin, cenueshmërinë, forcën dhe thellësinë e identitetit njerëzor përmes një kornize të vetme ose serisë.',
+    description: 'Compelling portrait work that reveals character, emotion, and the human condition through the lens. This category recognizes photographers who capture the depth and complexity of individual identity — from environmental portraits to intimate close-ups, from documentary portraiture to conceptual explorations of the self.',
+    descriptionAl: 'Punë portretesh bindëse që zbulojnë karakterin, emocionin dhe gjendjen njerëzore përmes objektivit. Kjo kategori njeh fotografët që kapin thellësinë dhe kompleksitetin e identitetit individual — nga portretet mjedisore te afërsirat intime, nga portretistika dokumentare te eksplorime konceptuale të vetvetes.',
+    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2026. JPEG, sRGB, 2500–4000 px ana e gjatë.',
+  },
+  'land-best-landscape': {
+    slug: 'land-best-landscape',
+    title: 'Land — Best Landscape',
+    titleAl: 'Toka — Peizazhi më i Mirë',
     heroImage: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1920&h=800&fit=crop',
     accent: 'sky',
     textColor: 'text-sky-400',
     borderColor: 'border-sky-500/40',
-    prize: '2 × €500',
-    prizeLabel: 'Cash prize per sub-category',
-    format: 'Up to 6 images per sub-category',
-    subcategories: [
-      { name: 'Best Landscape', nameAl: 'Peizazhi më i Mirë', prize: '€500' },
-      { name: 'Best Wild World', nameAl: 'Bota e Egër më e Mirë', prize: '€500' },
-    ],
-    description: 'Landscape, animals, plants, natural processes — celebrating the beauty of nature and the importance of environmental protection. This category recognizes excellence in two sub-awards: Landscape Photography and Wildlife Photography.',
-    descriptionAl: 'Peizazhi, kafshët, bimët, proceset natyrore — duke festuar bukurinë e natyrës dhe rëndësinë e mbrojtjes së mjedisit. Kjo kategori njeh ekselencën në dy nën-çmime: Fotografia e Peizazhit dhe Fotografia e Botës së Egër.',
-    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side. 1 photo per sub-category entry.',
+    prize: '€500',
+    prizeLabel: 'Cash prize',
+    prizeLabelAl: 'Çmim monetar',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    objective: 'To honor landscape photography that reveals the spirit of place — showcasing the beauty, power, fragility, and transformation of natural and urban environments through masterful use of light, composition, and perspective.',
+    objectiveAl: 'Të nderojë fotografinë e peizazhit që zbulon shpirtin e vendit — duke treguar bukurinë, fuqinë, brishtësinë dhe transformimin e mjediseve natyrore dhe urbane përmes përdorimit mjeshtëror të dritës, kompozicionit dhe perspektivës.',
+    description: 'Outstanding landscape photography showcasing the beauty, drama, and fragility of natural and urban environments. This category celebrates the photographer\'s ability to reveal the spirit of place — from vast wilderness panoramas to intimate natural details, from dramatic weather phenomena to the quiet geometry of the land.',
+    descriptionAl: 'Fotografi e jashtëzakonshme peizazhi që tregon bukurinë, dramën dhe brishtësinë e mjediseve natyrore dhe urbane. Kjo kategori feston aftësinë e fotografit për të zbuluar shpirtin e vendit — nga panoramat e gjera të natyrës së egër te detajet intime natyrore, nga fenomenet dramatike të motit te gjeometria e qetë e tokës.',
+    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2026. JPEG, sRGB, 2500–4000 px ana e gjatë.',
+  },
+  'land-best-wild-world': {
+    slug: 'land-best-wild-world',
+    title: 'Land — Best Wild World',
+    titleAl: 'Toka — Bota e Egër më e Mirë',
+    heroImage: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=1920&h=800&fit=crop',
+    accent: 'amber',
+    textColor: 'text-amber-400',
+    borderColor: 'border-amber-500/40',
+    prize: '€500',
+    prizeLabel: 'Cash prize',
+    prizeLabelAl: 'Çmim monetar',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    objective: 'To honor wildlife and nature photography that brings viewers closer to the animal kingdom and wild ecosystems — celebrating patience, fieldcraft, and the ability to capture untamed life in its most authentic and compelling moments.',
+    objectiveAl: 'Të nderojë fotografinë e botës së egër dhe natyrës që i afron shikuesit me mbretërinë e kafshëve dhe ekosistemet e egra — duke festuar durimin, mjeshtërinë në terren dhe aftësinë për të kapur jetën e egër në momentet e saj më autentike dhe bindëse.',
+    description: 'Wildlife and nature photography capturing animals, ecosystems, and the untamed beauty of the natural world. This category honors photographers who bring us closer to the creatures and habitats we share this planet with — from behavioral studies to dramatic predator-prey encounters, from macro worlds to migratory spectacles.',
+    descriptionAl: 'Fotografi e natyrës dhe botës së egër duke kapur kafshët, ekosistemet dhe bukurinë e papërmbajtur të botës natyrore. Kjo kategori nderon fotografët që na afrojnë me krijesat dhe habitatet me të cilat ndajmë këtë planet — nga studime sjelljes te takime dramatike gjahtar-pre, nga botët makro te spektaklet migruese.',
+    photoRules: 'Photos taken between 2022–2026. JPEG, sRGB, 2500–4000 px long side.',
+    photoRulesAl: 'Foto të realizuara mes 2022–2026. JPEG, sRGB, 2500–4000 px ana e gjatë.',
   },
 };
 
 const JURY_CRITERIA = [
-  { label: 'Coherence with the theme', detail: 'How clearly and deeply the project articulates breath — intimate, social, ecological, or creative.' },
-  { label: 'Visual & narrative strength', detail: 'Composition, rhythm, use of light, consistency of the series, ability to hold attention.' },
-  { label: 'Originality of perspective', detail: 'Avoiding clichés; discovering a new form of the "invisible."' },
-  { label: 'Ethical sensitivity', detail: 'Respect for subjects, context, and the consequences of representation.' },
-  { label: 'Local relevance / universality', detail: 'Connection to concrete realities and the ability to speak beyond them.' },
-  { label: 'Photographic integrity', detail: 'Clarity about process and limits of manipulation; exclusion of AI-generated images.' },
+  { label: 'Coherence with the theme', labelAl: 'Koherenca me temën', detail: 'How clearly and deeply the project articulates breath — intimate, social, ecological, or creative.', detailAl: 'Sa qartë dhe thellë projekti artikulon frymën — intime, sociale, ekologjike ose krijuese.' },
+  { label: 'Visual & narrative strength', labelAl: 'Forca vizuale dhe narrative', detail: 'Composition, rhythm, use of light, consistency of the series, ability to hold attention.', detailAl: 'Kompozicioni, ritmi, përdorimi i dritës, konsistenca e serisë, aftësia për të mbajtur vëmendjen.' },
+  { label: 'Originality of perspective', labelAl: 'Origjinaliteti i perspektivës', detail: 'Avoiding clichés; discovering a new form of the "invisible."', detailAl: 'Shmangja e klisheve; zbulimi i një forme të re të "të padukshmes."' },
+  { label: 'Ethical sensitivity', labelAl: 'Ndjeshmëria etike', detail: 'Respect for subjects, context, and the consequences of representation.', detailAl: 'Respekti për subjektet, kontekstin dhe pasojat e përfaqësimit.' },
+  { label: 'Local relevance / universality', labelAl: 'Relevanca lokale / universaliteti', detail: 'Connection to concrete realities and the ability to speak beyond them.', detailAl: 'Lidhja me realitete konkrete dhe aftësia për të folur përtej tyre.' },
+  { label: 'Photographic integrity', labelAl: 'Integriteti fotografik', detail: 'Clarity about process and limits of manipulation; exclusion of AI-generated images.', detailAl: 'Qartësia rreth procesit dhe kufijve të manipulimit; përjashtimi i imazheve të gjeneruara nga IA.' },
 ];
 
 export default function CategoryDetailPage() {
@@ -174,17 +243,17 @@ export default function CategoryDetailPage() {
   if (!cat) return <Navigate to="/apply" replace />;
 
   const isOpen = edition?.status === 'open';
-  const isTheme = cat.slug === 'theme';
+  const isTheme = cat.slug === 'main-theme-breath';
   const conceptParagraphs = lang === 'en' ? CONCEPT_EN : CONCEPT_AL;
 
   return (
     <div className="pb-24">
       {/* ── Hero with prominent image ── */}
-      <section className="relative h-[50vh] min-h-[400px] overflow-hidden">
+      <section className="relative h-[50vh] min-h-[300px] sm:min-h-[400px] overflow-hidden">
         <img src={cat.heroImage} alt={lang === 'al' ? cat.titleAl : cat.title} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-surface-950/30" />
         <div className="absolute inset-0 flex flex-col justify-end">
-          <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-10">
+            <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-6 sm:pb-10">
             <Link to="/apply" className="inline-flex items-center gap-2 text-sm text-surface-300 hover:text-primary-400 transition-colors mb-4">
               <ArrowLeft className="h-4 w-4" /> {t('apply.all_categories')}
             </Link>
@@ -194,7 +263,7 @@ export default function CategoryDetailPage() {
               animate={{ opacity: 1 }}
               className={`inline-block text-xs font-semibold uppercase tracking-[0.3em] ${cat.textColor} mb-3 border ${cat.borderColor} px-4 py-1.5 rounded-full`}
             >
-              IFFA 17 · 2026
+              {t('apply.edition_badge')}
             </motion.span>
 
             {isTheme ? (
@@ -203,7 +272,7 @@ export default function CategoryDetailPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
-                  className="text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
+                  className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
                 >
                   FRYMË
                   <span className="block text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-primary-400">
@@ -216,7 +285,7 @@ export default function CategoryDetailPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
+                className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-none tracking-tight"
               >
                 {lang === 'al' ? cat.titleAl : cat.title}
               </motion.h1>
@@ -236,26 +305,56 @@ export default function CategoryDetailPage() {
               )}
               <span className="flex items-center gap-2">
                 <Award className={`h-4 w-4 ${cat.textColor}`} />
-                <strong className="text-white">{cat.prize}</strong> {cat.prizeLabel}
+                <strong className="text-white">{cat.prize}</strong> {lang === 'al' ? cat.prizeLabelAl : cat.prizeLabel}
               </span>
               <span className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary-400" />
-                {t('apply.deadline')}: <strong className="text-white">30 June 2026</strong>
+                {t('apply.deadline')}: <strong className="text-white">{t('apply.deadline_date')}</strong>
               </span>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ── Description ── */}
-      <section className="py-14">
+      {/* ── Objective & Description ── */}
+      <section className="detail-section">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-display font-bold text-white mb-5">
+          {/* Objective */}
+          <div className={`p-5 rounded-xl bg-surface-900 border ${cat.borderColor} mb-8`}>
+            <h3 className={`text-xs font-semibold ${cat.textColor} uppercase tracking-widest mb-2`}>
+              {t('apply.objective')}
+            </h3>
+            <p className="detail-body text-surface-200">
+              {lang === 'al' ? cat.objectiveAl : cat.objective}
+            </p>
+          </div>
+
+          {/* Hero image in content */}
+          <div className="rounded-2xl overflow-hidden mb-8 border border-surface-800">
+            <img
+              src={cat.heroImage}
+              alt={lang === 'al' ? cat.titleAl : cat.title}
+              className="w-full h-56 sm:h-72 object-cover"
+              loading="lazy"
+            />
+          </div>
+
+          <h2 className="detail-heading font-display font-bold text-white mb-5">
             {t('apply.about_category')}
           </h2>
-          <p className="text-base text-surface-200 leading-relaxed">
+          <p className="detail-body text-surface-200">
             {lang === 'al' ? cat.descriptionAl : cat.description}
           </p>
+
+          {/* Extra requirement callout (e.g. Press & News context requirement) */}
+          {cat.extraRequirement && (
+            <div className="mt-5 p-4 rounded-xl bg-blue-500/5 border border-blue-500/20 flex items-start gap-3">
+              <AlertTriangle className={`h-5 w-5 ${cat.textColor} flex-shrink-0 mt-0.5`} />
+              <p className="text-sm text-surface-200">
+                {lang === 'al' ? cat.extraRequirementAl : cat.extraRequirement}
+              </p>
+            </div>
+          )}
 
           {/* Subcategories */}
           {cat.subcategories && (
@@ -284,13 +383,13 @@ export default function CategoryDetailPage() {
           <div className="mt-6 grid sm:grid-cols-2 gap-4">
             <div className="p-5 rounded-xl bg-surface-900 border border-surface-800">
               <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-2">{t('apply.format')}</h3>
-              <p className="text-sm text-surface-300">{cat.format}</p>
+              <p className="text-sm text-surface-300">{lang === 'al' ? cat.formatAl : cat.format}</p>
             </div>
             <div className="p-5 rounded-xl bg-surface-900 border border-surface-800">
               <h3 className="text-sm font-semibold text-primary-400 uppercase tracking-wider mb-2">
                 {t('apply.tech_requirements')}
               </h3>
-              <p className="text-sm text-surface-300">{cat.photoRules}</p>
+              <p className="text-sm text-surface-300">{lang === 'al' ? cat.photoRulesAl : cat.photoRules}</p>
             </div>
           </div>
         </div>
@@ -304,7 +403,7 @@ export default function CategoryDetailPage() {
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <blockquote className="relative">
                 <span className="absolute -top-6 left-0 text-7xl text-primary-400/20 font-display leading-none select-none">"</span>
-                <p className="text-xl md:text-2xl font-display italic text-surface-100 leading-relaxed px-8">
+                <p className="text-base sm:text-xl md:text-2xl font-display italic text-surface-100 leading-relaxed px-4 sm:px-8">
                   {lang === 'en'
                     ? 'BREATH is the most ordinary miracle: constant, unconscious, and taken for granted until the loss of a single breath changes everything.'
                     : 'FRYMË / BREATH është mrekullia më e zakonshme: e pandërprerë, e pavetëdijshme dhe e marrë si e mirëqenë, derisa humbja e një fryme të vetme ndryshon gjithçka.'}
@@ -315,9 +414,9 @@ export default function CategoryDetailPage() {
           </section>
 
           {/* Essay */}
-          <section className="py-14">
+          <section className="detail-section">
             <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-              <h2 className="text-2xl font-display font-bold text-white mb-8">{t('apply.the_concept')}</h2>
+              <h2 className="detail-heading font-display font-bold text-white mb-8">{t('apply.the_concept')}</h2>
               <div className="space-y-5">
                 {conceptParagraphs.map((paragraph, i) => (
                   <motion.p
@@ -325,7 +424,7 @@ export default function CategoryDetailPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08, duration: 0.5 }}
-                    className="text-base text-surface-200 leading-relaxed"
+                    className="detail-body text-surface-200"
                   >
                     {paragraph}
                   </motion.p>
@@ -339,7 +438,7 @@ export default function CategoryDetailPage() {
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center mb-12">
                 <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{t('apply.thematic_directions')}</span>
-                <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-3">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-white mt-3">
                   {t('apply.five_doors')}
                 </h2>
               </div>
@@ -357,8 +456,8 @@ export default function CategoryDetailPage() {
                     <div className="flex items-start gap-4 mb-4">
                       <span className="text-3xl font-display font-black text-primary-500/30 leading-none">{door.number}</span>
                       <div>
-                        <h3 className="text-lg font-display font-bold text-white">{door.title}</h3>
-                        <p className="text-sm text-gold-400 italic">{door.titleAl}</p>
+                        <h3 className="text-lg font-display font-bold text-white">{lang === 'al' ? door.titleAl : door.title}</h3>
+                        <p className="text-sm text-gold-400 italic">{lang === 'al' ? door.title : door.titleAl}</p>
                       </div>
                     </div>
                     <p className="text-sm text-surface-300 leading-relaxed">
@@ -373,7 +472,7 @@ export default function CategoryDetailPage() {
       )}
 
       {/* ── Submission Guidelines ── */}
-      <section className="py-16">
+      <section className="detail-section">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <span className="text-primary-400 text-xs font-semibold uppercase tracking-widest">{t('apply.how_to_apply')}</span>
@@ -399,11 +498,18 @@ export default function CategoryDetailPage() {
                 <Check className="h-4 w-4" /> {t('apply.accepted')}
               </h3>
               <ul className="space-y-1.5 text-sm text-surface-300">
-                {['accepted_cropping', 'accepted_contrast', 'accepted_color', 'accepted_desat', 'accepted_retouch'].map((key) => (
-                  <li key={key} className="flex items-center gap-2">
-                    <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" /> {t(`apply.${key}`)}
-                  </li>
-                ))}
+                {cat.customAccepted
+                  ? (lang === 'al' ? cat.customAcceptedAl! : cat.customAccepted).map((item, idx) => (
+                      <li key={idx} className="flex items-center gap-2">
+                        <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" /> {item}
+                      </li>
+                    ))
+                  : ['accepted_cropping', 'accepted_contrast', 'accepted_color', 'accepted_desat', 'accepted_retouch'].map((key) => (
+                      <li key={key} className="flex items-center gap-2">
+                        <Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" /> {t(`apply.${key}`)}
+                      </li>
+                    ))
+                }
               </ul>
             </div>
             <div className="p-5 rounded-2xl bg-surface-900 border border-surface-800">
@@ -411,11 +517,18 @@ export default function CategoryDetailPage() {
                 <XIcon className="h-4 w-4" /> {t('apply.not_accepted')}
               </h3>
               <ul className="space-y-1.5 text-sm text-surface-300">
-                {['rejected_import', 'rejected_clone', 'rejected_ai'].map((key) => (
-                  <li key={key} className="flex items-start gap-2">
-                    <XIcon className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {t(`apply.${key}`)}
-                  </li>
-                ))}
+                {cat.customRejected
+                  ? (lang === 'al' ? cat.customRejectedAl! : cat.customRejected).map((item, idx) => (
+                      <li key={idx} className="flex items-start gap-2">
+                        <XIcon className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {item}
+                      </li>
+                    ))
+                  : ['rejected_import', 'rejected_clone', 'rejected_ai'].map((key) => (
+                      <li key={key} className="flex items-start gap-2">
+                        <XIcon className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" /> {t(`apply.${key}`)}
+                      </li>
+                    ))
+                }
               </ul>
               <div className="mt-3 p-3 rounded-lg bg-red-500/5 border border-red-500/20 flex items-start gap-2">
                 <AlertTriangle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
@@ -430,7 +543,7 @@ export default function CategoryDetailPage() {
       {isTheme && (
         <section className="py-16 bg-surface-900/40">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-2xl font-display font-bold text-white mb-6">{t('apply.jury_criteria')}</h2>
+            <h2 className="detail-heading font-display font-bold text-white mb-6">{t('apply.jury_criteria')}</h2>
             <div className="space-y-4">
               {JURY_CRITERIA.map((c, i) => (
                 <div key={i} className="flex gap-3">
@@ -438,8 +551,8 @@ export default function CategoryDetailPage() {
                     {i + 1}
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-white">{c.label}</p>
-                    <p className="text-xs text-surface-400 mt-0.5 leading-relaxed">{c.detail}</p>
+                    <p className="text-sm font-semibold text-white">{lang === 'al' ? c.labelAl : c.label}</p>
+                    <p className="text-xs text-surface-400 mt-0.5 leading-relaxed">{lang === 'al' ? c.detailAl : c.detail}</p>
                   </div>
                 </div>
               ))}

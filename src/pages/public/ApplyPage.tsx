@@ -18,14 +18,16 @@ const fadeUp = {
 
 const CATEGORIES = [
   {
-    slug: 'theme',
-    title: 'Theme — BREATH',
-    titleAl: 'Tema — FRYMË',
+    slug: 'main-theme-breath',
+    title: 'Main Theme — BREATH',
+    titleAl: 'Tema Kryesore — FRYMË',
     subtitle: 'FRYMË / BREATH',
-    description: 'The invisible rhythm of being, the conditions of life, the politics of air, and the human capacity to breathe life into the world.',
-    descriptionAl: 'Ritmi i padukshëm i qenies, kushtet e jetës, politika e ajrit, dhe aftësia njerëzore për t\'i dhënë frymë botës.',
+    subtitleAl: 'FRYMË / BREATH',
+    description: 'Explore BREATH / FRYMË — the invisible rhythm of being, the conditions of life, the politics of air, and the human capacity to breathe life into the world.',
+    descriptionAl: 'Eksploroni FRYMË / BREATH — ritmin e padukshëm të qenies, kushtet e jetës, politikën e ajrit, dhe aftësinë njerëzore për t\'i dhënë frymë botës.',
     prize: '€1,000',
-    format: 'Series (6–12) or Single (1–3)',
+    format: '1 image',
+    formatAl: '1 imazh',
     image: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&h=600&fit=crop',
     accent: 'gold',
     gradientFrom: 'from-gold-500/20',
@@ -38,10 +40,12 @@ const CATEGORIES = [
     title: 'Press & News',
     titleAl: 'Shtypi & Lajmet',
     subtitle: 'Documentary & Photojournalism',
-    description: 'Photos with informative and social value from news-worthy events, sports, daily life moments, and social phenomena.',
-    descriptionAl: 'Foto me vlerë informative dhe shoqërore nga ngjarje të rëndësishme, sport, momente të jetës së përditshme dhe fenomene sociale.',
+    subtitleAl: 'Dokumentar & Fotojournalizëm',
+    description: 'Pictures with the best informative and social value from news-worthy events, sports, and social phenomena. Must include a written context with date, location, and event description.',
+    descriptionAl: 'Foto me vlerën më të mirë informative dhe sociale nga ngjarje me vlerë lajmi, sport dhe fenomene sociale. Duhet të përfshijë kontekstin me shkrim me datën, vendndodhjen dhe përshkrimin e ngjarjes.',
     prize: '€1,000',
-    format: 'Series (6–12) or Single (1–3)',
+    format: '1 image',
+    formatAl: '1 imazh',
     image: 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=800&h=600&fit=crop',
     accent: 'blue',
     gradientFrom: 'from-blue-500/20',
@@ -50,14 +54,16 @@ const CATEGORIES = [
     badgeBg: 'bg-blue-500/15',
   },
   {
-    slug: 'life',
-    title: 'Life',
-    titleAl: 'Jeta',
-    subtitle: 'Street · Portrait',
-    description: 'Style, fashion, objects, products, people, weddings, architecture — the beauty of everyday life captured through street and portrait photography.',
-    descriptionAl: 'Stili, moda, objekte, produkte, njerëz, dasma, arkitektura — bukuria e jetës së përditshme e kapur përmes fotografisë së rrugës dhe portretit.',
-    prize: '2 × €500',
-    format: 'Up to 6 images per sub-category',
+    slug: 'life-best-street-photography',
+    title: 'Life — Best Street Photography',
+    titleAl: 'Jeta — Fotografia më e Mirë e Rrugës',
+    subtitle: 'Street Photography',
+    subtitleAl: 'Fotografia e Rrugës',
+    description: 'The art of observing and capturing unscripted everyday life in public spaces — striking compositions, human interactions, humor, drama, or quiet poetry.',
+    descriptionAl: 'Arti i vëzhgimit dhe kapjes së jetës së përditshme të pa-skriptuar në hapësira publike — kompozicione mahnitëse, ndërveprime njerëzore, humor, dramë ose poezi e qetë.',
+    prize: '€500',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
     image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop',
     accent: 'emerald',
     gradientFrom: 'from-emerald-500/20',
@@ -66,20 +72,58 @@ const CATEGORIES = [
     badgeBg: 'bg-emerald-500/15',
   },
   {
-    slug: 'land',
-    title: 'Land',
-    titleAl: 'Toka',
-    subtitle: 'Landscape · Wildlife',
-    description: 'Landscape, animals, plants, natural processes — celebrating the beauty of nature and the importance of environmental protection.',
-    descriptionAl: 'Peizazhi, kafshët, bimët, proceset natyrore — duke festuar bukurinë e natyrës dhe rëndësinë e mbrojtjes së mjedisit.',
-    prize: '2 × €500',
-    format: 'Up to 6 images per sub-category',
+    slug: 'life-best-portrait',
+    title: 'Life — Best Portrait',
+    titleAl: 'Jeta — Portreti më i Mirë',
+    subtitle: 'Portrait Photography',
+    subtitleAl: 'Fotografia e Portretit',
+    description: 'Portrait photography that goes beyond surface appearance — capturing character, emotion, vulnerability, strength, and the depth of human identity.',
+    descriptionAl: 'Fotografi portreti që shkon përtej pamjes sipërfaqësore — duke kapur karakterin, emocionin, cenueshmërinë, forcën dhe thellësinë e identitetit njerëzor.',
+    prize: '€500',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&h=600&fit=crop',
+    accent: 'violet',
+    gradientFrom: 'from-violet-500/20',
+    borderColor: 'border-violet-500/40',
+    textColor: 'text-violet-400',
+    badgeBg: 'bg-violet-500/15',
+  },
+  {
+    slug: 'land-best-landscape',
+    title: 'Land — Best Landscape',
+    titleAl: 'Toka — Peizazhi më i Mirë',
+    subtitle: 'Landscape Photography',
+    subtitleAl: 'Fotografia e Peizazhit',
+    description: 'The spirit of place revealed — from vast wilderness panoramas to intimate natural details, from dramatic weather to the quiet geometry of the land.',
+    descriptionAl: 'Shpirti i vendit i zbuluar — nga panoramat e gjera të natyrës së egër te detajet intime natyrore, nga moti dramatik te gjeometria e qetë e tokës.',
+    prize: '€500',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
     image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop',
     accent: 'sky',
     gradientFrom: 'from-sky-500/20',
     borderColor: 'border-sky-500/40',
     textColor: 'text-sky-400',
     badgeBg: 'bg-sky-500/15',
+  },
+  {
+    slug: 'land-best-wild-world',
+    title: 'Land — Best Wild World',
+    titleAl: 'Toka — Bota e Egër më e Mirë',
+    subtitle: 'Wildlife & Nature',
+    subtitleAl: 'Bota e Egër & Natyra',
+    description: 'Bringing viewers closer to the animal kingdom and wild ecosystems — from behavioral studies to dramatic encounters, from macro worlds to migratory spectacles.',
+    descriptionAl: 'Duke i afruar shikuesit me mbretërinë e kafshëve dhe ekosistemet e egra — nga studime sjelljes te takime dramatike, nga botët makro te spektaklet migruese.',
+    prize: '€500',
+    format: 'Up to 6 images',
+    formatAl: 'Deri në 6 imazhe',
+    image: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800&h=600&fit=crop',
+    accent: 'amber',
+    gradientFrom: 'from-amber-500/20',
+    borderColor: 'border-amber-500/40',
+    textColor: 'text-amber-400',
+    badgeBg: 'bg-amber-500/15',
   },
 ];
 
@@ -117,7 +161,7 @@ export default function ApplyPage() {
   return (
     <div>
       {/* ── Hero ── */}
-      <section className="relative pt-32 pb-20 overflow-hidden">
+      <section className="relative pt-12 pb-20 overflow-hidden">
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-8"
@@ -132,14 +176,14 @@ export default function ApplyPage() {
             animate={{ opacity: 1 }}
             className="inline-block text-primary-400 text-xs font-semibold uppercase tracking-[0.3em] mb-4 border border-primary-400/30 px-4 py-1.5 rounded-full"
           >
-            IFFA 17 · 2026 Edition
+            {t('apply.edition_badge')}
           </motion.span>
 
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="text-5xl md:text-6xl font-display font-bold text-white leading-none tracking-tight"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white leading-none tracking-tight"
           >
             {t('apply.open_call')}
           </motion.h1>
@@ -167,7 +211,7 @@ export default function ApplyPage() {
             )}
             <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary-400" />
-              {t('apply.deadline')}: <strong className="text-white">30 June 2026</strong>
+              {t('apply.deadline')}: <strong className="text-white">{t('apply.deadline_date')}</strong>
             </span>
           </motion.div>
         </div>
@@ -176,7 +220,7 @@ export default function ApplyPage() {
       {/* ── Category Cards 2×2 ── */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {CATEGORIES.map((cat, i) => (
               <motion.div
                 key={cat.slug}
@@ -188,7 +232,7 @@ export default function ApplyPage() {
               >
                 <Link
                   to={`/apply/${cat.slug}`}
-                  className="group block relative rounded-2xl overflow-hidden h-full min-h-[280px] border border-surface-800 hover:border-surface-600 transition-all duration-300"
+                  className="group block relative rounded-2xl overflow-hidden h-full min-h-[220px] sm:min-h-[280px] border border-surface-800 hover:border-surface-600 transition-all duration-300"
                 >
                   {/* Background image */}
                   <img
@@ -200,23 +244,23 @@ export default function ApplyPage() {
                   <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/70 to-surface-950/30" />
 
                   {/* Content */}
-                  <div className="relative h-full flex flex-col justify-end p-6 md:p-8">
+                  <div className="relative h-full flex flex-col justify-end p-4 sm:p-6 md:p-8">
                     {/* Prize badge */}
                     <div className={`absolute top-5 right-5 px-3 py-1.5 rounded-full ${cat.badgeBg} border ${cat.borderColor} backdrop-blur-sm`}>
                       <span className={`text-sm font-bold ${cat.textColor}`}>{cat.prize}</span>
                     </div>
 
                     <span className={`text-[10px] font-semibold uppercase tracking-[0.25em] ${cat.textColor} mb-2`}>
-                      {cat.subtitle}
+                      {lang === 'al' ? cat.subtitleAl : cat.subtitle}
                     </span>
-                    <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
                       {lang === 'al' ? cat.titleAl : cat.title}
                     </h2>
                     <p className="text-sm text-surface-300 leading-relaxed line-clamp-2 mb-4 max-w-lg">
                       {lang === 'al' ? cat.descriptionAl : cat.description}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-surface-500">{cat.format}</span>
+                      <span className="text-xs text-surface-500">{lang === 'al' ? cat.formatAl : cat.format}</span>
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-400 group-hover:text-primary-300 transition-colors">
                         {t('apply.view_details')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </span>
@@ -244,13 +288,11 @@ export default function ApplyPage() {
             </h2>
             <p className="text-5xl font-bold text-gold-400 mt-3">€4,000</p>
             <p className="text-sm text-surface-400 mt-2">
-              {lang === 'en'
-                ? '+ Honorary diplomas, exhibition, catalog publication'
-                : '+ Diploma nderi, ekspozitë, publikim katalogu'}
+              {t('apply.honorary_extras')}
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
             {CATEGORIES.map((cat, i) => (
               <motion.div
                 key={cat.slug}
@@ -286,7 +328,7 @@ export default function ApplyPage() {
                 </Button>
               </Link>
               <p className="text-xs text-surface-500 mt-3">
-                {lang === 'en' ? 'Open to photographers 18+ worldwide' : 'E hapur për fotografë 18+ në mbarë botën'}
+                {t('apply.open_worldwide')}
               </p>
             </motion.div>
           )}

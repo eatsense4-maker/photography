@@ -57,6 +57,7 @@
   body {
     font-family: var(--font-sans);
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -111,6 +112,30 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* Category detail page — compact text & spacing */
+  .detail-body {
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .detail-heading {
+    font-size: 1.25rem;
+  }
+
+  .detail-section {
+    padding-top: 2.5rem;
+    padding-bottom: 2.5rem;
+  }
+
+  /* Hide scrollbar for horizontal scroll areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
 

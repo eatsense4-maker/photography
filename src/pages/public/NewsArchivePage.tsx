@@ -68,7 +68,7 @@ export default function NewsArchivePage() {
   return (
     <div className="relative">
       {/* Header */}
-      <section className="relative pt-28 pb-12 overflow-hidden">
+      <section className="relative pt-8 pb-12 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-950/95 to-surface-950" />
         <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-10 relative">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>

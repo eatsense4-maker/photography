@@ -183,10 +183,10 @@ export default function HomePage() {
   // const announcements = ...
 
   const stats = [
-    { icon: <Camera className="h-5 w-5" />, value: '17', label: 'Editions' },
-    { icon: <Globe2 className="h-5 w-5" />, value: '100+', label: 'Countries' },
-    { icon: <Users className="h-5 w-5" />, value: '1,500+', label: 'Photographers' },
-    { icon: <ImageIcon className="h-5 w-5" />, value: '2,000+', label: 'Photos' },
+    { icon: <Camera className="h-5 w-5" />, value: '17', label: t('home.stats.editions') },
+    { icon: <Globe2 className="h-5 w-5" />, value: '100+', label: t('home.stats.countries') },
+    { icon: <Users className="h-5 w-5" />, value: '1,500+', label: t('home.stats.photographers') },
+    { icon: <ImageIcon className="h-5 w-5" />, value: '2,000+', label: t('home.stats.photos') },
   ];
 
   const currentSlide = sliderPosts[slideIndex];
@@ -196,7 +196,7 @@ export default function HomePage() {
 
       {/* ===== HERO SLIDER — Full-width pinned/featured posts ===== */}
       {sliderPosts.length > 0 ? (
-        <section className="relative h-dvh overflow-hidden">
+        <section className="relative h-[calc(100dvh-5rem)] min-h-[400px] overflow-hidden">
           <AnimatePresence initial={false} custom={slideDir} mode="popLayout">
             <motion.div
               key={currentSlide?.id}
@@ -228,7 +228,7 @@ export default function HomePage() {
 
           {/* Slide content overlay */}
           <div className="absolute inset-0 flex items-end z-10">
-            <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-10 pb-12 md:pb-16">
+            <div className="max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-10 pb-8 sm:pb-12 md:pb-16">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={currentSlide?.id + '-text'}
@@ -260,18 +260,18 @@ export default function HomePage() {
                     )}
                   </div>
                   <Link to={`/news/${currentSlide?.slug}`} className="group">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-[1.1] group-hover:text-primary-300 transition-colors">
+                    <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-display font-bold text-white leading-[1.15] group-hover:text-primary-300 transition-colors">
                       {currentSlide?.title}
                     </h1>
                   </Link>
                   {currentSlide?.excerpt && (
-                    <p className="text-surface-300 mt-3 text-sm md:text-base line-clamp-2 leading-relaxed">
+                    <p className="text-surface-300 mt-2 sm:mt-3 text-xs sm:text-sm md:text-base line-clamp-2 leading-relaxed">
                       {currentSlide.excerpt}
                     </p>
                   )}
                   <Link
                     to={`/news/${currentSlide?.slug}`}
-                    className="inline-flex items-center gap-2 mt-5 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
+                    className="inline-flex items-center gap-2 mt-3 sm:mt-5 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
                   >
                     {t('home.read_more')} <ArrowRight className="h-4 w-4" />
                   </Link>
@@ -318,13 +318,13 @@ export default function HomePage() {
         </section>
       ) : (
         /* Fallback header when no posts */
-        <section className="relative pt-28 pb-16 overflow-hidden">
+        <section className="relative pt-8 pb-16 overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-950/95 to-surface-950" />
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 relative text-center">
             <Award className="h-8 w-8 text-gold-400 mx-auto mb-4" />
             <h1 className="text-4xl sm:text-5xl font-display font-bold text-white">FOKUS Award</h1>
             <p className="text-surface-400 mt-3 max-w-lg mx-auto">
-              Celebrating photographic excellence since 2009
+              {t('home.hero_fallback')}
             </p>
           </div>
         </section>
@@ -333,12 +333,12 @@ export default function HomePage() {
       {/* ===== Stats ribbon ===== */}
       <section className="border-b border-surface-800 bg-surface-950/80 backdrop-blur-sm relative z-10">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex items-center justify-between py-4 overflow-x-auto gap-6">
+          <div className="flex items-center justify-between py-3 sm:py-4 overflow-x-auto gap-4 sm:gap-6">
             <div className="flex items-center gap-2 shrink-0">
               <Award className="h-4 w-4 text-gold-400" />
-              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-surface-400">FOKUS Award</span>
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-surface-400">FOKUS Award</span>
             </div>
-            <div className="flex items-center gap-6 sm:gap-10">
+            <div className="flex items-center gap-4 sm:gap-6 md:gap-10">
               {stats.map(s => (
                 <div key={s.label} className="flex items-center gap-2 shrink-0">
                   <span className="text-primary-400">{s.icon}</span>
@@ -366,7 +366,7 @@ export default function HomePage() {
                 {t('home.view_all')} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {homeCategories.slice(0, 6).map((cat, i) => {
                 const style = CAT_COLORS[i % CAT_COLORS.length];
                 const slug = derivedSlug(cat.name);
@@ -378,7 +378,7 @@ export default function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
                   >
-                    <Link to={`/apply/${slug}`} className={`group block relative rounded-xl overflow-hidden h-44 border border-surface-800 ${style.border} transition-all`}>
+                    <Link to={`/apply/${slug}`} className={`group block relative rounded-xl overflow-hidden h-36 sm:h-44 border border-surface-800 ${style.border} transition-all`}>
                       {cat.image_url ? (
                         <img src={cat.image_url} alt={cat.name}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -421,7 +421,7 @@ export default function HomePage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
-                    className="shrink-0 w-72 sm:w-80 snap-start"
+                    className="shrink-0 w-64 sm:w-72 md:w-80 snap-start"
                   >
                     <Link to={`/news/${post.slug}`} className="group block">
                       <div className="rounded-xl overflow-hidden bg-surface-900 border border-surface-800 hover:border-emerald-500/30 transition-colors">
@@ -435,7 +435,7 @@ export default function HomePage() {
                           )}
                           <div className="absolute top-3 left-3">
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/90 text-white">
-                              <Calendar className="h-2.5 w-2.5" /> Event
+                              <Calendar className="h-2.5 w-2.5" /> {t('home.event_badge')}
                             </span>
                           </div>
                         </div>
@@ -464,7 +464,7 @@ export default function HomePage() {
                   <h2 className="text-lg font-display font-bold text-white">{t('home.latest_news')}</h2>
                 </div>
                 <Link to="/news" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
-                  View All <ArrowRight className="h-3 w-3" />
+                  {t('home.view_all')} <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
               {news.length > 0 ? (
@@ -490,7 +490,7 @@ export default function HomePage() {
                           )}
                           {isNew && (
                             <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-red-500 text-white leading-none tracking-wider">
-                              New
+                              {t('home.new_badge')}
                             </span>
                           )}
                         </div>
@@ -532,17 +532,17 @@ export default function HomePage() {
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Wind className="h-4 w-4 text-emerald-400" />
-                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Open Call</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">{t('home.open_call')}</span>
                   </div>
                   <h3 className="text-lg font-display font-bold text-white mb-2">
-                    IFFA 17 · €4,000 in prizes
+                    {t('home.sidebar_title')}
                   </h3>
                   <p className="text-xs text-surface-400 leading-relaxed mb-4">
-                    4 categories across theme, press, life & land photography.
+                    {t('home.sidebar_desc')}
                   </p>
                   <Link to="/apply">
                     <Button variant="gold" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
-                      View Categories
+                      {t('home.view_categories')}
                     </Button>
                   </Link>
                 </motion.div>
@@ -550,13 +550,13 @@ export default function HomePage() {
 
               {/* Quick Links */}
               <div className="rounded-2xl border border-surface-800 bg-surface-900 p-5">
-                <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-4">Quick Links</h3>
+                <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-4">{t('home.quick_links')}</h3>
                 <div className="space-y-2">
                   {[
-                    { to: '/about', label: 'About FOKUS Award' },
-                    { to: '/winners', label: 'Past Winners' },
-                    { to: '/gallery', label: 'Photo Gallery' },
-                    { to: '/contact', label: 'Contact Us' },
+                    { to: '/about', label: t('home.about_fokus') },
+                    { to: '/winners', label: t('home.past_winners') },
+                    { to: '/gallery', label: t('home.photo_gallery') },
+                    { to: '/contact', label: t('home.contact_us') },
                   ].map(link => (
                     <Link
                       key={link.to}
@@ -610,7 +610,7 @@ export default function HomePage() {
                 </a>
               ))}
               {partners.length === 0 && (
-                <p className="text-surface-600 text-sm">Partners coming soon</p>
+                <p className="text-surface-600 text-sm">{t('home.partners_soon')}</p>
               )}
             </motion.div>
           </motion.div>

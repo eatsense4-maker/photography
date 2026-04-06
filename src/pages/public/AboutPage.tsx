@@ -86,7 +86,7 @@ export default function AboutPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative pt-32 pb-20">
+      <section className="relative pt-12 pb-20">
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-20"

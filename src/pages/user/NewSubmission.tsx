@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+﻿import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
 import {
   Upload, X, ArrowRight, ArrowLeft, Image as ImageIcon,
-  CreditCard, Check, Camera, ShieldCheck, Package, Info, HelpCircle, Lock,
+  CreditCard, Check, Camera, ShieldCheck, Info, HelpCircle, Lock,
 } from 'lucide-react';
 import { Button, Input, Textarea, Select, Card } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -14,6 +14,16 @@ import { uploadPhoto } from '@/lib/r2';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 import type { PricingTier, Category } from '@/types';
+
+/* -- Category accent colors -- */
+const CAT_ACCENTS = [
+  { text: 'text-gold-400', border: 'border-gold-500/40', bg: 'bg-gold-500/10' },
+  { text: 'text-blue-400', border: 'border-blue-500/40', bg: 'bg-blue-500/10' },
+  { text: 'text-emerald-400', border: 'border-emerald-500/40', bg: 'bg-emerald-500/10' },
+  { text: 'text-violet-400', border: 'border-violet-500/40', bg: 'bg-violet-500/10' },
+  { text: 'text-sky-400', border: 'border-sky-500/40', bg: 'bg-sky-500/10' },
+  { text: 'text-amber-400', border: 'border-amber-500/40', bg: 'bg-amber-500/10' },
+];
 
 interface UploadedPhoto {
   id: string;
@@ -37,9 +47,9 @@ export default function NewSubmission() {
   const [editionId, setEditionId] = useState('');
   const [editions, setEditions] = useState<{ value: string; label: string }[]>([]);
 
-  // Categories (multi-select)
+  // Categories (single-select)
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   // Pricing tiers from DB
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
@@ -52,30 +62,22 @@ export default function NewSubmission() {
   const [paying, setPaying] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
 
-  // Per-category photos: { categoryId: UploadedPhoto[] }
-  const [categoryPhotos, setCategoryPhotos] = useState<Record<string, UploadedPhoto[]>>({});
-
-  // Active category in upload step
-  const [activeCategoryIdx, setActiveCategoryIdx] = useState(0);
+  // Photos (single category, flat array)
+  const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
 
   // Submission details
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
 
-  // ─── Derived state ───
-  const selectedCategories = useMemo(
-    () => categories.filter((c) => selectedCategoryIds.includes(c.id)),
-    [categories, selectedCategoryIds]
+  // --- Derived state ---
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.id === selectedCategoryId) || null,
+    [categories, selectedCategoryId]
   );
 
-  const paidCategories = useMemo(
-    () => selectedCategories.filter((c) => c.price > 0),
-    [selectedCategories]
-  );
-
-  const hasPaidCategories = paidCategories.length > 0;
+  const isPaid = selectedCategory ? selectedCategory.price > 0 : false;
   const hasCredits = !!userCredits || paymentComplete;
-  const needsPayment = hasPaidCategories && !hasCredits;
+  const needsPayment = isPaid && !hasCredits;
 
   const selectedTier = useMemo(
     () => pricingTiers.find((t) => t.id === selectedTierId) || null,
@@ -84,9 +86,8 @@ export default function NewSubmission() {
 
   const paymentAmount = useMemo(() => {
     if (!selectedTier) return 0;
-    if (selectedTier.is_bundle) return Number(selectedTier.price);
-    return Number(selectedTier.price) * paidCategories.length;
-  }, [selectedTier, paidCategories.length]);
+    return Number(selectedTier.price);
+  }, [selectedTier]);
 
   const paidPhotoLimit = useMemo(() => {
     if (userCredits) return userCredits.photo_credits;
@@ -94,11 +95,14 @@ export default function NewSubmission() {
     return 0;
   }, [userCredits, selectedTier]);
 
-  const activeCategory = selectedCategories[activeCategoryIdx] || null;
+  const maxPhotos = selectedCategory
+    ? (isPaid ? Math.min(selectedCategory.max_photos, paidPhotoLimit || selectedCategory.max_photos) : selectedCategory.max_photos)
+    : 0;
 
-  // ─── Data fetching ───
+  const hasPhotos = photos.length > 0;
+  const allPhotosTitled = photos.every((p) => p.title.trim() !== '');
 
-  // Fetch editions
+  // --- Data fetching ---
   useEffect(() => {
     supabase
       .from('editions')
@@ -116,7 +120,6 @@ export default function NewSubmission() {
       });
   }, []);
 
-  // Fetch categories when edition changes
   useEffect(() => {
     if (!editionId) { setCategories([]); return; }
     supabase
@@ -127,18 +130,17 @@ export default function NewSubmission() {
       .then(({ data }) => setCategories(data || []));
   }, [editionId]);
 
-  // Fetch pricing tiers when edition changes
   useEffect(() => {
     if (!editionId) { setPricingTiers([]); return; }
     supabase
       .from('pricing_tiers')
       .select('*')
       .eq('edition_id', editionId)
+      .eq('is_bundle', false)
       .order('sort_order')
       .then(({ data }) => setPricingTiers(data || []));
   }, [editionId]);
 
-  // Check if user already has credits for this edition
   useEffect(() => {
     if (!editionId || !user?.id) { setUserCredits(null); return; }
     supabase
@@ -150,28 +152,17 @@ export default function NewSubmission() {
       .then(({ data }) => setUserCredits(data || null));
   }, [editionId, user?.id]);
 
-  // ─── Category selection ───
-  const toggleCategory = (catId: string) => {
-    setSelectedCategoryIds((prev) =>
-      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
-    );
+  // --- Category selection (single) ---
+  const selectCategory = (catId: string) => {
+    setSelectedCategoryId(catId);
+    setPhotos([]);
   };
 
-  // ─── Photos management ───
-  const getPhotosForCategory = (catId: string) => categoryPhotos[catId] || [];
-
-  const getMaxPhotos = (cat: Category) => {
-    if (cat.price > 0) return Math.min(cat.max_photos, paidPhotoLimit || cat.max_photos);
-    return cat.max_photos;
-  };
-
+  // --- Photos management ---
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      if (!activeCategory) return;
-      const catId = activeCategory.id;
-      const current = getPhotosForCategory(catId);
-      const max = getMaxPhotos(activeCategory);
-      const remaining = max - current.length;
+      if (!selectedCategory) return;
+      const remaining = maxPhotos - photos.length;
       const filesToAdd = acceptedFiles.slice(0, remaining);
 
       const newPhotos: UploadedPhoto[] = filesToAdd.map((file) => ({
@@ -184,16 +175,10 @@ export default function NewSubmission() {
         description: '',
       }));
 
-      setCategoryPhotos((prev) => ({
-        ...prev,
-        [catId]: [...(prev[catId] || []), ...newPhotos],
-      }));
+      setPhotos((prev) => [...prev, ...newPhotos]);
     },
-    [activeCategory, categoryPhotos, paidPhotoLimit]
+    [selectedCategory, photos.length, maxPhotos]
   );
-
-  const currentPhotos = activeCategory ? getPhotosForCategory(activeCategory.id) : [];
-  const currentMaxPhotos = activeCategory ? getMaxPhotos(activeCategory) : 0;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -203,56 +188,31 @@ export default function NewSubmission() {
       'image/tiff': ['.tif', '.tiff'],
     },
     maxSize: 20 * 1024 * 1024,
-    disabled: !activeCategory || currentPhotos.length >= currentMaxPhotos,
+    disabled: !selectedCategory || photos.length >= maxPhotos,
   });
 
-  const removePhoto = (catId: string, photoId: string) => {
-    setCategoryPhotos((prev) => {
-      const photos = prev[catId] || [];
-      const photo = photos.find((p) => p.id === photoId);
+  const removePhoto = (photoId: string) => {
+    setPhotos((prev) => {
+      const photo = prev.find((p) => p.id === photoId);
       if (photo) URL.revokeObjectURL(photo.preview);
-      return { ...prev, [catId]: photos.filter((p) => p.id !== photoId) };
+      return prev.filter((p) => p.id !== photoId);
     });
   };
 
-  const updatePhotoField = (catId: string, photoId: string, field: 'title' | 'description', value: string) => {
-    setCategoryPhotos((prev) => ({
-      ...prev,
-      [catId]: (prev[catId] || []).map((p) =>
-        p.id === photoId ? { ...p, [field]: value } : p
-      ),
-    }));
+  const updatePhotoField = (photoId: string, field: 'title' | 'description', value: string) => {
+    setPhotos((prev) =>
+      prev.map((p) => (p.id === photoId ? { ...p, [field]: value } : p))
+    );
   };
 
-  // ─── Step navigation ───
-  const canProceedStep1 = selectedCategoryIds.length > 0;
-  const canProceedUpload = selectedCategories.every(
-    (c) => getPhotosForCategory(c.id).length > 0
-  );
-  const allCurrentPhotosTitled = activeCategory
-    ? getPhotosForCategory(activeCategory.id).every((p) => p.title.trim() !== '')
-    : false;
-
-  // In upload step: find the next category that still needs photos
-  const currentCatHasPhotos = activeCategory
-    ? getPhotosForCategory(activeCategory.id).length > 0
-    : false;
-  const nextEmptyCategoryIdx = selectedCategories.findIndex(
-    (c, i) => i > activeCategoryIdx && getPhotosForCategory(c.id).length === 0
-  );
-  const shouldAdvanceCategory = step === 3 && currentCatHasPhotos && nextEmptyCategoryIdx !== -1;
-
+  // --- Step navigation ---
   const goToNextStep = () => {
-    if (step === 1 && hasPaidCategories && !hasCredits) {
+    if (step === 1 && isPaid && !hasCredits) {
       setStep(2);
     } else if (step === 1) {
       setStep(3);
-      setActiveCategoryIdx(0);
     } else if (step === 2) {
       setStep(3);
-      setActiveCategoryIdx(0);
-    } else if (step === 3 && shouldAdvanceCategory) {
-      setActiveCategoryIdx(nextEmptyCategoryIdx);
     } else if (step === 3) {
       setStep(4);
     }
@@ -260,91 +220,74 @@ export default function NewSubmission() {
 
   const goToPrevStep = () => {
     if (step === 4) setStep(3);
-    else if (step === 3 && hasPaidCategories && !userCredits && paymentComplete) setStep(2);
+    else if (step === 3 && isPaid && !userCredits && paymentComplete) setStep(2);
     else if (step === 3) setStep(1);
     else if (step === 2) setStep(1);
   };
 
-  // ─── Submit ───
+  // --- Submit ---
   const handleSubmit = async (asDraft: boolean) => {
-    if (!user?.id) return;
+    if (!user?.id || !selectedCategory) return;
 
-    // Check submissions_remaining for paid categories (anti-spam)
-    const submittingPaidCount = selectedCategories.filter((c) => c.price > 0).length;
-    if (!asDraft && submittingPaidCount > 0 && userCredits && userCredits.submissions_remaining <= 0) {
+    if (!asDraft && isPaid && userCredits && userCredits.submissions_remaining <= 0) {
       toast.error('You have no submissions remaining for this edition. Contact support if you need assistance.');
       return;
     }
 
     setLoading(true);
     try {
-      let submittedPaidCount = 0;
-      for (const cat of selectedCategories) {
-        const photos = getPhotosForCategory(cat.id);
-        if (photos.length === 0 && !asDraft) continue;
+      const status = asDraft ? 'draft' : (isPaid && !hasCredits ? 'draft' : 'submitted');
 
-        const isPaid = cat.price > 0;
-        const status = asDraft ? 'draft' : (isPaid && !hasCredits ? 'draft' : 'submitted');
+      const { data: submission, error: subError } = await supabase
+        .from('submissions')
+        .insert({
+          user_id: user.id,
+          edition_id: editionId,
+          category_id: selectedCategory.id,
+          title: title || null,
+          description: description || null,
+          status,
+          submitted_at: status === 'submitted' ? new Date().toISOString() : null,
+        })
+        .select('id')
+        .single();
 
-        const { data: submission, error: subError } = await supabase
-          .from('submissions')
-          .insert({
-            user_id: user.id,
-            edition_id: editionId,
-            category_id: cat.id,
-            title: title || null,
-            description: description || null,
-            status,
-            submitted_at: status === 'submitted' ? new Date().toISOString() : null,
-          })
-          .select('id')
-          .single();
+      if (subError) throw subError;
 
-        if (subError) throw subError;
-        if (isPaid && status === 'submitted') submittedPaidCount++;
+      for (let i = 0; i < photos.length; i++) {
+        const photo = photos[i];
+        try {
+          const { key } = await uploadPhoto(photo.file, (progress) => {
+            setPhotos((prev) =>
+              prev.map((p) => (p.id === photo.id ? { ...p, progress } : p))
+            );
+          });
 
-        for (let i = 0; i < photos.length; i++) {
-          const photo = photos[i];
-          try {
-            const { key } = await uploadPhoto(photo.file, (progress) => {
-              setCategoryPhotos((prev) => ({
-                ...prev,
-                [cat.id]: (prev[cat.id] || []).map((p) =>
-                  p.id === photo.id ? { ...p, progress } : p
-                ),
-              }));
-            });
+          await supabase.from('submission_photos').insert({
+            submission_id: submission.id,
+            storage_key: key,
+            original_filename: photo.file.name,
+            mime_type: photo.file.type,
+            file_size: photo.file.size,
+            sort_order: i,
+            title: photo.title || null,
+            description: photo.description || null,
+          });
 
-            await supabase.from('submission_photos').insert({
-              submission_id: submission.id,
-              storage_key: key,
-              original_filename: photo.file.name,
-              mime_type: photo.file.type,
-              file_size: photo.file.size,
-              sort_order: i,
-              title: photo.title || null,
-              description: photo.description || null,
-            });
-
-            setCategoryPhotos((prev) => ({
-              ...prev,
-              [cat.id]: (prev[cat.id] || []).map((p) =>
-                p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p
-              ),
-            }));
-          } catch (uploadErr) {
-            console.error('Photo upload failed:', uploadErr);
-            toast.error(`Failed to upload ${photo.file.name}`);
-          }
+          setPhotos((prev) =>
+            prev.map((p) => (p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p))
+          );
+        } catch (uploadErr) {
+          console.error('Photo upload failed:', uploadErr);
+          toast.error(`Failed to upload ${photo.file.name}`);
         }
       }
 
-      // Decrement submissions_remaining for paid submissions
-      if (submittedPaidCount > 0 && userCredits) {
+      if (!asDraft && isPaid && status === 'submitted' && userCredits) {
         await supabase.rpc('decrement_submissions_remaining', {
           p_user_id: user.id,
           p_edition_id: editionId,
-          p_count: submittedPaidCount,
+          p_count: 1,
         });
       }
 
@@ -357,7 +300,7 @@ export default function NewSubmission() {
     }
   };
 
-  // ─── Progress bar ───
+  // --- Progress bar ---
   const progressSteps = needsPayment
     ? [t('submission.step_categories'), t('submission.step_payment'), t('submission.step_upload'), t('submission.step_review')]
     : [t('submission.step_categories'), t('submission.step_upload'), t('submission.step_review')];
@@ -377,7 +320,7 @@ export default function NewSubmission() {
         </p>
       </div>
 
-      {/* Progress Steps — Large numbered circles */}
+      {/* Progress Steps */}
       <nav aria-label="Submission progress" className="flex items-center justify-center gap-0">
         {progressSteps.map((label, i) => {
           const isCompleted = i < currentProgressIdx;
@@ -420,20 +363,19 @@ export default function NewSubmission() {
         })}
       </nav>
 
-      {/* ═══ STEP 1: Select Categories ═══ */}
+      {/* === STEP 1: Select Category (Card Grid) === */}
       {step === 1 && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="space-y-3"
         >
-          {/* Friendly instruction */}
           <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary-500/5 border border-primary-500/20">
             <Info className="h-4 w-4 text-primary-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-white font-medium">Choose the categories you'd like to enter</p>
+              <p className="text-sm text-white font-medium">Choose a category to enter</p>
               <p className="text-xs text-surface-300 mt-0.5">
-                Select one or more categories. Some are free, others require a small fee.
+                Select one category. You can submit to other categories separately.
               </p>
             </div>
           </div>
@@ -446,60 +388,61 @@ export default function NewSubmission() {
               value={editionId}
               onChange={(e) => {
                 setEditionId(e.target.value);
-                setSelectedCategoryIds([]);
+                setSelectedCategoryId(null);
+                setPhotos([]);
               }}
             />
 
             {editionId && categories.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-white mb-0.5">
-                  Select categories to participate in
+                <label className="block text-sm font-medium text-white mb-2">
+                  Select a category
                 </label>
-                <p className="text-xs text-surface-400 mb-2">
-                  Click a category to select it.
-                </p>
-                <div className="space-y-1.5">
-                  {categories.map((cat) => {
-                    const isSelected = selectedCategoryIds.includes(cat.id);
-                    const isPaid = cat.price > 0;
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {categories.map((cat, i) => {
+                    const isSelected = selectedCategoryId === cat.id;
+                    const accent = CAT_ACCENTS[i % CAT_ACCENTS.length];
+                    const catIsPaid = cat.price > 0;
                     return (
                       <button
                         key={cat.id}
                         type="button"
-                        onClick={() => toggleCategory(cat.id)}
-                        className={`w-full flex items-center gap-3 p-2.5 rounded-lg border transition-all text-left cursor-pointer ${
-                          isSelected
-                            ? 'border-primary-500 bg-primary-500/10'
-                            : 'border-surface-700 hover:border-surface-500 bg-surface-900'
+                        onClick={() => selectCategory(cat.id)}
+                        className={`group relative rounded-xl overflow-hidden text-left transition-all cursor-pointer border-2 ${
+                          isSelected ? `${accent.border} ring-1 ring-white/20` : 'border-surface-700 hover:border-surface-500'
                         }`}
                       >
-                        <div
-                          className={`h-5 w-5 rounded flex items-center justify-center flex-shrink-0 transition-colors ${
-                            isSelected
-                              ? 'bg-primary-500 text-white'
-                              : 'border border-surface-500'
-                          }`}
-                        >
-                          {isSelected && <Check className="h-3 w-3" />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white">{cat.name}</p>
-                          {cat.description && (
-                            <p className="text-xs text-surface-400 line-clamp-1">{cat.description}</p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0 flex items-center gap-2">
-                          <span className="text-xs text-surface-500">Max {cat.max_photos}</span>
-                          {isPaid ? (
-                            <span className="inline-flex items-center gap-1 text-xs font-medium text-gold-400 bg-gold-500/10 px-2 py-0.5 rounded-full">
-                              <CreditCard className="h-3 w-3" />
-                              {t('submission.paid_badge')}
-                            </span>
+                        <div className="h-24 sm:h-28 bg-surface-800 overflow-hidden relative">
+                          {cat.image_url ? (
+                            <img src={cat.image_url} alt={cat.name}
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                           ) : (
-                            <span className="inline-flex items-center text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                              {t('submission.free_badge')}
-                            </span>
+                            <div className="w-full h-full bg-gradient-to-br from-surface-800 to-surface-900 flex items-center justify-center">
+                              <Camera className="h-8 w-8 text-surface-700" />
+                            </div>
                           )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/40 to-transparent" />
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center">
+                              <Check className="h-3.5 w-3.5 text-white" />
+                            </div>
+                          )}
+                          <div className="absolute top-2 left-2">
+                            {catIsPaid ? (
+                              <span className="text-[10px] font-bold text-gold-400 bg-surface-950/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                                €{Number(cat.price).toFixed(0)}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-emerald-400 bg-surface-950/80 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                                {t('submission.free_badge')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="p-3 bg-surface-900">
+                          <p className="text-sm font-semibold text-white leading-tight">{cat.name}</p>
+                          {cat.description && <p className="text-[11px] text-surface-400 line-clamp-2 mt-1">{cat.description}</p>}
+                          <p className="text-[10px] text-surface-500 mt-1.5">Max {cat.max_photos} photo{cat.max_photos > 1 ? 's' : ''}</p>
                         </div>
                       </button>
                     );
@@ -508,30 +451,21 @@ export default function NewSubmission() {
               </div>
             )}
 
-            {selectedCategoryIds.length > 0 && (
+            {selectedCategory && (
               <div className="p-2.5 rounded-lg bg-surface-800/50 border border-surface-700 space-y-1">
-                <p className="text-sm text-white font-medium">
-                  ✓ {selectedCategoryIds.length} categor{selectedCategoryIds.length === 1 ? 'y' : 'ies'} selected
+                <p className="text-sm text-white font-medium flex items-center gap-2">
+                  <Check className="h-4 w-4 text-emerald-400" />
+                  {selectedCategory.name}
+                  {isPaid && <span className="text-gold-400 text-xs">· €{Number(selectedCategory.price).toFixed(0)}</span>}
                 </p>
-                {hasPaidCategories && (
-                  <p className="text-xs text-gold-400">
-                    {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'} — you'll choose a plan in the next step
-                    {hasCredits && (
-                      <span className="text-emerald-400 ml-1">
-                        — Credits already available ({userCredits?.photo_credits} photos/category)
-                      </span>
-                    )}
-                  </p>
-                )}
-                {userCredits && userCredits.submissions_remaining <= 0 && hasPaidCategories && (
+                {userCredits && userCredits.submissions_remaining <= 0 && isPaid && (
                   <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 mt-1">
                     <p className="text-xs text-red-400 font-medium">
-                      You have used all your paid submissions for this edition. You can still enter free categories.
-                      Contact support if you need to submit again.
+                      You have used all your paid submissions for this edition. Contact support if you need to submit again.
                     </p>
                   </div>
                 )}
-                {userCredits && userCredits.submissions_remaining > 0 && hasPaidCategories && (
+                {userCredits && userCredits.submissions_remaining > 0 && isPaid && (
                   <p className="text-xs text-surface-400">
                     {userCredits.submissions_remaining} paid submission{userCredits.submissions_remaining !== 1 ? 's' : ''} remaining
                   </p>
@@ -546,15 +480,15 @@ export default function NewSubmission() {
               size="sm"
               icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
-              disabled={!canProceedStep1}
+              disabled={!selectedCategoryId}
             >
-              {hasPaidCategories && !hasCredits ? 'Continue to Choose Plan' : 'Continue to Upload Photos'}
+              {isPaid && !hasCredits ? 'Continue to Choose Plan' : 'Continue to Upload Photos'}
             </Button>
           </div>
         </motion.div>
       )}
 
-      {/* ═══ STEP 2: Payment ═══ */}
+      {/* === STEP 2: Payment === */}
       {step === 2 && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
@@ -568,7 +502,7 @@ export default function NewSubmission() {
               </div>
               <h3 className="text-base font-bold text-white">Payment Confirmed!</h3>
               <p className="text-sm text-surface-300 mt-1 max-w-md mx-auto">
-                You now have <strong className="text-white">{paidPhotoLimit} photo credits</strong> per paid category.
+                You now have <strong className="text-white">{paidPhotoLimit} photo credits</strong> for {selectedCategory?.name}.
               </p>
               <Button
                 variant="primary"
@@ -584,13 +518,12 @@ export default function NewSubmission() {
 
           {!paymentComplete && (
             <>
-              {/* Friendly instruction */}
               <div className="flex items-start gap-2.5 p-3 rounded-lg bg-gold-500/5 border border-gold-500/20">
                 <Info className="h-4 w-4 text-gold-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-white font-medium">Choose your photo plan</p>
                   <p className="text-xs text-surface-300 mt-0.5">
-                    Select how many photos per paid category, then complete payment.
+                    Select how many photos you want to upload for {selectedCategory?.name}.
                   </p>
                 </div>
               </div>
@@ -600,13 +533,12 @@ export default function NewSubmission() {
                   <Card className="p-4">
                     <h2 className="text-sm font-bold text-white mb-0.5">Choose Your Plan</h2>
                     <p className="text-xs text-surface-400 mb-3">
-                      {paidCategories.length} paid categor{paidCategories.length === 1 ? 'y' : 'ies'} selected. Pick a plan:
+                      Pick a plan for {selectedCategory?.name}:
                     </p>
 
                     <div className="space-y-1.5">
-                      {pricingTiers.filter((t) => !t.is_bundle).map((tier) => {
+                      {pricingTiers.map((tier) => {
                         const isActive = selectedTierId === tier.id;
-                        const total = Number(tier.price) * paidCategories.length;
                         return (
                           <button
                             key={tier.id}
@@ -628,56 +560,10 @@ export default function NewSubmission() {
                             <div className="flex-1">
                               <span className="text-sm text-white font-semibold">{tier.name}</span>
                               <span className="text-xs text-surface-400 ml-2">
-                                {tier.photo_credits} photo{tier.photo_credits > 1 ? 's' : ''}/cat · €{tier.price}/cat × {paidCategories.length}
+                                {tier.photo_credits} photo{tier.photo_credits > 1 ? 's' : ''}
                               </span>
                             </div>
-                            <span className="text-base font-bold text-white">€{total.toFixed(0)}</span>
-                          </button>
-                        );
-                      })}
-
-                      {pricingTiers.filter((t) => t.is_bundle).map((tier) => {
-                        const isActive = selectedTierId === tier.id;
-                        const regularEquivalent = pricingTiers.find(
-                          (t) => !t.is_bundle && t.photo_credits === tier.photo_credits
-                        );
-                        const regularTotal = regularEquivalent
-                          ? Number(regularEquivalent.price) * paidCategories.length
-                          : 0;
-                        const savings = regularTotal - Number(tier.price);
-                        return (
-                          <button
-                            key={tier.id}
-                            type="button"
-                            onClick={() => setSelectedTierId(tier.id)}
-                            className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left cursor-pointer ${
-                              isActive
-                                ? 'border-emerald-500 bg-emerald-500/10'
-                                : 'border-emerald-500/20 hover:border-emerald-500/40 bg-emerald-500/5'
-                            }`}
-                          >
-                            <div
-                              className={`h-5 w-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                                isActive ? 'border-emerald-500' : 'border-emerald-500/40'
-                              }`}
-                            >
-                              {isActive && <div className="h-2.5 w-2.5 rounded-full bg-emerald-500" />}
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center gap-1.5">
-                                <Package className="h-3.5 w-3.5 text-emerald-400" />
-                                <span className="text-sm text-white font-semibold">{tier.name}</span>
-                                {savings > 0 && (
-                                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-[10px] font-bold text-emerald-300">
-                                    Save €{savings.toFixed(0)}
-                                  </span>
-                                )}
-                              </div>
-                              <span className="text-xs text-surface-400">
-                                {tier.photo_credits} photos · all paid categories
-                              </span>
-                            </div>
-                            <span className="text-base font-bold text-emerald-400">€{Number(tier.price).toFixed(0)}</span>
+                            <span className="text-base font-bold text-white">€{Number(tier.price).toFixed(0)}</span>
                           </button>
                         );
                       })}
@@ -691,14 +577,12 @@ export default function NewSubmission() {
                       Order Summary
                     </h3>
                     <div className="space-y-1.5 text-xs">
-                      {paidCategories.map((c) => (
-                        <div key={c.id} className="flex justify-between">
-                          <span className="text-surface-400 truncate max-w-[65%]">{c.name}</span>
-                          <span className="text-white">
-                            {selectedTier?.is_bundle ? '—' : selectedTier ? `€${Number(selectedTier.price).toFixed(0)}` : '—'}
-                          </span>
-                        </div>
-                      ))}
+                      <div className="flex justify-between">
+                        <span className="text-surface-400 truncate max-w-[65%]">{selectedCategory?.name}</span>
+                        <span className="text-white">
+                          {selectedTier ? `€${Number(selectedTier.price).toFixed(0)}` : '-'}
+                        </span>
+                      </div>
                       {selectedTier && (
                         <>
                           <div className="border-t border-surface-700 pt-2 flex justify-between">
@@ -706,7 +590,7 @@ export default function NewSubmission() {
                             <span className="text-white">{selectedTier.name}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-surface-400">Photos/category</span>
+                            <span className="text-surface-400">Photos</span>
                             <span className="text-white">{selectedTier.photo_credits}</span>
                           </div>
                           <div className="border-t border-surface-700 pt-1.5 flex justify-between">
@@ -732,7 +616,6 @@ export default function NewSubmission() {
                         </div>
                       ) : (
                         <div className="space-y-3">
-                          {/* ── Card Payment Section (primary) ── */}
                           <div className="rounded-lg border border-gold-500/40 bg-gradient-to-b from-gold-500/5 to-transparent p-3 space-y-3">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
@@ -753,15 +636,14 @@ export default function NewSubmission() {
                               fundingSource="card"
                               createOrder={async () => {
                                 const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-                                  body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
+                                  body: { tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                 });
                                 if (error) {
                                   let msg = error.message;
                                   try { const body = await error.context?.json(); msg = body?.error || body?.details || msg; } catch {}
-                                  console.error('create-paypal-order error:', msg, error);
                                   throw new Error(msg);
                                 }
-                                if (!data?.orderId) { console.error('create-paypal-order bad response:', data); throw new Error(data?.error || 'Failed to create order'); }
+                                if (!data?.orderId) throw new Error(data?.error || 'Failed to create order');
                                 return data.orderId;
                               }}
                               onApprove={async (data) => {
@@ -773,7 +655,7 @@ export default function NewSubmission() {
                                   if (error) throw new Error(error.message || 'Capture request failed');
                                   if (res?.success) {
                                     setPaymentComplete(true);
-                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: paidCategories.length });
+                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
                                     toast.success('Payment successful! Credits added.');
                                   } else {
                                     throw new Error(res?.error || 'Capture failed');
@@ -791,7 +673,6 @@ export default function NewSubmission() {
                             </div>
                           </div>
 
-                          {/* ── Divider ── */}
                           <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                               <div className="w-full border-t border-surface-700" />
@@ -803,22 +684,20 @@ export default function NewSubmission() {
                             </div>
                           </div>
 
-                          {/* ── PayPal Button ── */}
                           <div className="space-y-3">
                             <PayPalButtons
                               style={{ layout: 'vertical', color: 'blue', shape: 'pill', label: 'paypal', height: 38 }}
                               fundingSource="paypal"
                               createOrder={async () => {
                                 const { data, error } = await supabase.functions.invoke('create-paypal-order', {
-                                  body: { tierId: selectedTierId, editionId, categoryIds: paidCategories.map((c) => c.id) },
+                                  body: { tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                 });
                                 if (error) {
                                   let msg = error.message;
                                   try { const body = await error.context?.json(); msg = body?.error || body?.details || msg; } catch {}
-                                  console.error('create-paypal-order error:', msg, error);
                                   throw new Error(msg);
                                 }
-                                if (!data?.orderId) { console.error('create-paypal-order bad response:', data); throw new Error(data?.error || 'Failed to create order'); }
+                                if (!data?.orderId) throw new Error(data?.error || 'Failed to create order');
                                 return data.orderId;
                               }}
                               onApprove={async (data) => {
@@ -830,7 +709,7 @@ export default function NewSubmission() {
                                   if (error) throw new Error(error.message || 'Capture request failed');
                                   if (res?.success) {
                                     setPaymentComplete(true);
-                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: paidCategories.length });
+                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
                                     toast.success('Payment successful! Credits added.');
                                   } else {
                                     throw new Error(res?.error || 'Capture failed');
@@ -845,7 +724,6 @@ export default function NewSubmission() {
                         </div>
                       )}
 
-                      {/* ── Trust badges ── */}
                       <div className="border-t border-surface-800 pt-2">
                         <div className="flex items-center gap-1.5 text-[11px] text-surface-400 justify-center">
                           <ShieldCheck className="h-3 w-3 text-emerald-400" />
@@ -869,180 +747,120 @@ export default function NewSubmission() {
         </motion.div>
       )}
 
-      {/* ═══ STEP 3: Upload Photos (per category) ═══ */}
-      {step === 3 && (
+      {/* === STEP 3: Upload Photos === */}
+      {step === 3 && selectedCategory && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="space-y-3"
         >
-          {/* Friendly instruction */}
           <div className="flex items-start gap-2.5 p-3 rounded-lg bg-primary-500/5 border border-primary-500/20">
             <Info className="h-4 w-4 text-primary-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm text-white font-medium">Upload your photos</p>
+              <p className="text-sm text-white font-medium">Upload your photos for {selectedCategory.name}</p>
               <p className="text-xs text-surface-300 mt-0.5">
                 JPG, PNG, or TIFF · max 20 MB each. Click or drag & drop.
               </p>
             </div>
           </div>
 
-          {/* Category tabs */}
-          <div className="flex flex-wrap gap-1.5">
-            {selectedCategories.map((cat, idx) => {
-              const photos = getPhotosForCategory(cat.id);
-              const maxPhotos = getMaxPhotos(cat);
-              const isActive = activeCategoryIdx === idx;
-              const isFull = photos.length >= maxPhotos;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setActiveCategoryIdx(idx)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer border ${
-                    isActive
-                      ? 'bg-primary-500/15 text-primary-300 border-primary-500/40'
-                      : 'bg-surface-800 text-surface-400 border-transparent hover:border-surface-600'
-                  }`}
-                >
-                  {cat.name}
-                  <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
-                    isFull
-                      ? 'bg-emerald-500/20 text-emerald-400'
-                      : photos.length > 0
-                      ? 'bg-primary-500/20 text-primary-400'
-                      : 'bg-surface-700 text-surface-500'
-                  }`}>
-                    {photos.length}/{maxPhotos}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {activeCategory && (
-            <Card className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="text-sm font-bold text-white">{activeCategory.name}</h3>
-                  <p className="text-xs text-surface-400 mt-0.5">
-                    {currentPhotos.length}/{currentMaxPhotos} photos
-                    {activeCategory.price > 0 && (
-                      <> · <span className="text-gold-400">{paidPhotoLimit} credits</span></>
-                    )}
-                    {activeCategory.price === 0 && (
-                      <> · <span className="text-emerald-400">Free</span></>
-                    )}
-                  </p>
-                </div>
-                {activeCategory.price > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-gold-500/10 text-xs font-medium text-gold-400">Paid</span>
-                )}
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h3 className="text-sm font-bold text-white">{selectedCategory.name}</h3>
+                <p className="text-xs text-surface-400 mt-0.5">
+                  {photos.length}/{maxPhotos} photos
+                  {isPaid && (
+                    <> - <span className="text-gold-400">{paidPhotoLimit} credits</span></>
+                  )}
+                  {!isPaid && (
+                    <> - <span className="text-emerald-400">Free</span></>
+                  )}
+                </p>
               </div>
-
-              {/* Upload zone */}
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
-                  isDragActive
-                    ? 'border-primary-500 bg-primary-500/5'
-                    : currentPhotos.length >= currentMaxPhotos
-                    ? 'border-surface-800 bg-surface-900/50 cursor-not-allowed'
-                    : 'border-surface-600 hover:border-primary-500/50 bg-surface-900 cursor-pointer'
-                }`}
-              >
-                <input {...getInputProps()} />
-                <Upload className={`h-8 w-8 mx-auto mb-2 ${
-                  currentPhotos.length >= currentMaxPhotos ? 'text-surface-700' : 'text-surface-400'
-                }`} />
-                {currentPhotos.length >= currentMaxPhotos ? (
-                  <p className="text-sm text-surface-500">Max photos reached</p>
-                ) : isDragActive ? (
-                  <p className="text-sm text-primary-400 font-medium">Drop here!</p>
-                ) : (
-                  <>
-                    <p className="text-sm text-white font-medium">Click to choose or drag & drop</p>
-                    <p className="text-xs text-surface-500 mt-1">JPG, PNG, or TIFF · up to 20 MB</p>
-                  </>
-                )}
-              </div>
-
-              {/* Photo grid with per-photo title & description */}
-              {currentPhotos.length > 0 && (
-                <div className="mt-3 space-y-3">
-                  {currentPhotos.map((photo, idx) => (
-                    <div key={photo.id} className="flex gap-3 p-2.5 rounded-lg bg-surface-800/50 border border-surface-700/50">
-                      <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-800 flex-shrink-0">
-                        <img src={photo.preview} alt="" className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => removePhoto(activeCategory.id, photo.id)}
-                          className="absolute top-1 right-1 p-0.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
-                          title="Remove"
-                        >
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                        {!photo.uploaded && photo.progress > 0 && (
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-700">
-                            <div className="h-full bg-primary-500 transition-all" style={{ width: `${photo.progress}%` }} />
-                          </div>
-                        )}
-                        {photo.uploaded && (
-                          <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
-                            <div className="bg-emerald-500 rounded-full p-0.5">
-                              <Check className="h-2.5 w-2.5 text-white" />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-surface-500 font-mono">#{idx + 1}</span>
-                          <span className="text-[10px] text-surface-500 truncate">{photo.file.name}</span>
-                        </div>
-                        <input
-                          type="text"
-                          placeholder="Photo title (required)"
-                          value={photo.title}
-                          onChange={(e) => updatePhotoField(activeCategory.id, photo.id, 'title', e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
-                        />
-                        <input
-                          type="text"
-                          placeholder="Description (optional)"
-                          value={photo.description}
-                          onChange={(e) => updatePhotoField(activeCategory.id, photo.id, 'description', e.target.value)}
-                          className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {isPaid && (
+                <span className="px-2 py-0.5 rounded-full bg-gold-500/10 text-xs font-medium text-gold-400">Paid</span>
               )}
-            </Card>
-          )}
-
-          {/* Checklist */}
-          <Card className="p-3">
-            <h4 className="text-xs font-semibold text-surface-300 uppercase tracking-wider mb-1.5">Checklist</h4>
-            <div className="space-y-1">
-              {selectedCategories.map((cat) => {
-                const photos = getPhotosForCategory(cat.id);
-                const hasPhotos = photos.length > 0;
-                return (
-                  <div key={cat.id} className="flex items-center gap-2 text-xs">
-                    <div className={`h-4 w-4 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      hasPhotos ? 'bg-emerald-500 text-white' : 'bg-surface-700 text-surface-500'
-                    }`}>
-                      {hasPhotos ? <Check className="h-2.5 w-2.5" /> : <span className="text-[9px]">–</span>}
-                    </div>
-                    <span className={`${hasPhotos ? 'text-white' : 'text-surface-400'}`}>{cat.name}</span>
-                    <span className={`ml-auto ${hasPhotos ? 'text-emerald-400' : 'text-surface-500'}`}>
-                      {photos.length} photo{photos.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                );
-              })}
             </div>
+
+            {/* Upload zone */}
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-5 sm:p-6 text-center transition-all ${
+                isDragActive
+                  ? 'border-primary-500 bg-primary-500/5'
+                  : photos.length >= maxPhotos
+                  ? 'border-surface-800 bg-surface-900/50 cursor-not-allowed'
+                  : 'border-surface-600 hover:border-primary-500/50 bg-surface-900 cursor-pointer'
+              }`}
+            >
+              <input {...getInputProps()} />
+              <Upload className={`h-8 w-8 mx-auto mb-2 ${
+                photos.length >= maxPhotos ? 'text-surface-700' : 'text-surface-400'
+              }`} />
+              {photos.length >= maxPhotos ? (
+                <p className="text-sm text-surface-500">Max photos reached</p>
+              ) : isDragActive ? (
+                <p className="text-sm text-primary-400 font-medium">Drop here!</p>
+              ) : (
+                <>
+                  <p className="text-sm text-white font-medium">Click to choose or drag & drop</p>
+                  <p className="text-xs text-surface-500 mt-1">JPG, PNG, or TIFF · up to 20 MB</p>
+                </>
+              )}
+            </div>
+
+            {/* Photo list with per-photo title & description */}
+            {photos.length > 0 && (
+              <div className="mt-3 space-y-3">
+                {photos.map((photo, idx) => (
+                  <div key={photo.id} className="flex gap-3 p-2.5 rounded-lg bg-surface-800/50 border border-surface-700/50">
+                    <div className="relative w-20 h-20 rounded-lg overflow-hidden bg-surface-800 flex-shrink-0">
+                      <img src={photo.preview} alt="" className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => removePhoto(photo.id)}
+                        className="absolute top-1 right-1 p-0.5 rounded-full bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
+                        title="Remove"
+                      >
+                        <X className="h-2.5 w-2.5" />
+                      </button>
+                      {!photo.uploaded && photo.progress > 0 && (
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-700">
+                          <div className="h-full bg-primary-500 transition-all" style={{ width: `${photo.progress}%` }} />
+                        </div>
+                      )}
+                      {photo.uploaded && (
+                        <div className="absolute inset-0 bg-emerald-500/10 flex items-center justify-center">
+                          <div className="bg-emerald-500 rounded-full p-0.5">
+                            <Check className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-surface-500 font-mono">#{idx + 1}</span>
+                        <span className="text-[10px] text-surface-500 truncate">{photo.file.name}</span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Photo title (required)"
+                        value={photo.title}
+                        onChange={(e) => updatePhotoField(photo.id, 'title', e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Description (optional)"
+                        value={photo.description}
+                        onChange={(e) => updatePhotoField(photo.id, 'description', e.target.value)}
+                        className="w-full px-2.5 py-1.5 rounded-md bg-surface-900 border border-surface-700 text-white text-xs placeholder:text-surface-500 focus:outline-none focus:border-primary-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
 
           <div className="flex justify-between">
@@ -1054,26 +872,21 @@ export default function NewSubmission() {
               size="sm"
               icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
-              disabled={!currentCatHasPhotos || !allCurrentPhotosTitled}
+              disabled={!hasPhotos || !allPhotosTitled}
             >
-              {canProceedUpload
-                ? 'Review'
-                : shouldAdvanceCategory
-                ? `Next: ${selectedCategories[nextEmptyCategoryIdx]?.name}`
-                : 'Add photos'}
+              Review
             </Button>
           </div>
         </motion.div>
       )}
 
-      {/* ═══ STEP 4: Review & Submit ═══ */}
-      {step === 4 && (
+      {/* === STEP 4: Review & Submit === */}
+      {step === 4 && selectedCategory && (
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           className="space-y-3"
         >
-          {/* Friendly instruction */}
           <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
             <Info className="h-4 w-4 text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
@@ -1104,48 +917,41 @@ export default function NewSubmission() {
                 Summary
               </h3>
 
-              <div className="space-y-2">
-                {selectedCategories.map((cat) => {
-                  const photos = getPhotosForCategory(cat.id);
-                  return (
-                    <div key={cat.id} className="rounded-lg bg-surface-800/50 border border-surface-700/50 overflow-hidden">
-                      <div className="flex items-center justify-between p-2.5">
-                        <div className="flex items-center gap-2">
-                          <Camera className="h-3.5 w-3.5 text-surface-400" />
-                          <span className="text-sm text-white">{cat.name}</span>
-                          {cat.price > 0 ? (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold-500/10 text-gold-400">Paid</span>
-                          ) : (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Free</span>
-                          )}
-                        </div>
-                        <span className="text-xs text-surface-300">
-                          {photos.length} photo{photos.length !== 1 ? 's' : ''}
+              <div className="rounded-lg bg-surface-800/50 border border-surface-700/50 overflow-hidden">
+                <div className="flex items-center justify-between p-2.5">
+                  <div className="flex items-center gap-2">
+                    <Camera className="h-3.5 w-3.5 text-surface-400" />
+                    <span className="text-sm text-white">{selectedCategory.name}</span>
+                    {isPaid ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-gold-500/10 text-gold-400">Paid</span>
+                    ) : (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">Free</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-surface-300">
+                    {photos.length} photo{photos.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                {photos.length > 0 && (
+                  <div className="border-t border-surface-700/50 px-2.5 py-1.5 space-y-1">
+                    {photos.map((photo, idx) => (
+                      <div key={photo.id} className="flex items-center gap-2 text-xs">
+                        <img src={photo.preview} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
+                        <span className="text-surface-300 flex-shrink-0">#{idx + 1}</span>
+                        <span className={`truncate ${photo.title.trim() ? 'text-white' : 'text-red-400 italic'}`}>
+                          {photo.title.trim() || 'Missing title'}
                         </span>
                       </div>
-                      {photos.length > 0 && (
-                        <div className="border-t border-surface-700/50 px-2.5 py-1.5 space-y-1">
-                          {photos.map((photo, idx) => (
-                            <div key={photo.id} className="flex items-center gap-2 text-xs">
-                              <img src={photo.preview} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
-                              <span className="text-surface-300 flex-shrink-0">#{idx + 1}</span>
-                              <span className={`truncate ${photo.title.trim() ? 'text-white' : 'text-red-400 italic'}`}>
-                                {photo.title.trim() || 'Missing title'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {hasPaidCategories && hasCredits && (
+              {isPaid && hasCredits && (
                 <div className="p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20">
                   <p className="text-xs text-emerald-400 flex items-center gap-1.5">
                     <Check className="h-3.5 w-3.5" />
-                    Payment confirmed — {paidPhotoLimit} photos/paid category
+                    Payment confirmed - {paidPhotoLimit} photo credits
                   </p>
                 </div>
               )}
@@ -1166,7 +972,7 @@ export default function NewSubmission() {
                 icon={<ImageIcon className="h-4 w-4" />}
                 onClick={() => handleSubmit(false)}
                 loading={loading}
-                disabled={!title.trim() || selectedCategories.some(cat => getPhotosForCategory(cat.id).some(p => !p.title.trim()))}
+                disabled={!title.trim() || photos.some(p => !p.title.trim())}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
                 Submit
@@ -1174,7 +980,7 @@ export default function NewSubmission() {
             </div>
           </div>
 
-          {(!title.trim() || selectedCategories.some(cat => getPhotosForCategory(cat.id).some(p => !p.title.trim()))) && (
+          {(!title.trim() || photos.some(p => !p.title.trim())) && (
             <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">
               <HelpCircle className="h-3 w-3" />
               {!title.trim() ? 'Enter a submission title to submit' : 'All photos need a title'}
@@ -1185,3 +991,4 @@ export default function NewSubmission() {
     </div>
   );
 }
+

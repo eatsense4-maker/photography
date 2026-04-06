@@ -47,7 +47,7 @@ export default function PostDetailPage() {
   const categoryLabel = post.category.charAt(0).toUpperCase() + post.category.slice(1);
 
   return (
-    <article className="pt-28 pb-20">
+    <article className="pt-8 pb-20">
       {/* Hero */}
       {post.cover_image_url && (
         <div className="relative h-[50vh] max-h-[500px] mb-12 overflow-hidden">

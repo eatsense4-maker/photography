@@ -182,7 +182,7 @@ export default function GalleryPage() {
     <div className="bg-surface-950 min-h-screen">
 
       {/* ===== Hero ===== */}
-      <section className="relative pt-28 pb-16 overflow-hidden">
+      <section className="relative pt-8 pb-16 overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-900/40 to-surface-950" />
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600/8 rounded-full blur-3xl" />

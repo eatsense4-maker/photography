@@ -109,7 +109,7 @@ export default function ThemePage() {
   return (
     <div>
       {/* ── Hero ── */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
+      <section className="relative pt-12 pb-24 overflow-hidden">
         <div className="absolute inset-0">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-10"

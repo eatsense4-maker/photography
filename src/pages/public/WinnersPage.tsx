@@ -239,7 +239,7 @@ export default function WinnersPage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative pt-32 pb-16">
+      <section className="relative pt-12 pb-16">
         <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-900/30 to-surface-950" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <motion.div
