@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
+import PayPalProvider from '@/components/PayPalProvider';
 import {
   ArrowRight, ArrowLeft, X, Upload, Check, Camera,
   ShieldCheck, Calendar, Award, Wind, Eye, Leaf, Film,
@@ -255,6 +256,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
+    <PayPalProvider>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <motion.div className="fixed inset-0 bg-black/80 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
       <motion.div
@@ -812,6 +814,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
         </div>
       </motion.div>
     </div>
+    </PayPalProvider>
   );
 }
 

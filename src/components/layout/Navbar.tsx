@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Menu, X, Globe, Bell, ChevronDown, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationStore, useUIStore } from '@/stores';
+import { getPhotoUrl } from '@/lib/r2';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -52,8 +53,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center group">
             <img
-              src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+              src={getPhotoUrl('brand/fokus-logo.png')}
               alt="FOKUS Award"
+              width={120}
+              height={40}
               className="h-10 w-auto object-contain"
             />
           </Link>
@@ -67,7 +70,7 @@ export default function Navbar() {
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   location.pathname === link.path
                     ? 'text-white bg-white/10'
-                    : 'text-surface-300 hover:text-white hover:bg-white/5'
+                    : 'text-white/80 hover:text-white hover:bg-white/5'
                 }`}
               >
                 {link.label}
@@ -80,7 +83,7 @@ export default function Navbar() {
             {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-surface-300 hover:text-white hover:bg-white/5 transition-all text-sm cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-all text-sm cursor-pointer"
             >
               <Globe className="h-4 w-4" />
               {i18n.language === 'en' ? 'AL' : 'EN'}
@@ -91,7 +94,7 @@ export default function Navbar() {
                 {/* Notifications */}
                 <Link
                   to="/dashboard/notifications"
-                  className="relative p-2 rounded-lg text-surface-300 hover:text-white hover:bg-white/5 transition-all"
+                  className="relative p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-all"
                 >
                   <Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
@@ -164,7 +167,7 @@ export default function Navbar() {
               <>
                 <Link
                   to="/login"
-                  className="px-4 py-2 rounded-lg text-sm font-medium text-surface-300 hover:text-white hover:bg-white/5 transition-all"
+                  className="px-4 py-2 rounded-lg text-sm font-medium text-white/80 hover:text-white hover:bg-white/5 transition-all"
                 >
                   {t('nav.login')}
                 </Link>
@@ -182,7 +185,7 @@ export default function Navbar() {
           <button
             onClick={toggleMobileMenu}
             aria-label="Toggle menu"
-            className="lg:hidden p-2 rounded-lg text-surface-300 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
+            className="lg:hidden p-2 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-all cursor-pointer"
           >
             {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -206,7 +209,7 @@ export default function Navbar() {
                   className={`block px-4 py-3 rounded-lg text-base font-medium transition-all ${
                     location.pathname === link.path
                       ? 'text-white bg-white/10'
-                      : 'text-surface-300 hover:text-white hover:bg-white/5'
+                      : 'text-white/80 hover:text-white hover:bg-white/5'
                   }`}
                 >
                   {link.label}
@@ -217,7 +220,7 @@ export default function Navbar() {
 
               <button
                 onClick={toggleLanguage}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg text-surface-300 hover:text-white hover:bg-white/5 transition-all w-full cursor-pointer"
+                className="flex items-center gap-2 px-4 py-3 rounded-lg text-white/80 hover:text-white hover:bg-white/5 transition-all w-full cursor-pointer"
               >
                 <Globe className="h-5 w-5" />
                 {i18n.language === 'en' ? 'Shqip' : 'English'}
@@ -227,7 +230,7 @@ export default function Navbar() {
                 <>
                   <Link
                     to={getDashboardPath()}
-                    className="block px-4 py-3 rounded-lg text-surface-300 hover:text-white hover:bg-white/5"
+                    className="block px-4 py-3 rounded-lg text-white/80 hover:text-white hover:bg-white/5"
                   >
                     {t('nav.dashboard')}
                   </Link>
@@ -242,7 +245,7 @@ export default function Navbar() {
                 <div className="space-y-2 pt-2">
                   <Link
                     to="/login"
-                    className="block px-4 py-3 rounded-lg text-center text-surface-300 border border-surface-700 hover:bg-white/5"
+                    className="block px-4 py-3 rounded-lg text-center text-white/80 border border-surface-700 hover:bg-white/5"
                   >
                     {t('nav.login')}
                   </Link>

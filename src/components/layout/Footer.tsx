@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Facebook, Instagram, Mail, MapPin, Youtube } from 'lucide-react';
+import { getPhotoUrl } from '@/lib/r2';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -22,8 +23,10 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img
-                src="https://pub-c988af810ab64c9185019688ecf11024.r2.dev/brand/fokus-logo.png"
+                src={getPhotoUrl('brand/fokus-logo.png')}
                 alt="FOKUS Award"
+                width={120}
+                height={40}
                 className="h-10 w-auto object-contain"
               />
             </Link>
@@ -35,6 +38,7 @@ export default function Footer() {
                 href="https://www.facebook.com/FOKUSaward"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Facebook"
                 className="p-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-all"
               >
                 <Facebook className="h-4 w-4" />
@@ -43,6 +47,7 @@ export default function Footer() {
                 href="https://www.instagram.com/fokusaward/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Instagram"
                 className="p-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-all"
               >
                 <Instagram className="h-4 w-4" />
@@ -51,6 +56,7 @@ export default function Footer() {
                 href="https://www.youtube.com/@FOKUSaward"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="YouTube"
                 className="p-2.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-surface-400 hover:text-white transition-all"
               >
                 <Youtube className="h-4 w-4" />
@@ -60,9 +66,9 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
+            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               {t('footer.quick_links')}
-            </h4>
+            </h3>
             <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.path}>
@@ -79,9 +85,9 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
+            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               {t('contact.title')}
-            </h4>
+            </h3>
             <ul className="space-y-3">
               <li className="flex items-start gap-3 text-sm text-surface-400">
                 <Mail className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-400" />
@@ -98,9 +104,9 @@ export default function Footer() {
 
           {/* Follow */}
           <div>
-            <h4 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
+            <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-wider">
               {t('footer.follow_us')}
-            </h4>
+            </h3>
             <p className="text-sm text-surface-400 leading-relaxed">
               Stay updated with the latest news, winners, and upcoming editions of FOKUS Award.
             </p>

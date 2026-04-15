@@ -5,6 +5,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
+import PayPalProvider from '@/components/PayPalProvider';
 import {
   Upload, X, ArrowRight, ArrowLeft, Image as ImageIcon,
   CreditCard, Check, Camera, ShieldCheck, Info, HelpCircle, Lock,
@@ -316,6 +317,7 @@ export default function NewSubmission() {
     : step === 1 ? 0 : step === 3 ? 1 : 2;
 
   return (
+    <PayPalProvider>
     <div className="max-w-4xl mx-auto space-y-4 pb-6">
       <div className="text-center">
         <h1 className="text-xl font-display font-bold text-white">
@@ -1009,6 +1011,7 @@ export default function NewSubmission() {
         </motion.div>
       )}
     </div>
+    </PayPalProvider>
   );
 }
 
