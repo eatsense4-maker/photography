@@ -7,7 +7,7 @@ import { ArrowRight, ArrowLeft, Award, Calendar, Check, X as XIcon, AlertTriangl
 import { Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import type { Edition } from '@/types';
+import type { Edition, Category } from '@/types';
 
 /* ── Animation ── */
 const fadeUp = {
@@ -217,6 +217,7 @@ export default function CategoryDetailPage() {
   const { isAuthenticated } = useAuth();
   const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);
+  const [dbCategory, setDbCategory] = useState<Category | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -229,9 +230,25 @@ export default function CategoryDetailPage() {
       .single()
       .then(({ data }) => {
         setEdition(data);
-        setLoading(false);
+        if (data && categorySlug) {
+          supabase
+            .from('categories')
+            .select('*')
+            .eq('edition_id', data.id)
+            .then(({ data: cats }) => {
+              const match = cats?.find(c =>
+                c.slug === categorySlug ||
+                categorySlug.includes(c.slug || '') ||
+                (c.slug || '').includes(categorySlug)
+              ) || null;
+              setDbCategory(match);
+              setLoading(false);
+            });
+        } else {
+          setLoading(false);
+        }
       });
-  }, []);
+  }, [categorySlug]);
 
   if (loading) {
     return (
@@ -241,18 +258,24 @@ export default function CategoryDetailPage() {
     );
   }
 
-  const cat = categorySlug ? CATEGORY_DATA[categorySlug] : null;
+  const cat = categorySlug ? (
+    CATEGORY_DATA[categorySlug] ||
+    Object.values(CATEGORY_DATA).find(c =>
+      categorySlug.includes(c.slug) || c.slug.includes(categorySlug)
+    ) || null
+  ) : null;
   if (!cat) return <Navigate to="/apply" replace />;
 
   const isOpen = edition?.status === 'open';
   const isTheme = cat.slug === 'main-theme-breath';
   const conceptParagraphs = lang === 'en' ? CONCEPT_EN : CONCEPT_AL;
+  const heroImage = dbCategory?.image_url || cat.heroImage;
 
   return (
     <div className="pb-24">
       {/* ── Hero with prominent image ── */}
       <section className="relative h-[50vh] min-h-[300px] sm:min-h-[400px] overflow-hidden">
-        <img src={cat.heroImage} alt={lang === 'al' ? cat.titleAl : cat.title} className="absolute inset-0 w-full h-full object-cover" />
+        <img src={heroImage} alt={lang === 'al' ? cat.titleAl : cat.title} className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-surface-950/30" />
         <div className="absolute inset-0 flex flex-col justify-end">
             <div className="max-w-3xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-6 sm:pb-10">
@@ -334,7 +357,7 @@ export default function CategoryDetailPage() {
           {/* Hero image in content */}
           <div className="rounded-2xl overflow-hidden mb-8 border border-surface-800">
             <img
-              src={cat.heroImage}
+              src={heroImage}
               alt={lang === 'al' ? cat.titleAl : cat.title}
               className="w-full h-56 sm:h-72 object-cover"
               loading="lazy"

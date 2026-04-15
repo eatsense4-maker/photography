@@ -46,7 +46,10 @@ export interface Category {
   id: string;
   edition_id: string;
   name: string;
+  name_al: string | null;
+  slug: string | null;
   description: string | null;
+  description_al: string | null;
   image_url: string | null;
   max_photos: number;
   price: number;

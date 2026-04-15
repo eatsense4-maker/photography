@@ -7,7 +7,7 @@ import { ArrowRight, Award, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import type { Edition } from '@/types';
+import type { Edition, Category } from '@/types';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -17,116 +17,19 @@ const fadeUp = {
   }),
 };
 
-const CATEGORIES = [
-  {
-    slug: 'main-theme-breath',
-    title: 'Main Theme — BREATH',
-    titleAl: 'Tema Kryesore — FRYMË',
-    subtitle: 'FRYMË / BREATH',
-    subtitleAl: 'FRYMË / BREATH',
-    description: 'Explore BREATH / FRYMË — the invisible rhythm of being, the conditions of life, the politics of air, and the human capacity to breathe life into the world.',
-    descriptionAl: 'Eksploroni FRYMË / BREATH — ritmin e padukshëm të qenies, kushtet e jetës, politikën e ajrit, dhe aftësinë njerëzore për t\'i dhënë frymë botës.',
-    prize: '€1,000',
-    format: '1 image',
-    formatAl: '1 imazh',
-    image: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&h=600&fit=crop',
-    accent: 'gold',
-    gradientFrom: 'from-gold-500/20',
-    borderColor: 'border-gold-500/40',
-    textColor: 'text-gold-400',
-    badgeBg: 'bg-gold-500/15',
-  },
-  {
-    slug: 'press-news',
-    title: 'Press & News',
-    titleAl: 'Shtypi & Lajmet',
-    subtitle: 'Documentary & Photojournalism',
-    subtitleAl: 'Dokumentar & Fotojournalizëm',
-    description: 'Pictures with the best informative and social value from news-worthy events, sports, and social phenomena. Must include a written context with date, location, and event description.',
-    descriptionAl: 'Foto me vlerën më të mirë informative dhe sociale nga ngjarje me vlerë lajmi, sport dhe fenomene sociale. Duhet të përfshijë kontekstin me shkrim me datën, vendndodhjen dhe përshkrimin e ngjarjes.',
-    prize: '€1,000',
-    format: '1 image',
-    formatAl: '1 imazh',
-    image: 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=800&h=600&fit=crop',
-    accent: 'blue',
-    gradientFrom: 'from-blue-500/20',
-    borderColor: 'border-blue-500/40',
-    textColor: 'text-blue-400',
-    badgeBg: 'bg-blue-500/15',
-  },
-  {
-    slug: 'life-best-street-photography',
-    title: 'Life — Best Street Photography',
-    titleAl: 'Jeta — Fotografia më e Mirë e Rrugës',
-    subtitle: 'Street Photography',
-    subtitleAl: 'Fotografia e Rrugës',
-    description: 'The art of observing and capturing unscripted everyday life in public spaces — striking compositions, human interactions, humor, drama, or quiet poetry.',
-    descriptionAl: 'Arti i vëzhgimit dhe kapjes së jetës së përditshme të pa-skriptuar në hapësira publike — kompozicione mahnitëse, ndërveprime njerëzore, humor, dramë ose poezi e qetë.',
-    prize: '€500',
-    format: 'Up to 6 images',
-    formatAl: 'Deri në 6 imazhe',
-    image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop',
-    accent: 'emerald',
-    gradientFrom: 'from-emerald-500/20',
-    borderColor: 'border-emerald-500/40',
-    textColor: 'text-emerald-400',
-    badgeBg: 'bg-emerald-500/15',
-  },
-  {
-    slug: 'life-best-portrait',
-    title: 'Life — Best Portrait',
-    titleAl: 'Jeta — Portreti më i Mirë',
-    subtitle: 'Portrait Photography',
-    subtitleAl: 'Fotografia e Portretit',
-    description: 'Portrait photography that goes beyond surface appearance — capturing character, emotion, vulnerability, strength, and the depth of human identity.',
-    descriptionAl: 'Fotografi portreti që shkon përtej pamjes sipërfaqësore — duke kapur karakterin, emocionin, cenueshmërinë, forcën dhe thellësinë e identitetit njerëzor.',
-    prize: '€500',
-    format: 'Up to 6 images',
-    formatAl: 'Deri në 6 imazhe',
-    image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&h=600&fit=crop',
-    accent: 'violet',
-    gradientFrom: 'from-violet-500/20',
-    borderColor: 'border-violet-500/40',
-    textColor: 'text-violet-400',
-    badgeBg: 'bg-violet-500/15',
-  },
-  {
-    slug: 'land-best-landscape',
-    title: 'Land — Best Landscape',
-    titleAl: 'Toka — Peizazhi më i Mirë',
-    subtitle: 'Landscape Photography',
-    subtitleAl: 'Fotografia e Peizazhit',
-    description: 'The spirit of place revealed — from vast wilderness panoramas to intimate natural details, from dramatic weather to the quiet geometry of the land.',
-    descriptionAl: 'Shpirti i vendit i zbuluar — nga panoramat e gjera të natyrës së egër te detajet intime natyrore, nga moti dramatik te gjeometria e qetë e tokës.',
-    prize: '€500',
-    format: 'Up to 6 images',
-    formatAl: 'Deri në 6 imazhe',
-    image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop',
-    accent: 'sky',
-    gradientFrom: 'from-sky-500/20',
-    borderColor: 'border-sky-500/40',
-    textColor: 'text-sky-400',
-    badgeBg: 'bg-sky-500/15',
-  },
-  {
-    slug: 'land-best-wild-world',
-    title: 'Land — Best Wild World',
-    titleAl: 'Toka — Bota e Egër më e Mirë',
-    subtitle: 'Wildlife & Nature',
-    subtitleAl: 'Bota e Egër & Natyra',
-    description: 'Bringing viewers closer to the animal kingdom and wild ecosystems — from behavioral studies to dramatic encounters, from macro worlds to migratory spectacles.',
-    descriptionAl: 'Duke i afruar shikuesit me mbretërinë e kafshëve dhe ekosistemet e egra — nga studime sjelljes te takime dramatike, nga botët makro te spektaklet migruese.',
-    prize: '€500',
-    format: 'Up to 6 images',
-    formatAl: 'Deri në 6 imazhe',
-    image: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800&h=600&fit=crop',
-    accent: 'amber',
-    gradientFrom: 'from-amber-500/20',
-    borderColor: 'border-amber-500/40',
-    textColor: 'text-amber-400',
-    badgeBg: 'bg-amber-500/15',
-  },
+/* Accent colour palette cycled by sort_order */
+const ACCENT_STYLES = [
+  { borderColor: 'border-gold-500/40', textColor: 'text-gold-400', badgeBg: 'bg-gold-500/15' },
+  { borderColor: 'border-blue-500/40', textColor: 'text-blue-400', badgeBg: 'bg-blue-500/15' },
+  { borderColor: 'border-emerald-500/40', textColor: 'text-emerald-400', badgeBg: 'bg-emerald-500/15' },
+  { borderColor: 'border-violet-500/40', textColor: 'text-violet-400', badgeBg: 'bg-violet-500/15' },
+  { borderColor: 'border-sky-500/40', textColor: 'text-sky-400', badgeBg: 'bg-sky-500/15' },
+  { borderColor: 'border-amber-500/40', textColor: 'text-amber-400', badgeBg: 'bg-amber-500/15' },
 ];
+
+function deriveSlug(name: string) {
+  return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
 
 export default function ApplyPage() {
   const { t, i18n } = useTranslation();
@@ -134,6 +37,7 @@ export default function ApplyPage() {
   const { isAuthenticated } = useAuth();
   const lang = i18n.language === 'al' ? 'al' : 'en';
   const [edition, setEdition] = useState<Edition | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -146,7 +50,19 @@ export default function ApplyPage() {
       .single()
       .then(({ data }) => {
         setEdition(data);
-        setLoading(false);
+        if (data) {
+          supabase
+            .from('categories')
+            .select('*')
+            .eq('edition_id', data.id)
+            .order('sort_order')
+            .then(({ data: cats }) => {
+              setCategories(cats || []);
+              setLoading(false);
+            });
+        } else {
+          setLoading(false);
+        }
       });
   }, []);
 
@@ -223,9 +139,14 @@ export default function ApplyPage() {
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {CATEGORIES.map((cat, i) => (
+            {categories.map((cat, i) => {
+              const style = ACCENT_STYLES[i % ACCENT_STYLES.length];
+              const catSlug = cat.slug || deriveSlug(cat.name);
+              const catTitle = lang === 'al' && cat.name_al ? cat.name_al : cat.name;
+              const catDesc = lang === 'al' && cat.description_al ? cat.description_al : (cat.description || '');
+              return (
               <motion.div
-                key={cat.slug}
+                key={cat.id}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
@@ -233,36 +154,44 @@ export default function ApplyPage() {
                 variants={fadeUp}
               >
                 <Link
-                  to={`/apply/${cat.slug}`}
+                  to={`/apply/${catSlug}`}
                   className="group block relative rounded-2xl overflow-hidden h-full min-h-[220px] sm:min-h-[280px] border border-surface-800 hover:border-surface-600 transition-all duration-300"
                 >
                   {/* Background image */}
-                  <img
-                    src={cat.image}
-                    alt={cat.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
+                  {cat.image_url ? (
+                    <img
+                      src={cat.image_url}
+                      alt={catTitle}
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-surface-800 to-surface-900" />
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/70 to-surface-950/30" />
 
                   {/* Content */}
                   <div className="relative h-full flex flex-col justify-end p-4 sm:p-6 md:p-8">
                     {/* Prize badge */}
-                    <div className={`absolute top-5 right-5 px-3 py-1.5 rounded-full ${cat.badgeBg} border ${cat.borderColor} backdrop-blur-sm`}>
-                      <span className={`text-sm font-bold ${cat.textColor}`}>{cat.prize}</span>
-                    </div>
+                    {cat.price > 0 && (
+                      <div className={`absolute top-5 right-5 px-3 py-1.5 rounded-full ${style.badgeBg} border ${style.borderColor} backdrop-blur-sm`}>
+                        <span className={`text-sm font-bold ${style.textColor}`}>€{cat.price.toLocaleString()}</span>
+                      </div>
+                    )}
 
-                    <span className={`text-[10px] font-semibold uppercase tracking-[0.25em] ${cat.textColor} mb-2`}>
-                      {lang === 'al' ? cat.subtitleAl : cat.subtitle}
-                    </span>
                     <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
-                      {lang === 'al' ? cat.titleAl : cat.title}
+                      {catTitle}
                     </h2>
                     <p className="text-sm text-surface-300 leading-relaxed line-clamp-2 mb-4 max-w-lg">
-                      {lang === 'al' ? cat.descriptionAl : cat.description}
+                      {catDesc}
                     </p>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-surface-500">{lang === 'al' ? cat.formatAl : cat.format}</span>
+                      <span className="text-xs text-surface-500">
+                        {cat.max_photos === 1
+                          ? (lang === 'al' ? '1 imazh' : '1 image')
+                          : (lang === 'al' ? `Deri në ${cat.max_photos} imazhe` : `Up to ${cat.max_photos} images`)
+                        }
+                      </span>
                       <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-400 group-hover:text-primary-300 transition-colors">
                         {t('apply.view_details')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                       </span>
@@ -270,7 +199,8 @@ export default function ApplyPage() {
                   </div>
                 </Link>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -288,30 +218,34 @@ export default function ApplyPage() {
             <h2 className="text-3xl font-display font-bold text-white">
               {t('apply.prize_pool')}
             </h2>
-            <p className="text-5xl font-bold text-gold-400 mt-3">€4,000</p>
+            <p className="text-5xl font-bold text-gold-400 mt-3">€{categories.reduce((sum, c) => sum + c.price, 0).toLocaleString()}</p>
             <p className="text-sm text-surface-400 mt-2">
               {t('apply.honorary_extras')}
             </p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((cat, i) => (
+            {categories.map((cat, i) => {
+              const style = ACCENT_STYLES[i % ACCENT_STYLES.length];
+              const catTitle = lang === 'al' && cat.name_al ? cat.name_al : cat.name;
+              return (
               <motion.div
-                key={cat.slug}
+                key={cat.id}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className={`p-4 rounded-xl bg-surface-900 border ${cat.borderColor} text-center`}
+                className={`p-4 rounded-xl bg-surface-900 border ${style.borderColor} text-center`}
               >
-                <Trophy className={`h-5 w-5 ${cat.textColor} mx-auto mb-2`} />
+                <Trophy className={`h-5 w-5 ${style.textColor} mx-auto mb-2`} />
                 <p className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-1">
-                  {lang === 'al' ? cat.titleAl : cat.title}
+                  {catTitle}
                 </p>
-                <p className={`text-xl font-bold ${cat.textColor}`}>{cat.prize}</p>
+                <p className={`text-xl font-bold ${style.textColor}`}>€{cat.price.toLocaleString()}</p>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
           {/* CTA */}

@@ -21,7 +21,10 @@ export default function AdminCategories() {
 
   // Form state
   const [name, setName] = useState('');
+  const [nameAl, setNameAl] = useState('');
   const [description, setDescription] = useState('');
+  const [descriptionAl, setDescriptionAl] = useState('');
+  const [slug, setSlug] = useState('');
   const [maxPhotos, setMaxPhotos] = useState('10');
   const [price, setPrice] = useState('0');
   const [sortOrder, setSortOrder] = useState('0');
@@ -30,6 +33,8 @@ export default function AdminCategories() {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const deriveSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
   useEffect(() => {
     supabase
@@ -62,7 +67,10 @@ export default function AdminCategories() {
   const openCreate = () => {
     setEditingCategory(null);
     setName('');
+    setNameAl('');
     setDescription('');
+    setDescriptionAl('');
+    setSlug('');
     setMaxPhotos('10');
     setPrice('0');
     setSortOrder((categories.length + 1).toString());
@@ -75,7 +83,10 @@ export default function AdminCategories() {
   const openEdit = (cat: Category) => {
     setEditingCategory(cat);
     setName(cat.name);
+    setNameAl(cat.name_al || '');
     setDescription(cat.description || '');
+    setDescriptionAl(cat.description_al || '');
+    setSlug(cat.slug || '');
     setMaxPhotos(cat.max_photos.toString());
     setPrice(cat.price.toString());
     setSortOrder(cat.sort_order.toString());
@@ -104,7 +115,10 @@ export default function AdminCategories() {
     const payload = {
       edition_id: editionId || selectedEdition,
       name,
+      name_al: nameAl || null,
       description: description || null,
+      description_al: descriptionAl || null,
+      slug: slug || deriveSlug(name),
       image_url: imageUrl || null,
       max_photos: parseInt(maxPhotos),
       price: parseFloat(price),
@@ -226,8 +240,11 @@ export default function AdminCategories() {
       {/* Create/Edit Modal */}
       <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editingCategory ? 'Edit Category' : 'New Category'}>
         <div className="space-y-4">
-          <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Category name" />
-          <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Input label="Name (English)" value={name} onChange={(e) => { setName(e.target.value); if (!editingCategory || !slug) setSlug(deriveSlug(e.target.value)); }} placeholder="Category name" />
+          <Input label="Name (Albanian)" value={nameAl} onChange={(e) => setNameAl(e.target.value)} placeholder="Emri i kategorisë" />
+          <Textarea label="Description (English)" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+          <Textarea label="Description (Albanian)" value={descriptionAl} onChange={(e) => setDescriptionAl(e.target.value)} rows={3} />
+          <Input label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto-generated-from-name" />
 
           {/* Image upload */}
           <div>

@@ -52,6 +52,38 @@ function derivedSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+/* Canonical category slugs & cover images — fallback only when DB has no slug/image */
+const CATEGORY_LIST = [
+  { slug: 'main-theme-breath',            image: 'https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=800&h=600&fit=crop' },
+  { slug: 'press-news',                   image: 'https://images.unsplash.com/photo-1504711434969-e33886168d9c?w=800&h=600&fit=crop' },
+  { slug: 'life-best-street-photography', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=800&h=600&fit=crop' },
+  { slug: 'life-best-portrait',           image: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&h=600&fit=crop' },
+  { slug: 'land-best-landscape',          image: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=800&h=600&fit=crop' },
+  { slug: 'land-best-wild-world',         image: 'https://images.unsplash.com/photo-1474511320723-9a56873571b7?w=800&h=600&fit=crop' },
+];
+
+/* Build a lookup from derived slug → { slug, image } */
+const CATEGORY_COVERS = Object.fromEntries(
+  CATEGORY_LIST.map(c => [c.slug, c])
+);
+
+function getCategoryMeta(cat: Category, sortIndex: number) {
+  // 1. Use DB slug if available
+  if (cat.slug) return { slug: cat.slug, image: CATEGORY_COVERS[cat.slug]?.image || '' };
+  // 2. Try matching by position (sort_order) — most reliable
+  if (sortIndex >= 0 && sortIndex < CATEGORY_LIST.length) {
+    return CATEGORY_LIST[sortIndex];
+  }
+  // 3. Try exact slug match from name
+  const derived = derivedSlug(cat.name);
+  if (CATEGORY_COVERS[derived]) return CATEGORY_COVERS[derived];
+  // 4. Partial match fallback
+  const match = CATEGORY_LIST.find(c => derived.includes(c.slug) || c.slug.includes(derived));
+  if (match) return match;
+  // 5. Last resort — use derived slug
+  return { slug: derived, image: '' };
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
@@ -78,7 +110,7 @@ function formatDate(d: string | null, full = false) {
 
 /* ---------- component ---------- */
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   usePageTitle();
 
   const [currentEdition, setCurrentEdition] = useState<Edition | null>(null);
@@ -124,13 +156,18 @@ export default function HomePage() {
       .order('year', { ascending: false })
       .limit(1)
       .single()
-      .then(({ data }) => { if (data) setCurrentEdition(data); });
-
-    supabase
-      .from('categories')
-      .select('*')
-      .order('sort_order')
-      .then(({ data }) => { if (data) setHomeCategories(data); });
+      .then(({ data }) => {
+        if (data) {
+          setCurrentEdition(data);
+          // Fetch categories filtered by current edition
+          supabase
+            .from('categories')
+            .select('*')
+            .eq('edition_id', data.id)
+            .order('sort_order')
+            .then(({ data: cats }) => { if (cats) setHomeCategories(cats); });
+        }
+      });
 
     supabase
       .from('partners')
@@ -388,7 +425,9 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
               {homeCategories.slice(0, 6).map((cat, i) => {
                 const style = CAT_COLORS[i % CAT_COLORS.length];
-                const slug = derivedSlug(cat.name);
+                const meta = getCategoryMeta(cat, i);
+                const coverImage = cat.image_url || meta.image;
+                const catName = i18n.language === 'al' && cat.name_al ? cat.name_al : cat.name;
                 return (
                   <motion.div
                     key={cat.id}
@@ -397,9 +436,9 @@ export default function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
                   >
-                    <Link to={`/apply/${slug}`} className={`group block relative rounded-xl overflow-hidden h-36 sm:h-44 border border-surface-200 ${style.border} transition-all shadow-sm`}>
-                      {cat.image_url ? (
-                        <img src={cat.image_url} alt={cat.name}
+                    <Link to={`/apply/${meta.slug}`} className={`group block relative rounded-xl overflow-hidden h-36 sm:h-44 border border-surface-200 ${style.border} transition-all shadow-sm`}>
+                      {coverImage ? (
+                        <img src={coverImage} alt={catName}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy" sizes="(max-width: 1024px) 50vw, 33vw" />
                       ) : (
@@ -408,7 +447,7 @@ export default function HomePage() {
                       <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-3">
                         {cat.price > 0 && <p className={`text-xs font-bold ${style.color}`}>€{cat.price.toLocaleString()}</p>}
-                        <h3 className="text-sm font-semibold text-white leading-tight">{cat.name}</h3>
+                        <h3 className="text-sm font-semibold text-white leading-tight">{catName}</h3>
                       </div>
                     </Link>
                   </motion.div>
