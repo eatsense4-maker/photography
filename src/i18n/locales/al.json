@@ -1,7 +1,9 @@
 {
   "nav": {
     "home": "Kryefaqja",
-    "about": "Rreth Nesh",
+    "about": "Rreth",
+    "about_us": "Rreth Nesh",
+    "curators": "Kuratorët",
     "apply": "Apliko",
     "editions": "Edicionet",
     "winners": "Fituesit",
@@ -12,6 +14,12 @@
     "dashboard": "Paneli",
     "logout": "Dil",
     "profile": "Profili"
+  },
+  "curators": {
+    "title": "Kuratorët",
+    "subtitle": "Njihuni me kuratorët që formësojnë vizionin pas FOKUS Award 2026.",
+    "read_more": "Lexo biografinë e plotë",
+    "all_curators": "Të gjithë Kuratorët"
   },
   "hero": {
     "badge": "Çmimi Ndërkombëtar i Fotografisë",

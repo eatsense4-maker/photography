@@ -13,21 +13,27 @@ export default function Navbar() {
   const { unreadCount } = useNotificationStore();
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUIStore();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const location = useLocation();
 
 
   useEffect(() => {
     closeMobileMenu();
     setProfileOpen(false);
+    setAboutOpen(false);
   }, [location.pathname]);
 
   const navLinks = [
     { path: '/', label: t('nav.home') },
-    { path: '/about', label: t('nav.about') },
     { path: '/apply', label: t('nav.apply') },
     { path: '/winners', label: t('nav.winners') },
     { path: '/gallery', label: t('nav.gallery') },
     { path: '/contact', label: t('nav.contact') },
+  ];
+
+  const aboutLinks = [
+    { path: '/about', label: t('nav.about_us') },
+    { path: '/curators', label: t('nav.curators') },
   ];
 
   const toggleLanguage = () => {
@@ -63,7 +69,64 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navLinks.map((link) => (
+            {/* Home link */}
+            <Link
+              to="/"
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                location.pathname === '/'
+                  ? 'text-white bg-white/10'
+                  : 'text-white/80 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {t('nav.home')}
+            </Link>
+
+            {/* About dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setAboutOpen(true)}
+              onMouseLeave={() => setAboutOpen(false)}
+            >
+              <button
+                onClick={() => setAboutOpen(!aboutOpen)}
+                className={`flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
+                  location.pathname === '/about' || location.pathname.startsWith('/curators')
+                    ? 'text-white bg-white/10'
+                    : 'text-white/80 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                {t('nav.about')}
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence>
+                {aboutOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute left-0 mt-1 w-48 bg-surface-900 border border-surface-700 rounded-xl shadow-2xl py-1.5 overflow-hidden z-50"
+                  >
+                    {aboutLinks.map((link) => (
+                      <Link
+                        key={link.path}
+                        to={link.path}
+                        className={`block px-4 py-2.5 text-sm transition-colors ${
+                          location.pathname === link.path
+                            ? 'text-white bg-surface-800'
+                            : 'text-surface-300 hover:text-white hover:bg-surface-800'
+                        }`}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Other nav links */}
+            {navLinks.filter(l => l.path !== '/').map((link) => (
               <Link
                 key={link.path}
                 to={link.path}
@@ -203,6 +266,21 @@ export default function Navbar() {
           >
             <div className="px-4 py-6 space-y-1">
               {navLinks.map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all ${
+                    location.pathname === link.path
+                      ? 'text-white bg-white/10'
+                      : 'text-white/80 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              ))}
+
+              {/* About sub-links */}
+              {aboutLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}

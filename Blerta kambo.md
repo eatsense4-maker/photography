@@ -1,0 +1,5 @@
+Blerta kambo
+(English)
+Blerta Kambo is an Albanian visual artist, photographer, and filmmaker based in Tirana. With an academic background in environmental engineering, later completing an MA in Filmmaking, and nearly two decades of professional experience, her practice moves between documentary, conceptual image-making, and public interventions. She explores social and environmental justice through ecofeminism, archives, multiple truths, and the ways architecture and public space shape everyday life. Her work has been exhibited in Albania and internationally.
+ (Shqip)
+Blerta Kambo është artiste vizuale, fotografe dhe regjisore shqiptare me bazë në Tiranë. Me formim akademik në inxhinieri mjedisi, më pas me një MA në realizim filmi, dhe gati dy dekada përvojë profesionale, praktika e saj lëviz mes dokumentarit, imazhit konceptual dhe ndërhyrjeve në hapësirën publike. Ajo trajton drejtësinë sociale dhe mjedisore përmes ekofeminizmit, arkivave, të vërtetave të shumëfishta, si edhe mënyrës se si arkitektura dhe hapësira publike formësojnë jetën e përditshme. Puna e saj është ekspozuar në Shqipëri dhe ndërkombëtarisht.

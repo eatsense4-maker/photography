@@ -19,6 +19,8 @@ const WinnersPage = lazy(() => import('@/pages/public/WinnersPage'));
 const GalleryPage = lazy(() => import('@/pages/public/GalleryPage'));
 const EditionGalleryPage = lazy(() => import('@/pages/public/EditionGalleryPage'));
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'));
+const CuratorsPage = lazy(() => import('@/pages/public/CuratorsPage'));
+const CuratorDetailPage = lazy(() => import('@/pages/public/CuratorDetailPage'));
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'));
@@ -91,6 +93,8 @@ export default function App() {
               <Route path="/news" element={<NewsArchivePage />} />
               <Route path="/news/:slug" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/curators" element={<CuratorsPage />} />
+              <Route path="/curators/:curatorSlug" element={<CuratorDetailPage />} />
             </Route>
 
             {/* Auth Routes */}

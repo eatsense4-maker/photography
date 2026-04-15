@@ -650,7 +650,7 @@ export default function HomePage() {
             <motion.div
               custom={1}
               variants={fadeUp}
-              className="flex flex-wrap items-center justify-center gap-10 opacity-50"
+              className="flex flex-wrap items-center justify-center gap-12"
             >
               {partners.map((partner) => (
                 <a
@@ -658,13 +658,18 @@ export default function HomePage() {
                   href={partner.website_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-28 h-10 rounded bg-surface-100 flex items-center justify-center text-surface-400 text-xs overflow-hidden hover:opacity-80 transition-opacity"
+                  className="flex flex-col items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
-                  {partner.logo_url ? (
-                    <img src={partner.logo_url} alt={partner.name} width={112} height={40} className="max-w-full max-h-full object-contain p-1" />
-                  ) : (
-                    partner.name
-                  )}
+                  <div className="w-36 h-16 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden">
+                    {partner.logo_url ? (
+                      <img src={partner.logo_url} alt={partner.name} width={144} height={64} className="max-w-full max-h-full object-contain p-2" />
+                    ) : (
+                      <span className="text-surface-400 text-xs">{partner.name}</span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-surface-500 font-medium leading-tight text-center max-w-[144px] truncate">
+                    {partner.name}
+                  </span>
                 </a>
               ))}
               {partners.length === 0 && (

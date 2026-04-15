@@ -1,0 +1,15 @@
+Albes Fusha
+En
+Albes Fusha comes from a family with a strong tradition in photography. He graduated from the Academy of Fine Arts in 1994. With an accomplished career and notable contributions to the arts, he is also a committed educator for young photographers, sharing his expertise and enthusiasm with new generations.
+
+As a curator and jury member for numerous national and international exhibitions and events, he has played a key role in showcasing emerging talents and promoting Albanian art globally. His work as a curator and organizer has involved collaboration with many cultural and artistic institutions, helping to organize a variety of events. These experiences have given him a broad perspective and deep understanding of photography and painting, significantly influencing his career and enhancing his creative work.
+
+Well-known in the Albanian photography and painting scene for his artistic elegance and sensitivity, he has exhibited his photography and paintings at several solo and group shows.
+He is currently an Associate Professor and the head of the Photography Department at the Faculty of Fine Arts, University of Arts in Tirana. In this position, he plays a vital role in developing an innovative program aimed at preparing students for successful careers in photography and visual arts. He actively contributes to shaping the future of Albanian photography and is dedicated to discovering and supporting new talent.
+
+Al
+Albes Fusha vjen nga një familje me një traditë të fortë në fotografi. Ai u diplomua në Akademinë e Arteve të Bukura në vitin 1994 dhe që prej asaj kohe ka ndërtuar një karrierë të konsoliduar, me kontribute të rëndësishme në art. Krahas krijimtarisë së tij artistike, ai është edhe një pedagog i përkushtuar, duke ndarë me pasion njohuritë dhe duke frymëzuar brezat e rinj të fotografëve.
+Si kurator dhe anëtar jurie në shumë ekspozita dhe aktivitete kombëtare dhe ndërkombëtare, ai ka luajtur një rol të rëndësishëm në promovimin e talenteve të reja dhe në prezantimin e artit shqiptar në arenën ndërkombëtare. Puna e tij si kurator dhe organizator ka përfshirë bashkëpunime me institucione të ndryshme kulturore dhe artistike, duke kontribuar në realizimin e një sërë aktivitetesh artistike. Këto përvoja i kanë dhënë një perspektivë të gjerë dhe një kuptim të thellë të fotografisë dhe pikturës, duke ndikuar ndjeshëm në zhvillimin e tij krijues.
+I njohur në skenën shqiptare të fotografisë dhe pikturës për elegancën dhe ndjeshmërinë artistike, ai ka ekspozuar punimet e tij në shumë ekspozita personale dhe kolektive.
+Aktualisht, ai mban titullin Profesor i Asociuar dhe është përgjegjës i Departamentit të Fotografisë në Fakultetin e Arteve të Bukura, Universiteti i Arteve në Tiranë. Në këtë rol, ai luan një rol kyç në zhvillimin e programeve inovative akademike, të cilat synojnë përgatitjen e studentëve për karriera të suksesshme në fotografi dhe artet pamore. Përmes angazhimit të tij, ai vazhdon të ndikojë në formësimin e së ardhmes së fotografisë shqiptare dhe në zbulimin e mbështetjen e talenteve të reja.
+
