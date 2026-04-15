@@ -237,7 +237,7 @@ export default function HomePage() {
 
       {/* ===== HERO SLIDER — Full-width pinned/featured posts ===== */}
       {sliderPosts.length > 0 ? (
-        <section className="relative h-[calc(100dvh-5rem)] min-h-[400px] overflow-hidden">
+        <section className="relative h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)] min-h-[320px] sm:min-h-[400px] overflow-hidden">
           <AnimatePresence initial={false} custom={slideDir} mode="popLayout">
             <motion.div
               key={currentSlide?.id}
@@ -362,7 +362,7 @@ export default function HomePage() {
         </section>
       ) : (
         /* Fallback / loading placeholder — same height as hero to prevent CLS */
-        <section className="relative h-[calc(100dvh-5rem)] min-h-[400px] overflow-hidden bg-surface-900">
+        <section className="relative h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)] min-h-[320px] sm:min-h-[400px] overflow-hidden bg-surface-900">
           <div className="absolute inset-0 bg-gradient-to-b from-surface-900 via-surface-900/95 to-surface-950" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center relative">
@@ -389,7 +389,7 @@ export default function HomePage() {
       {/* ===== Stats ribbon ===== */}
       <section className="border-b border-surface-200 bg-white/90 backdrop-blur-sm relative z-10">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex items-center justify-between py-3 sm:py-4 overflow-x-auto gap-4 sm:gap-6">
+          <div className="flex items-center justify-between py-3 sm:py-4 overflow-x-auto gap-3 sm:gap-6 scrollbar-hide">
             <div className="flex items-center gap-2 shrink-0">
               <Award className="h-4 w-4 text-gold-400" />
               <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-surface-500">FOKUS Award</span>
@@ -422,7 +422,7 @@ export default function HomePage() {
                 {t('home.view_all')} <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {homeCategories.slice(0, 6).map((cat, i) => {
                 const style = CAT_COLORS[i % CAT_COLORS.length];
                 const meta = getCategoryMeta(cat, i);
@@ -650,7 +650,7 @@ export default function HomePage() {
             <motion.div
               custom={1}
               variants={fadeUp}
-              className="flex flex-wrap items-center justify-center gap-12"
+              className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:gap-12"
             >
               {partners.map((partner) => (
                 <a

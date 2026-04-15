@@ -53,7 +53,7 @@ export default function PostDetailPage() {
     <article className="pt-8 pb-20">
       {/* Hero */}
       {post.cover_image_url && (
-        <div className="relative h-[50vh] max-h-[500px] mb-12 overflow-hidden">
+        <div className="relative h-[35vh] sm:h-[50vh] max-h-[500px] mb-6 sm:mb-12 overflow-hidden">
           <img
             src={post.cover_image_url}
             alt={post.title}
@@ -96,7 +96,7 @@ export default function PostDetailPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="text-4xl md:text-5xl font-display font-bold text-white leading-tight mb-6"
+          className="text-2xl sm:text-4xl md:text-5xl font-display font-bold text-white leading-tight mb-6"
         >
           {post.title}
         </motion.h1>

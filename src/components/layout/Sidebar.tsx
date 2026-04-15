@@ -85,7 +85,9 @@ export default function Sidebar() {
     <motion.aside
       initial={false}
       animate={{ width: sidebarOpen ? 260 : 72 }}
-      className="fixed left-0 top-16 bottom-0 z-40 bg-surface-950 border-r border-surface-800 flex flex-col overflow-x-hidden"
+      className={`fixed left-0 top-16 bottom-0 z-40 bg-surface-950 border-r border-surface-800 flex flex-col overflow-x-hidden transition-transform duration-300 ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      }`}
     >
       <div className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
         {links.map((link) => {

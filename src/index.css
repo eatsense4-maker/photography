@@ -114,19 +114,33 @@
     overflow: hidden;
   }
 
-  /* Category detail page — compact text & spacing */
+  /* Category detail page — compact text & spacing (responsive) */
   .detail-body {
-    font-size: 0.875rem;
-    line-height: 1.5;
+    font-size: 0.8125rem;
+    line-height: 1.6;
   }
 
   .detail-heading {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
 
   .detail-section {
-    padding-top: 2.5rem;
-    padding-bottom: 2.5rem;
+    padding-top: 1.75rem;
+    padding-bottom: 1.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .detail-body {
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .detail-heading {
+      font-size: 1.25rem;
+    }
+    .detail-section {
+      padding-top: 2.5rem;
+      padding-bottom: 2.5rem;
+    }
   }
 
   /* Hide scrollbar for horizontal scroll areas */

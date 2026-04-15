@@ -215,16 +215,16 @@ export default function ApplyPage() {
             className="text-center mb-10"
           >
             <Award className="h-8 w-8 text-gold-400 mx-auto mb-3" />
-            <h2 className="text-3xl font-display font-bold text-white">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
               {t('apply.prize_pool')}
             </h2>
-            <p className="text-5xl font-bold text-gold-400 mt-3">€{categories.reduce((sum, c) => sum + c.price, 0).toLocaleString()}</p>
+            <p className="text-3xl sm:text-5xl font-bold text-gold-400 mt-3">€{categories.reduce((sum, c) => sum + c.price, 0).toLocaleString()}</p>
             <p className="text-sm text-surface-400 mt-2">
               {t('apply.honorary_extras')}
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {categories.map((cat, i) => {
               const style = ACCENT_STYLES[i % ACCENT_STYLES.length];
               const catTitle = lang === 'al' && cat.name_al ? cat.name_al : cat.name;

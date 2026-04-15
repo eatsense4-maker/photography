@@ -62,7 +62,7 @@ export default function ContactPage() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-display font-bold text-white mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white mb-6"
           >
             {t('contact.title')}
           </motion.h1>
@@ -78,9 +78,9 @@ export default function ContactPage() {
       </section>
 
       {/* Contact Form + Info */}
-      <section className="py-20">
+      <section className="py-10 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-5 gap-12">
+          <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
             {/* Info */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -165,7 +165,7 @@ export default function ContactPage() {
             >
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="p-8 rounded-2xl bg-surface-900 border border-surface-800 space-y-6"
+                className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-surface-900 border border-surface-800 space-y-5 sm:space-y-6"
               >
                 <div className="grid sm:grid-cols-2 gap-6">
                   <Input

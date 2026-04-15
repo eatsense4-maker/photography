@@ -76,7 +76,7 @@ export default function CuratorDetailPage() {
   return (
     <div className="pb-24">
       {/* Hero with photo */}
-      <section className="relative h-[50vh] min-h-[300px] sm:min-h-[400px] overflow-hidden">
+      <section className="relative h-[40vh] sm:h-[50vh] min-h-[250px] sm:min-h-[350px] overflow-hidden">
         <img
           src={curator.photo}
           alt={curator.name}
@@ -113,7 +113,7 @@ export default function CuratorDetailPage() {
       </section>
 
       {/* Bio content */}
-      <section className="py-16">
+      <section className="py-10 sm:py-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"

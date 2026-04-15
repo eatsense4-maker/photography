@@ -89,9 +89,9 @@ export default function CuratorsPage() {
       </section>
 
       {/* Curator Cards */}
-      <section className="py-16">
+      <section className="py-10 sm:py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid sm:grid-cols-2 gap-8">
+          <div className="grid sm:grid-cols-2 gap-4 sm:gap-8">
             {CURATORS.map((curator, i) => (
               <motion.div
                 key={curator.slug}
@@ -113,7 +113,7 @@ export default function CuratorsPage() {
                       loading="lazy"
                     />
                   </div>
-                  <div className="p-6">
+                  <div className="p-4 sm:p-6">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <h2 className="text-xl font-display font-bold text-white group-hover:text-primary-400 transition-colors">
                         {curator.name}

@@ -70,6 +70,7 @@ interface UIState {
   sidebarOpen: boolean;
   mobileMenuOpen: boolean;
   toggleSidebar: () => void;
+  closeSidebar: () => void;
   toggleMobileMenu: () => void;
   closeMobileMenu: () => void;
 }
@@ -78,6 +79,7 @@ export const useUIStore = create<UIState>((set) => ({
   sidebarOpen: true,
   mobileMenuOpen: false,
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  closeSidebar: () => set({ sidebarOpen: false }),
   toggleMobileMenu: () =>
     set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
   closeMobileMenu: () => set({ mobileMenuOpen: false }),

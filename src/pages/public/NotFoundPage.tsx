@@ -8,7 +8,7 @@ export default function NotFoundPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-surface-950 px-4">
       <div className="max-w-md w-full text-center space-y-6">
-        <p className="text-8xl font-display font-bold text-primary-500">404</p>
+        <p className="text-6xl sm:text-8xl font-display font-bold text-primary-500">404</p>
         <div className="space-y-2">
           <h1 className="text-xl font-display font-bold text-white">
             Page not found

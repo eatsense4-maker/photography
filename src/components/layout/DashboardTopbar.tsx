@@ -52,9 +52,14 @@ export default function DashboardTopbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 h-16 bg-surface-950/80 backdrop-blur-xl border-b border-surface-800/60">
       <div
-        className="flex items-center h-full px-5 transition-all duration-300"
-        style={{ marginLeft: sidebarOpen ? 260 : 72 }}
+        className="flex items-center h-full px-4 sm:px-5 transition-all duration-300"
+        style={{ marginLeft: 0 }}
       >
+        {/* On lg+, offset for sidebar */}
+        <div
+          className="hidden lg:block shrink-0 transition-all duration-300"
+          style={{ width: sidebarOpen ? 260 : 72 }}
+        />
         {/* Sidebar toggle */}
         <button
           onClick={toggleSidebar}

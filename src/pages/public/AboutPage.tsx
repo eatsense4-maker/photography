@@ -104,7 +104,7 @@ export default function AboutPage() {
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-5xl md:text-6xl font-display font-bold text-white mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white mb-6"
           >
             {t('about.title')}
           </motion.h1>
@@ -121,9 +121,9 @@ export default function AboutPage() {
       </section>
 
       {/* Story */}
-      <section className="py-24">
+      <section className="py-12 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
             <motion.div
               initial="hidden"
               whileInView="visible"
@@ -183,13 +183,13 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-24 bg-surface-900/50">
+      <section className="py-12 sm:py-24 bg-surface-900/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
           >
             <motion.h2
               custom={0}
@@ -200,7 +200,7 @@ export default function AboutPage() {
             </motion.h2>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
             {values.map((val, i) => (
               <motion.div
                 key={val.title}
@@ -223,13 +223,13 @@ export default function AboutPage() {
       </section>
 
       {/* Curators */}
-      <section className="py-24">
+      <section className="py-12 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-8 sm:mb-16"
           >
             <motion.span custom={0} variants={fadeUp} className="text-primary-400 text-sm font-semibold uppercase tracking-widest">
               The People Behind FOKUS
@@ -243,7 +243,7 @@ export default function AboutPage() {
             </motion.h2>
           </motion.div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
             {curators.map((c, i) => (
               <motion.div
                 key={c.name}
@@ -282,12 +282,12 @@ export default function AboutPage() {
       </section>
 
       {/* Timeline */}
-      <section className="py-24">
+      <section className="py-12 sm:py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-display font-bold text-white text-center mb-16">
+          <h2 className="text-3xl font-display font-bold text-white text-center mb-8 sm:mb-16">
             Our Journey
           </h2>
-          <div className="space-y-12 relative before:absolute before:left-1/2 before:-translate-x-px before:top-0 before:bottom-0 before:w-0.5 before:bg-surface-800">
+          <div className="space-y-8 sm:space-y-12 relative before:absolute before:left-4 sm:before:left-1/2 before:-translate-x-px before:top-0 before:bottom-0 before:w-0.5 before:bg-surface-800">
             {[
               { year: '2006', event: 'FOKUS Award founded by a group of photography enthusiasts' },
               { year: '2010', event: 'First international participants join the competition' },
@@ -303,16 +303,16 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className={`flex items-center gap-8 ${
-                  i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'
+                className={`flex items-start sm:items-center gap-4 sm:gap-8 pl-10 sm:pl-0 relative ${
+                  i % 2 === 0 ? 'sm:flex-row' : 'sm:flex-row-reverse'
                 }`}
               >
-                <div className={`flex-1 ${i % 2 === 0 ? 'text-right' : 'text-left'}`}>
+                <div className={`flex-1 ${i % 2 === 0 ? 'sm:text-right' : 'sm:text-left'}`}>
                   <span className="text-primary-400 font-bold text-lg">{item.year}</span>
                   <p className="text-surface-300 text-sm mt-1">{item.event}</p>
                 </div>
-                <div className="w-4 h-4 rounded-full bg-primary-500 border-4 border-surface-950 relative z-10 flex-shrink-0" />
-                <div className="flex-1" />
+                <div className="absolute left-2 sm:relative sm:left-auto w-4 h-4 rounded-full bg-primary-500 border-4 border-surface-950 z-10 flex-shrink-0 mt-1 sm:mt-0" />
+                <div className="hidden sm:block flex-1" />
               </motion.div>
             ))}
           </div>
