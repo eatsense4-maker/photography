@@ -85,7 +85,7 @@ export default function ApplyPage() {
             className="absolute inset-0 bg-cover bg-center opacity-8"
             style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1493863641943-9b68992a8d07?w=1920&h=800&fit=crop)' }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-950/95 to-surface-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/90 via-white/80 to-transparent" />
         </div>
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
@@ -155,7 +155,7 @@ export default function ApplyPage() {
               >
                 <Link
                   to={`/apply/${catSlug}`}
-                  className="group block relative rounded-2xl overflow-hidden h-full min-h-[220px] sm:min-h-[280px] border border-surface-800 hover:border-surface-600 transition-all duration-300"
+                  className="public-invert group relative block h-full min-h-[220px] overflow-hidden rounded-2xl border border-surface-800 transition-all duration-300 hover:border-surface-600 sm:min-h-[280px]"
                 >
                   {/* Background image */}
                   {cat.image_url ? (
@@ -206,7 +206,7 @@ export default function ApplyPage() {
       </section>
 
       {/* ── Prize Summary ── */}
-      <section className="py-16 bg-surface-900/40">
+      <section className="border-y border-surface-700/50 bg-white/70 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -236,7 +236,7 @@ export default function ApplyPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className={`p-4 rounded-xl bg-surface-900 border ${style.borderColor} text-center`}
+                className={`rounded-xl border ${style.borderColor} bg-white/85 p-4 text-center shadow-sm`}
               >
                 <Trophy className={`h-5 w-5 ${style.textColor} mx-auto mb-2`} />
                 <p className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-1">

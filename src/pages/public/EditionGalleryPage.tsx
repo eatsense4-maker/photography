@@ -12,6 +12,8 @@ import {
   ArrowLeft,
   Users,
   Tag,
+  Facebook,
+  ExternalLink,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getPhotoUrl } from '@/lib/r2';
@@ -54,6 +56,11 @@ interface GalleryData {
   photos: GalleryPhoto[];
 }
 
+interface FacebookAlbum {
+  label: string;
+  url: string;
+}
+
 /* ── helpers ──────────────────────────────────────────────────── */
 function catId(name: string) {
   return 'cat-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
@@ -72,6 +79,42 @@ function PlaceBadge({ place }: { place: number }) {
       <span className="text-[10px] font-bold uppercase tracking-wider">{c.label}</span>
     </div>
   );
+}
+
+const FACEBOOK_GALLERY_ALBUMS: Record<number, FacebookAlbum[]> = {
+  2025: [
+    { label: 'Theme Category', url: 'https://www.facebook.com/media/set/?set=a.1475971483975208&type=3' },
+    { label: 'Press & News', url: 'https://www.facebook.com/media/set/?set=a.1475927220646301&type=3' },
+    { label: 'People', url: 'https://www.facebook.com/media/set/?set=a.1475121494060207&type=3' },
+    { label: 'Life', url: 'https://www.facebook.com/media/set/?set=a.1475098394062517&type=3' },
+    { label: 'Land', url: 'https://www.facebook.com/media/set/?set=a.1475091240729899&type=3' },
+  ],
+  2024: [
+    { label: 'Theme Category', url: 'https://www.facebook.com/media/set/?set=a.1151499996422360&type=3' },
+    { label: 'Press & News', url: 'https://www.facebook.com/media/set/?set=a.1151497373089289&type=3' },
+    { label: 'People', url: 'https://www.facebook.com/media/set/?set=a.1151494886422871&type=3' },
+    { label: 'Life', url: 'https://www.facebook.com/media/set/?set=a.1151490416423318&type=3' },
+    { label: 'Land', url: 'https://www.facebook.com/media/set/?set=a.1151485376423822&type=3' },
+  ],
+  2023: [
+    { label: 'Life', url: 'https://www.facebook.com/media/set/?set=a.908725034033192&type=3' },
+    { label: 'Theme Category', url: 'https://www.facebook.com/media/set/?set=a.907135044192191&type=3' },
+    { label: 'Press & News', url: 'https://www.facebook.com/media/set/?set=a.907133110859051&type=3' },
+    { label: 'People', url: 'https://www.facebook.com/media/set/?set=a.907131530859209&type=3' },
+    { label: 'Land', url: 'https://www.facebook.com/media/set/?set=a.907122024193493&type=3' },
+  ],
+  2022: [
+    { label: 'Theme Category', url: 'https://www.facebook.com/media/set/?set=a.642015977370767&type=3' },
+    { label: 'Press & News', url: 'https://www.facebook.com/media/set/?set=a.642033864035645&type=3' },
+    { label: 'Wedding', url: 'https://www.facebook.com/media/set/?set=a.643719430533755&type=3' },
+    { label: 'Fashion', url: 'https://www.facebook.com/media/set/?set=a.633767921528906&type=3' },
+    { label: 'Street', url: 'https://www.facebook.com/media/set/?set=a.633787691526929&type=3' },
+    { label: 'Portrait', url: 'https://www.facebook.com/media/set/?set=a.633776798194685&type=3' },
+  ],
+};
+
+function getFacebookEmbedUrl(url: string) {
+  return `https://www.facebook.com/plugins/post.php?href=${encodeURIComponent(url)}&show_text=true&width=500`;
 }
 
 /* ── component ────────────────────────────────────────────────── */
@@ -225,6 +268,7 @@ export default function EditionGalleryPage() {
 
   const yearNum = Number(year);
   const edition = data?.editions.find((e) => e.year === yearNum) ?? null;
+  const facebookAlbums = FACEBOOK_GALLERY_ALBUMS[yearNum] ?? [];
 
   /* All non-jury photos for this edition */
   const photos = useMemo(() => {
@@ -240,7 +284,7 @@ export default function EditionGalleryPage() {
   /* Category sections (multi-category editions only) */
   const categorySections = useMemo(() => {
     if (!edition?.categories?.length) return null;
-    return edition.categories.map((cat) => {
+    const sections = edition.categories.map((cat) => {
       const catPhotos = photos.filter((p) => p.category === cat);
       return {
         name: cat,
@@ -251,12 +295,15 @@ export default function EditionGalleryPage() {
         allPhotos: catPhotos,
       };
     });
+    const visibleSections = sections.filter((section) => section.allPhotos.length > 0);
+    return visibleSections.length > 0 ? visibleSections : null;
   }, [edition, photos]);
 
   /* Legacy single-edition helpers */
   const legacyWinners = useMemo(() => photos.filter((p) => p.isWinner), [photos]);
   const visiblePhotos = photos.slice(0, visibleCount);
   const hasMore = visibleCount < photos.length;
+  const hideEmptyGalleryState = photos.length === 0 && facebookAlbums.length > 0;
 
   /* Infinite scroll (legacy only) */
   useEffect(() => {
@@ -393,7 +440,7 @@ export default function EditionGalleryPage() {
                   <ul className="space-y-1">
                     {edition.jury.map((m) => (
                       <li key={m.name} className="text-sm text-surface-300">
-                        <span className="font-medium text-white">{m.name}</span>
+                        <span className="font-medium text-surface-200">{m.name}</span>
                         {m.country && <span className="text-surface-500">, {m.country}</span>}
                       </li>
                     ))}
@@ -408,7 +455,7 @@ export default function EditionGalleryPage() {
                   <ul className="space-y-1">
                     {edition.curators.map((m) => (
                       <li key={m.name} className="text-sm text-surface-300">
-                        <span className="font-medium text-white">{m.name}</span>
+                        <span className="font-medium text-surface-200">{m.name}</span>
                         {m.country && <span className="text-surface-500">, {m.country}</span>}
                       </li>
                     ))}
@@ -419,6 +466,59 @@ export default function EditionGalleryPage() {
           )}
         </div>
       </section>
+
+      {facebookAlbums.length > 0 && edition && (
+        <section className="pb-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="rounded-3xl border border-surface-700 bg-surface-900/75 p-5 shadow-sm sm:p-6">
+              <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.26em] text-primary-400">
+                    Facebook Albums
+                  </p>
+                  <h2 className="mt-2 text-2xl font-display font-bold text-surface-100">
+                    Browse the {edition.year} category archive on Facebook
+                  </h2>
+                  <p className="mt-1 text-sm text-surface-400">
+                    Public album embeds for the available category links shared for this edition.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                {facebookAlbums.map((album) => (
+                  <article key={album.url} className="overflow-hidden rounded-2xl border border-surface-700 bg-white shadow-sm">
+                    <div className="flex items-start justify-between gap-4 border-b border-surface-700 px-4 py-3">
+                      <div>
+                        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-primary-400">
+                          <Facebook className="h-3.5 w-3.5" /> Facebook
+                        </div>
+                        <h3 className="mt-2 text-lg font-display font-bold text-surface-100">
+                          {album.label}
+                        </h3>
+                      </div>
+                      <a
+                        href={album.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-surface-700 px-3 py-1.5 text-xs font-semibold text-surface-300 transition-colors hover:border-primary-500/40 hover:text-primary-500"
+                      >
+                        Open album <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                    <iframe
+                      src={getFacebookEmbedUrl(album.url)}
+                      title={`${edition.year} ${album.label} Facebook album`}
+                      className="h-[30rem] w-full border-0 bg-surface-900"
+                      allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+                    />
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ===== Category Tab Bar (multi-category only) ===== */}
       {categorySections && (
@@ -508,7 +608,7 @@ export default function EditionGalleryPage() {
                           {(photo.title || photo.photographer) && (
                             <div className="px-4 py-3 bg-surface-900">
                               {photo.title && (
-                                <p className="text-sm font-semibold text-white truncate">{photo.title}</p>
+                                  <p className="text-sm font-semibold text-surface-200 truncate">{photo.title}</p>
                               )}
                               {photo.photographer && (
                                 <p className="text-xs text-surface-400 mt-0.5 truncate">{photo.photographer}</p>
@@ -537,7 +637,7 @@ export default function EditionGalleryPage() {
                       {section.participants.map((photo) => (
                         <div
                           key={photo.r2Key}
-                          className="break-inside-avoid mb-3 group relative rounded-lg overflow-hidden cursor-pointer bg-surface-900"
+                          className="public-invert break-inside-avoid group relative mb-3 cursor-pointer overflow-hidden rounded-lg bg-surface-900"
                           onClick={() => openLightbox(photo, section.allPhotos)}
                         >
                           <img
@@ -591,7 +691,7 @@ export default function EditionGalleryPage() {
                       </div>
                       {photo.photographer && (
                         <div className="px-4 py-3">
-                          <p className="text-sm font-medium text-white truncate">{photo.photographer}</p>
+                          <p className="text-sm font-medium text-surface-200 truncate">{photo.photographer}</p>
                         </div>
                       )}
                       <div className="absolute top-3 left-3">
@@ -609,57 +709,59 @@ export default function EditionGalleryPage() {
             </section>
           )}
 
-          <section className="pb-24">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {legacyWinners.length > 0 && photos.length > legacyWinners.length && (
-                <h2 className="text-sm font-medium text-surface-500 uppercase tracking-wider mb-4">
-                  {t('gallery.all_photos')}
-                </h2>
-              )}
-              {photos.length === 0 ? (
-                <div className="text-center py-24">
-                  <Camera className="h-12 w-12 text-surface-700 mx-auto mb-4" />
-                  <p className="text-surface-400">{t('gallery.no_photos')}</p>
-                </div>
-              ) : (
-                <>
-                  <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3">
-                    {visiblePhotos
-                      .filter((p) => !p.isWinner || legacyWinners.length === 0)
-                      .map((photo) => (
-                        <div
-                          key={photo.r2Key}
-                          className="break-inside-avoid mb-3 group relative rounded-xl overflow-hidden cursor-pointer bg-surface-900"
-                          onClick={() => openLightbox(photo, photos)}
-                        >
-                          <img
-                            src={photo.url}
-                            alt={photo.photographer || ''}
-                            className="w-full block transition-transform duration-500 group-hover:scale-[1.03]"
-                            loading="lazy"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="absolute bottom-0 left-0 right-0 p-3">
-                              {photo.photographer && (
-                                <p className="text-sm font-medium text-white truncate">{photo.photographer}</p>
-                              )}
+          {!hideEmptyGalleryState && (
+            <section className="pb-24">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                {legacyWinners.length > 0 && photos.length > legacyWinners.length && (
+                  <h2 className="text-sm font-medium text-surface-500 uppercase tracking-wider mb-4">
+                    {t('gallery.all_photos')}
+                  </h2>
+                )}
+                {photos.length === 0 ? (
+                  <div className="text-center py-24">
+                    <Camera className="h-12 w-12 text-surface-700 mx-auto mb-4" />
+                    <p className="text-surface-400">{t('gallery.no_photos')}</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3">
+                      {visiblePhotos
+                        .filter((p) => !p.isWinner || legacyWinners.length === 0)
+                        .map((photo) => (
+                          <div
+                            key={photo.r2Key}
+                            className="public-invert break-inside-avoid group relative mb-3 cursor-pointer overflow-hidden rounded-xl bg-surface-900"
+                            onClick={() => openLightbox(photo, photos)}
+                          >
+                            <img
+                              src={photo.url}
+                              alt={photo.photographer || ''}
+                              className="w-full block transition-transform duration-500 group-hover:scale-[1.03]"
+                              loading="lazy"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                              <div className="absolute bottom-0 left-0 right-0 p-3">
+                                {photo.photographer && (
+                                  <p className="text-sm font-medium text-white truncate">{photo.photographer}</p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                  </div>
-                  {hasMore && (
-                    <div ref={observerRef} className="flex justify-center py-12">
-                      <div className="flex items-center gap-3 text-surface-500">
-                        <div className="w-5 h-5 rounded-full border-2 border-surface-600 border-t-primary-500 animate-spin" />
-                        <span className="text-sm">{t('gallery.loading_more')}</span>
-                      </div>
+                        ))}
                     </div>
-                  )}
-                </>
-              )}
-            </div>
-          </section>
+                    {hasMore && (
+                      <div ref={observerRef} className="flex justify-center py-12">
+                        <div className="flex items-center gap-3 text-surface-500">
+                          <div className="w-5 h-5 rounded-full border-2 border-surface-600 border-t-primary-500 animate-spin" />
+                          <span className="text-sm">{t('gallery.loading_more')}</span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </section>
+          )}
         </>
       )}
 
@@ -671,7 +773,7 @@ export default function EditionGalleryPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black/97 flex items-center justify-center"
+            className="public-invert fixed inset-0 z-50 flex items-center justify-center bg-black/97"
             onClick={() => setLightbox(null)}
           >
             {/* Top bar */}

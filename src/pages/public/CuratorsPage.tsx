@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ArrowRight } from 'lucide-react';
-import { getPhotoUrl } from '@/lib/r2';
+import { CURATORS } from '@/data/curators';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -23,31 +23,6 @@ export interface Curator {
   shortBio: string;
   shortBioAl: string;
 }
-
-export const CURATORS: Curator[] = [
-  {
-    slug: 'albes-fusha',
-    name: 'Albes Fusha',
-    role: 'Curator & Educator',
-    roleAl: 'Kurator & Pedagog',
-    photo: getPhotoUrl('curators/albes-fusha.jpg'),
-    shortBio:
-      'Associate Professor and head of the Photography Department at the Faculty of Fine Arts, University of Arts in Tirana. Curator and jury member for numerous national and international exhibitions.',
-    shortBioAl:
-      'Profesor i Asociuar dhe përgjegjës i Departamentit të Fotografisë në Fakultetin e Arteve të Bukura, Universiteti i Arteve në Tiranë. Kurator dhe anëtar jurie në shumë ekspozita kombëtare dhe ndërkombëtare.',
-  },
-  {
-    slug: 'blerta-kambo',
-    name: 'Blerta Kambo',
-    role: 'Curator & Visual Artist',
-    roleAl: 'Kuratore & Artiste Vizuale',
-    photo: getPhotoUrl('curators/blerta-kambo.jpg'),
-    shortBio:
-      'Albanian visual artist, photographer, and filmmaker based in Tirana. Her practice moves between documentary, conceptual image-making, and public interventions exploring social and environmental justice.',
-    shortBioAl:
-      'Artiste vizuale, fotografe dhe regjisore shqiptare me bazë në Tiranë. Praktika e saj lëviz mes dokumentarit, imazhit konceptual dhe ndërhyrjeve në hapësirën publike duke trajtuar drejtësinë sociale dhe mjedisore.',
-  },
-];
 
 export default function CuratorsPage() {
   const { t, i18n } = useTranslation();
@@ -119,11 +94,11 @@ export default function CuratorsPage() {
                         {curator.name}
                       </h2>
                       <span className="shrink-0 text-xs font-medium text-primary-400 bg-primary-500/10 px-2.5 py-1 rounded-full whitespace-nowrap">
-                        {lang === 'al' ? curator.roleAl : curator.role}
+                        {curator.role[lang]}
                       </span>
                     </div>
                     <p className="text-sm text-surface-300 leading-relaxed mb-4">
-                      {lang === 'al' ? curator.shortBioAl : curator.shortBio}
+                      {curator.shortBio[lang]}
                     </p>
                     <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-400 group-hover:text-primary-300 transition-colors">
                       {t('curators.read_more')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

@@ -168,7 +168,7 @@ export default function GalleryPage() {
 
   if (loading) {
     return (
-      <div className="bg-surface-950 min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="relative w-12 h-12">
             <div className="absolute inset-0 rounded-full border-2 border-surface-700" />
@@ -181,12 +181,12 @@ export default function GalleryPage() {
   }
 
   return (
-    <div className="bg-surface-950 min-h-screen">
+    <div className="min-h-screen">
 
       {/* ===== Hero ===== */}
       <section className="relative pt-8 pb-16 overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-900/40 to-surface-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-white/80 to-transparent" />
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary-600/8 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gold-500/6 rounded-full blur-3xl" />
         </div>
@@ -222,11 +222,11 @@ export default function GalleryPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-40px' }}
                 transition={{ delay: i * 0.04, duration: 0.45 }}
-                className="group relative rounded-2xl overflow-hidden cursor-pointer bg-surface-900"
+                className="group relative cursor-pointer overflow-hidden rounded-2xl border border-surface-700 bg-white shadow-sm"
                 onClick={() => navigate(`/gallery/${ed.year}`)}
               >
                 {/* Cover image */}
-                <div className="aspect-[4/3] overflow-hidden relative">
+                <div className="public-invert relative aspect-[4/3] overflow-hidden">
                   {ed.cover ? (
                     <img
                       src={ed.cover.url}
@@ -268,7 +268,7 @@ export default function GalleryPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="px-5 py-3 flex items-center justify-between border-t border-surface-800/60">
+                <div className="flex items-center justify-between border-t border-surface-700/70 bg-white/90 px-5 py-3">
                   <span className="inline-flex items-center gap-1.5 text-sm text-surface-400">
                     <Camera className="h-3.5 w-3.5" />
                     {ed.photoCount} {t('gallery.photos')}

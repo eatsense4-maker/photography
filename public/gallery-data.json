@@ -11,6 +11,23 @@
       "photoCount": 5
     },
     {
+      "number": 15,
+      "year": 2024,
+      "title": "IFFA 15",
+      "slug": "edicioni-i-15-te-2024",
+      "theme": null,
+      "winner": null,
+      "photoCount": 0,
+      "categories": [
+        "THEME",
+        "PRESS & NEWS",
+        "PEOPLE",
+        "LIFE",
+        "LAND"
+      ],
+      "mainCategory": "THEME"
+    },
+    {
       "number": 14,
       "year": 2023,
       "title": "IFFA 14",

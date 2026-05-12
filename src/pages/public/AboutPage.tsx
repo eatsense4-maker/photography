@@ -98,7 +98,7 @@ export default function AboutPage() {
                 'url(https://images.unsplash.com/photo-1554048612-b6a482bc67e5?w=1920&h=600&fit=crop)',
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-950/90 to-surface-950" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-white/80 to-transparent" />
         </div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <motion.h1
@@ -180,7 +180,7 @@ export default function AboutPage() {
       </section>
 
       {/* Values */}
-      <section className="py-12 sm:py-24 bg-surface-900/50">
+      <section className="border-y border-surface-700/50 bg-white/70 py-12 sm:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial="hidden"
@@ -206,7 +206,7 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className="p-6 rounded-xl bg-surface-900 border border-surface-800 hover:border-surface-700 transition-colors text-center"
+                className="rounded-xl border border-surface-700 bg-white/85 p-6 text-center shadow-sm transition-colors hover:border-surface-600"
               >
                 <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary-600/10 text-primary-400 mb-4">
                   {val.icon}
@@ -249,7 +249,7 @@ export default function AboutPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className="group rounded-2xl overflow-hidden bg-surface-900 border border-surface-800 hover:border-surface-700 transition-colors"
+                className="group overflow-hidden rounded-2xl border border-surface-700 bg-white/85 shadow-sm transition-colors hover:border-surface-600"
               >
                 <div className="aspect-[4/3] overflow-hidden">
                   <img

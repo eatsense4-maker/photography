@@ -237,7 +237,7 @@ export default function HomePage() {
 
       {/* ===== HERO SLIDER — Full-width pinned/featured posts ===== */}
       {sliderPosts.length > 0 ? (
-        <section className="relative h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)] min-h-[320px] sm:min-h-[400px] overflow-hidden">
+        <section className="public-invert relative h-[calc(100dvh-4rem)] min-h-[320px] overflow-hidden sm:h-[calc(100dvh-5rem)] sm:min-h-[400px]">
           <AnimatePresence initial={false} custom={slideDir} mode="popLayout">
             <motion.div
               key={currentSlide?.id}
@@ -362,7 +362,7 @@ export default function HomePage() {
         </section>
       ) : (
         /* Fallback / loading placeholder — same height as hero to prevent CLS */
-        <section className="relative h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-5rem)] min-h-[320px] sm:min-h-[400px] overflow-hidden bg-surface-900">
+        <section className="public-invert relative h-[calc(100dvh-4rem)] min-h-[320px] overflow-hidden bg-surface-900 sm:h-[calc(100dvh-5rem)] sm:min-h-[400px]">
           <div className="absolute inset-0 bg-gradient-to-b from-surface-900 via-surface-900/95 to-surface-950" />
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center relative">
@@ -436,7 +436,7 @@ export default function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
                   >
-                    <Link to={`/apply/${meta.slug}`} className={`group block relative rounded-xl overflow-hidden h-36 sm:h-44 border border-surface-200 ${style.border} transition-all shadow-sm`}>
+                    <Link to={`/apply/${meta.slug}`} className={`public-invert group block relative h-36 overflow-hidden rounded-xl border border-surface-200 ${style.border} shadow-sm transition-all sm:h-44`}>
                       {coverImage ? (
                         <img src={coverImage} alt={catName}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"

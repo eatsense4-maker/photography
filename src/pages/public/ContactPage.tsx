@@ -57,7 +57,7 @@ export default function ContactPage() {
     <div>
       {/* Hero */}
       <section className="relative pt-12 pb-20">
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-900/30 to-surface-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/85 to-transparent" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -88,7 +88,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               className="lg:col-span-2 space-y-8"
             >
-              <div>
+              <div className="rounded-2xl border border-surface-700 bg-white/85 p-6 shadow-sm">
                 <h3 className="text-xl font-display font-bold text-white mb-6">
                   Get in Touch
                 </h3>
@@ -131,7 +131,7 @@ export default function ContactPage() {
               </div>
 
               {/* Social */}
-              <div>
+              <div className="rounded-2xl border border-surface-700 bg-white/85 p-6 shadow-sm">
                 <h4 className="text-sm font-semibold text-surface-400 uppercase tracking-wider mb-4">
                   Follow Us
                 </h4>
@@ -165,7 +165,7 @@ export default function ContactPage() {
             >
               <form
                 onSubmit={handleSubmit(onSubmit)}
-                className="p-4 sm:p-6 lg:p-8 rounded-2xl bg-surface-900 border border-surface-800 space-y-5 sm:space-y-6"
+                className="space-y-5 rounded-2xl border border-surface-700 bg-white/85 p-4 shadow-sm sm:space-y-6 sm:p-6 lg:p-8"
               >
                 <div className="grid sm:grid-cols-2 gap-6">
                   <Input

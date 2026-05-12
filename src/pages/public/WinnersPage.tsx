@@ -56,7 +56,7 @@ function PlaceBadge({ place }: { place: number }) {
 
 function WinnerCard({ photo, categoryLabel }: { photo: GalleryPhoto; categoryLabel?: string }) {
   return (
-    <div className="group relative rounded-2xl overflow-hidden bg-surface-900 border border-surface-800 hover:border-gold-500/40 transition-all duration-300 aspect-[4/5]">
+    <div className="public-invert group relative aspect-[4/5] overflow-hidden rounded-2xl border border-surface-800 bg-surface-900 transition-all duration-300 hover:border-gold-500/40">
       <img
         src={photo.url}
         alt={photo.title || categoryLabel || ''}
@@ -235,14 +235,14 @@ export default function WinnersPage() {
 
       // Text-only fallback for older editions
       return { edition, cards: [], isMultiCategory: false };
-    });
+    }).filter(({ edition, cards }) => cards.length > 0 || !!edition.winner);
   }, [data]);
 
   return (
     <div>
       {/* Hero */}
       <section className="relative pt-12 pb-16">
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-950 via-surface-900/30 to-surface-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-white/85 to-transparent" />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative text-center">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
@@ -276,8 +276,12 @@ export default function WinnersPage() {
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="animate-pulse rounded-xl bg-surface-800 h-72" />
+                <div key={i} className="h-72 animate-pulse rounded-xl border border-surface-700/40 bg-white/80 shadow-sm" />
               ))}
+            </div>
+          ) : editionSections.length === 0 ? (
+            <div className="rounded-2xl border border-surface-700 bg-white/85 px-6 py-16 text-center shadow-sm">
+              <p className="text-sm text-surface-400">No published winners yet.</p>
             </div>
           ) : (
             editionSections.map(({ edition, cards, isMultiCategory }, sectionIdx) => (
@@ -289,7 +293,7 @@ export default function WinnersPage() {
                 transition={{ duration: 0.6, delay: sectionIdx < 3 ? sectionIdx * 0.1 : 0 }}
               >
                 {/* Edition header */}
-                <div className="flex items-end justify-between mb-8 pb-4 border-b border-surface-800">
+                <div className="mb-8 flex items-end justify-between border-b border-surface-700 pb-4">
                   <div>
                     <div className="flex items-center gap-3 mb-1">
                       <span className="text-xs font-semibold text-gold-400 uppercase tracking-widest">
@@ -341,7 +345,7 @@ export default function WinnersPage() {
                   </div>
                 ) : edition.winner ? (
                   /* Text-only winner for oldest editions */
-                  <div className="flex items-center gap-4 py-6 px-6 rounded-2xl bg-surface-900/50 border border-surface-800">
+                  <div className="flex items-center gap-4 rounded-2xl border border-surface-700 bg-white/85 px-6 py-6 shadow-sm">
                     <div className="w-12 h-12 rounded-full bg-gold-500/10 flex items-center justify-center shrink-0">
                       <Trophy className="h-6 w-6 text-gold-400" />
                     </div>
