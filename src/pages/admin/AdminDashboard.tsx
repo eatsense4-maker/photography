@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import {
   Users,
   Image,
@@ -249,23 +250,26 @@ export default function AdminDashboard() {
                 color: 'text-gold-400',
               },
             ].map((action, i) => (
-              <motion.a
+              <motion.div
                 key={i}
-                href={action.href}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="p-4 rounded-xl bg-surface-800/50 hover:bg-surface-800 border border-surface-700/50 hover:border-surface-600 transition-colors text-center group"
               >
-                <div
-                  className={`${action.color} mx-auto mb-2 group-hover:scale-110 transition-transform`}
+                <Link
+                  to={action.href}
+                  className="block p-4 rounded-xl bg-surface-800/50 hover:bg-surface-800 border border-surface-700/50 hover:border-surface-600 transition-colors text-center group"
                 >
-                  {action.icon}
-                </div>
-                <p className="text-sm text-surface-300 group-hover:text-white transition-colors">
-                  {action.label}
-                </p>
-              </motion.a>
+                  <div
+                    className={`${action.color} mx-auto mb-2 group-hover:scale-110 transition-transform`}
+                  >
+                    {action.icon}
+                  </div>
+                  <p className="text-sm text-surface-300 group-hover:text-white transition-colors">
+                    {action.label}
+                  </p>
+                </Link>
+              </motion.div>
             ))}
           </div>
         </Card>

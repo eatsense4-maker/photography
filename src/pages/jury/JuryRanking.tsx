@@ -62,11 +62,26 @@ export default function JuryRanking() {
   const fetchRanking = async () => {
     setLoading(true);
 
-    // Get submissions in this category that have been scored (phase2 or top-scored phase1)
+    // PostgREST does not filter on nested-joined fields the way `.eq('submissions.category_id', ...)`
+    // implies — every row would be returned and re-filtered client-side. Instead, look up the
+    // category's submission ids first, then constrain the scores query to that set.
+    const { data: subRows } = await supabase
+      .from('submissions')
+      .select('id')
+      .eq('category_id', selectedCategory);
+
+    const submissionIds = (subRows || []).map((r: { id: string }) => r.id);
+
+    if (submissionIds.length === 0) {
+      setRanked([]);
+      setLoading(false);
+      return;
+    }
+
     const { data: scores } = await supabase
       .from('scores')
       .select('id, submission_id, score, rank, submissions(id, title, category_id, profiles!submissions_user_id_fkey(full_name), categories(name), submission_photos(storage_key, sort_order))')
-      .eq('submissions.category_id', selectedCategory)
+      .in('submission_id', submissionIds)
       .order('score', { ascending: false });
 
     if (!scores) {

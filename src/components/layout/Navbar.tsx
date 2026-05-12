@@ -6,6 +6,7 @@ import { Menu, X, Globe, Bell, ChevronDown, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationStore, useUIStore } from '@/stores';
 import { getPhotoUrl } from '@/lib/r2';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 export default function Navbar() {
   const { t, i18n } = useTranslation();
@@ -14,6 +15,7 @@ export default function Navbar() {
   const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUIStore();
   const [profileOpen, setProfileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const location = useLocation();
 
 
@@ -216,7 +218,7 @@ export default function Navbar() {
                         </Link>
                         <hr className="border-surface-800 my-1" />
                         <button
-                          onClick={signOut}
+                          onClick={() => { setProfileOpen(false); setShowSignOutConfirm(true); }}
                           className="w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-surface-800 transition-colors cursor-pointer"
                         >
                           {t('nav.logout')}
@@ -313,7 +315,7 @@ export default function Navbar() {
                     {t('nav.dashboard')}
                   </Link>
                   <button
-                    onClick={signOut}
+                    onClick={() => setShowSignOutConfirm(true)}
                     className="w-full text-left px-4 py-3 rounded-lg text-red-400 hover:bg-white/5 cursor-pointer"
                   >
                     {t('nav.logout')}
@@ -339,6 +341,16 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        isOpen={showSignOutConfirm}
+        onCancel={() => setShowSignOutConfirm(false)}
+        onConfirm={() => { setShowSignOutConfirm(false); signOut(); }}
+        title={t('common.sign_out')}
+        message={t('common.sign_out_confirm')}
+        confirmLabel={t('common.sign_out')}
+        confirmVariant="danger"
+      />
     </nav>
   );
 }

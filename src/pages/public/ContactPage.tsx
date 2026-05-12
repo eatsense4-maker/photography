@@ -38,9 +38,11 @@ export default function ContactPage() {
     try {
       const { error } = await supabase.functions.invoke('send-email', {
         body: {
-          to: 'info@fokusaward.com',
-          subject: `Contact Form: ${data.subject}`,
-          html: `<p><strong>From:</strong> ${data.name} (${data.email})</p><p>${data.message}</p>`,
+          kind: 'contact',
+          name: data.name,
+          email: data.email,
+          subject: data.subject,
+          message: data.message,
         },
       });
       if (error) throw error;

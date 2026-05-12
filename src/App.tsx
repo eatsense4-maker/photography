@@ -56,6 +56,8 @@ const AdminPosts = lazy(() => import('@/pages/admin/AdminPosts'));
 const AdminPricingTiers = lazy(() => import('@/pages/admin/AdminPricingTiers'));
 const PostDetailPage = lazy(() => import('@/pages/public/PostDetailPage'));
 const NewsArchivePage = lazy(() => import('@/pages/public/NewsArchivePage'));
+const PrivacyPage = lazy(() => import('@/pages/public/PrivacyPage'));
+const TermsPage = lazy(() => import('@/pages/public/TermsPage'));
 const NotFoundPage = lazy(() => import('@/pages/public/NotFoundPage'));
 
 const queryClient = new QueryClient({
@@ -93,6 +95,8 @@ export default function App() {
               <Route path="/news" element={<NewsArchivePage />} />
               <Route path="/news/:slug" element={<PostDetailPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/privacy" element={<PrivacyPage />} />
+              <Route path="/terms" element={<TermsPage />} />
               <Route path="/curators" element={<CuratorsPage />} />
               <Route path="/curators/:curatorSlug" element={<CuratorDetailPage />} />
             </Route>

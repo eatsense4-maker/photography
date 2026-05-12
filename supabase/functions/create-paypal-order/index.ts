@@ -7,12 +7,6 @@ const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-console.log('create-paypal-order init:', {
-  api: PAYPAL_API,
-  clientIdSet: !!PAYPAL_CLIENT_ID,
-  secretSet: !!PAYPAL_SECRET,
-});
-
 async function getAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`);
   const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
@@ -61,6 +55,8 @@ serve(async (req) => {
 
     let amount: number;
     let referenceId: string;
+    // Currency is always derived server-side. Never trust the client.
+    let currency = 'EUR';
 
     if (body.tierId && body.editionId) {
       // New flow: tier-based pricing — validate from DB
@@ -71,7 +67,7 @@ serve(async (req) => {
       // Look up tier in DB
       const { data: tier, error: tierErr } = await supabase
         .from('pricing_tiers')
-        .select('id, price, is_bundle, edition_id, category_id')
+        .select('id, price, currency, is_bundle, edition_id, category_id')
         .eq('id', tierId)
         .eq('edition_id', editionId)
         .single();
@@ -82,6 +78,8 @@ serve(async (req) => {
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
         });
       }
+
+      if (tier.currency) currency = String(tier.currency).toUpperCase();
 
       // If tier is scoped to a specific category, the request MUST target only that category.
       if (tier.category_id && (categoryIds.length !== 1 || categoryIds[0] !== tier.category_id)) {
@@ -116,9 +114,13 @@ serve(async (req) => {
       // Legacy flow: amount passed directly (for backward compatibility)
       amount = body.amount as number;
       referenceId = (body.submissionId as string) || 'legacy';
+      if (typeof body.currency === 'string') {
+        // Validate against a known list; legacy path only.
+        const cc = body.currency.toUpperCase();
+        if (['EUR', 'USD', 'GBP', 'ALL'].includes(cc)) currency = cc;
+      }
     }
 
-    const currency = (body.currency as string) || 'EUR';
     const accessToken = await getAccessToken();
 
     const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {

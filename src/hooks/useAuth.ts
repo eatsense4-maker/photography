@@ -3,10 +3,6 @@ import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/stores';
 import type { Profile, UserRole } from '@/types';
 
-// Flag shared with AuthProvider to prevent onAuthStateChange
-// from re-fetching the profile while signIn() is already handling it.
-export let _signingIn = false;
-
 export function useAuth() {
   const { user, isLoading, isAuthenticated, setUser, setLoading, logout } =
     useAuthStore();
@@ -15,7 +11,6 @@ export function useAuth() {
     async (email: string, password: string) => {
       try {
         setLoading(true);
-        _signingIn = true;
 
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
@@ -42,8 +37,6 @@ export function useAuth() {
       } catch (err) {
         setLoading(false);
         throw err;
-      } finally {
-        _signingIn = false;
       }
     },
     [setLoading, setUser]
@@ -92,6 +85,15 @@ export function useAuth() {
     if (error) throw error;
   }, []);
 
+  const resendVerification = useCallback(async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) throw error;
+  }, []);
+
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     logout();
@@ -133,6 +135,7 @@ export function useAuth() {
     signInWithGoogle,
     signOut,
     resetPassword,
+    resendVerification,
     updateProfile,
     hasRole,
   };

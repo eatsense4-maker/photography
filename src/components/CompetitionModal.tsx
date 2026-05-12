@@ -167,13 +167,23 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   const handleSignUp = async () => {
     setAuthError('');
     if (password !== confirmPassword) { setAuthError('Passwords do not match'); return; }
-    if (password.length < 6) { setAuthError('Password must be at least 6 characters'); return; }
+    if (password.length < 8) { setAuthError('Password must be at least 8 characters'); return; }
     if (!fullName.trim()) { setAuthError('Please enter your full name'); return; }
     setAuthLoading(true);
     try {
       await signUp(email, password, fullName, country || undefined);
-      await signIn(email, password);
-      setStep(2);
+      try {
+        await signIn(email, password);
+        setStep(2);
+      } catch (signInErr: any) {
+        const msg = String(signInErr?.message || '').toLowerCase();
+        if (msg.includes('not confirmed') || msg.includes('email not confirmed')) {
+          setAuthError('We sent a verification email. Please confirm your address, then sign in to continue.');
+          setAuthTab('login');
+        } else {
+          throw signInErr;
+        }
+      }
     } catch (err: any) { setAuthError(err.message || 'Sign up failed'); }
     finally { setAuthLoading(false); }
   };

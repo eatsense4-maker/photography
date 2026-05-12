@@ -7,8 +7,6 @@ const PAYPAL_SECRET = Deno.env.get('PAYPAL_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-console.log('capture-paypal-order init:', { api: PAYPAL_API, clientIdSet: !!PAYPAL_CLIENT_ID, secretSet: !!PAYPAL_SECRET });
-
 async function getAccessToken(): Promise<string> {
   const auth = btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`);
   const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
@@ -158,17 +156,20 @@ serve(async (req) => {
     let grantCategoryIds: string[] = [];
     let tierPhotoCredits = 0;
     let tierIsBundle = false;
+    let expectedAmount: number | null = null;
+    let expectedCurrency: string | null = null;
 
     if (tierId && editionId) {
       const { data: tier } = await supabase
         .from('pricing_tiers')
-        .select('photo_credits, is_bundle, category_id')
+        .select('photo_credits, is_bundle, category_id, price, currency')
         .eq('id', tierId)
         .single();
 
       if (tier) {
         tierPhotoCredits = tier.photo_credits as number;
         tierIsBundle = !!tier.is_bundle;
+        expectedCurrency = (tier.currency as string | null) || 'EUR';
       }
 
       if (tierIsBundle) {
@@ -179,9 +180,11 @@ serve(async (req) => {
           .eq('edition_id', editionId)
           .gt('price', 0);
         grantCategoryIds = (paidCats || []).map((c: { id: string }) => c.id);
+        expectedAmount = tier ? parseFloat(tier.price as unknown as string) : null;
       } else if (tier?.category_id) {
         // Tier locked to one category: ignore client list and grant only that one.
         grantCategoryIds = [tier.category_id as string];
+        expectedAmount = tier ? parseFloat(tier.price as unknown as string) : null;
       } else {
         // Single-category tier: trust only paid categories from the request.
         const { data: validCats } = await supabase
@@ -191,6 +194,57 @@ serve(async (req) => {
           .in('id', categoryIds.length > 0 ? categoryIds : ['00000000-0000-0000-0000-000000000000'])
           .gt('price', 0);
         grantCategoryIds = (validCats || []).map((c: { id: string }) => c.id);
+        expectedAmount = tier ? parseFloat(tier.price as unknown as string) * grantCategoryIds.length : null;
+      }
+    }
+
+    // Amount + currency cross-check: PayPal's reported value must match the
+    // DB-computed total. If it doesn't, refund and refuse to grant credits.
+    const capturedAmount = parseFloat(capture.amount.value);
+    const capturedCurrency = String(capture.amount.currency_code).toUpperCase();
+
+    if (expectedAmount !== null && expectedCurrency !== null) {
+      const amountMismatch = Math.abs(capturedAmount - expectedAmount) > 0.01;
+      const currencyMismatch = capturedCurrency !== expectedCurrency.toUpperCase();
+
+      if (amountMismatch || currencyMismatch) {
+        console.error('Payment amount/currency mismatch — refunding', {
+          captured: { amount: capturedAmount, currency: capturedCurrency },
+          expected: { amount: expectedAmount, currency: expectedCurrency },
+          orderId,
+          captureId: capture.id,
+        });
+
+        // Attempt automatic refund.
+        try {
+          await fetch(`${PAYPAL_API}/v2/payments/captures/${capture.id}/refund`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ note_to_payer: 'Order amount mismatch detected.' }),
+          });
+        } catch (refundErr) {
+          console.error('Auto-refund failed:', refundErr);
+        }
+
+        // Record the bad payment for admin review.
+        await supabase.from('payments').insert({
+          submission_id: submissionId || null,
+          user_id: userId,
+          amount: capturedAmount,
+          currency: capturedCurrency,
+          status: 'refunded',
+          paypal_order_id: orderId,
+          paypal_capture_id: capture.id,
+          paypal_payer_email: payerEmail,
+          tier_id: tierId || null,
+          refunded_at: new Date().toISOString(),
+          metadata: { reason: 'amount_mismatch', expected: { amount: expectedAmount, currency: expectedCurrency } },
+        });
+
+        return new Response(
+          JSON.stringify({ error: 'Payment amount mismatch. Refund initiated.' }),
+          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+        );
       }
     }
 
@@ -199,8 +253,8 @@ serve(async (req) => {
     await supabase.from('payments').insert({
       submission_id: submissionId || null,
       user_id: userId,
-      amount: parseFloat(capture.amount.value),
-      currency: capture.amount.currency_code,
+      amount: capturedAmount,
+      currency: capturedCurrency,
       status: 'completed',
       paypal_order_id: orderId,
       paypal_capture_id: capture.id,

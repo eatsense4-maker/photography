@@ -129,13 +129,18 @@ export default function WinnersPage() {
     const { data: subs } = await supabase
       .from('submissions')
       .select(`
-        id, edition_id, category_id,
+        id, edition_id, category_id, user_id,
         categories!submissions_category_id_fkey(name),
-        profiles!submissions_user_id_fkey(full_name),
         submission_photos!inner(id, storage_key, status)
       `)
       .in('edition_id', editionIds)
       .eq('submission_photos.status', 'approved');
+
+    const userIds = [...new Set(((subs || []) as Array<{ user_id: string }>).map((s) => s.user_id).filter(Boolean))];
+    const { data: profiles } = userIds.length
+      ? await supabase.from('public_profiles').select('id, full_name').in('id', userIds)
+      : { data: [] };
+    const profileNames = new Map((profiles || []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
 
     // Get all scores
     const { data: allScores } = await supabase
@@ -161,7 +166,7 @@ export default function WinnersPage() {
           photoId: photo.id,
           storageKey: photo.storage_key,
           category: sub.categories?.name || '',
-          photographer: sub.profiles?.full_name || '',
+          photographer: profileNames.get(sub.user_id) || '',
           avg,
           editionId: sub.edition_id,
         });

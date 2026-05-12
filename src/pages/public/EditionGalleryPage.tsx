@@ -178,13 +178,18 @@ export default function EditionGalleryPage() {
     const { data: subs } = await supabase
       .from('submissions')
       .select(`
-        id, category_id,
+        id, category_id, user_id,
         categories!submissions_category_id_fkey(name),
-        profiles!submissions_user_id_fkey(full_name),
         submission_photos!inner(id, storage_key, status)
       `)
       .eq('edition_id', ed.id)
       .eq('submission_photos.status', 'approved');
+
+    const userIds = [...new Set(((subs || []) as Array<{ user_id: string }>).map((s) => s.user_id).filter(Boolean))];
+    const { data: profiles } = userIds.length
+      ? await supabase.from('public_profiles').select('id, full_name').in('id', userIds)
+      : { data: [] };
+    const profileNames = new Map((profiles || []).map((p: { id: string; full_name: string | null }) => [p.id, p.full_name]));
 
     // Fetch scores
     const { data: allScores } = await supabase
@@ -210,7 +215,7 @@ export default function EditionGalleryPage() {
         const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
         byCat.get(catName)!.push({
           id: photo.id, key: photo.storage_key,
-          cat: catName, photographer: sub.profiles?.full_name || '',
+          cat: catName, photographer: profileNames.get(sub.user_id) || '',
           avg,
         });
       }
@@ -237,7 +242,8 @@ export default function EditionGalleryPage() {
         const place = winnerPlace.get(photo.id) ?? null;
         const scores = photoAvg.get(photo.id);
         const avg = scores ? scores.reduce((a: number, b: number) => a + b, 0) / scores.length : 0;
-        if (avg > topAvg) { topAvg = avg; topWinner = sub.profiles?.full_name || null; }
+        const photographer = profileNames.get(sub.user_id) || null;
+        if (avg > topAvg) { topAvg = avg; topWinner = photographer; }
         photos.push({
           r2Key: photo.storage_key,
           url: getPhotoUrl(photo.storage_key),
@@ -245,7 +251,7 @@ export default function EditionGalleryPage() {
           isWinner: isW,
           place,
           title: null,
-          photographer: sub.profiles?.full_name || null,
+          photographer,
           edition: yr,
           year: yr,
         });

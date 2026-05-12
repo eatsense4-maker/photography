@@ -145,17 +145,49 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Ownership check: every key must either belong to the caller's
+    // submissions, or the caller must be an admin.
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    const isAdmin = profile?.role === 'admin';
+
+    let allowedKeys: Set<string>;
+    if (isAdmin) {
+      allowedKeys = new Set(keys);
+    } else {
+      // Look up which keys belong to a submission owned by the caller.
+      const { data: ownedPhotos } = await supabase
+        .from('submission_photos')
+        .select('storage_key, thumbnail_key, submissions!inner(user_id)')
+        .in('storage_key', keys);
+
+      allowedKeys = new Set();
+      for (const row of (ownedPhotos || []) as Array<{ storage_key: string; thumbnail_key: string | null; submissions: { user_id: string } | { user_id: string }[] }>) {
+        const sub = Array.isArray(row.submissions) ? row.submissions[0] : row.submissions;
+        if (sub && sub.user_id === user.id) {
+          allowedKeys.add(row.storage_key);
+          if (row.thumbnail_key) allowedKeys.add(row.thumbnail_key);
+        }
+      }
+    }
+
     // Delete each key from R2
     let deleted = 0;
+    let skipped = 0;
     for (const key of keys) {
       // Basic validation: only allow keys that start with "submissions/"
-      if (typeof key !== 'string' || !key.startsWith('submissions/')) continue;
+      if (typeof key !== 'string' || !key.startsWith('submissions/')) { skipped++; continue; }
+      if (!allowedKeys.has(key)) { skipped++; continue; }
       const ok = await deleteR2Object(key);
       if (ok) deleted++;
     }
 
     return new Response(
-      JSON.stringify({ deleted }),
+      JSON.stringify({ deleted, skipped }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (err) {
