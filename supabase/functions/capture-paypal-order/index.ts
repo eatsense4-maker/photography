@@ -56,9 +56,14 @@ serve(async (req) => {
     const orderId = body.orderId as string;
     const userId = body.userId as string;
 
-    // New flow fields (tier-based credits)
+    // New flow fields (tier-based credits, per category)
     const tierId = body.tierId as string | undefined;
     const editionId = body.editionId as string | undefined;
+    // Categories the credit should be granted to. For non-bundle tiers
+    // we expect exactly one entry; bundles can target many.
+    const categoryIds = Array.isArray(body.categoryIds)
+      ? (body.categoryIds as unknown[]).filter((x): x is string => typeof x === 'string')
+      : [];
 
     // Legacy flow fields
     const submissionId = body.submissionId as string | undefined;
@@ -134,7 +139,60 @@ serve(async (req) => {
     // Save to database
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // Create payment record
+    // Idempotency: if a completed payment row already exists for this
+    // PayPal order, skip the side effects.
+    const { data: existingPayment } = await supabase
+      .from('payments')
+      .select('id')
+      .eq('paypal_order_id', orderId)
+      .maybeSingle();
+
+    if (existingPayment) {
+      return new Response(
+        JSON.stringify({ success: true, captureId: capture.id, idempotent: true }),
+        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+      );
+    }
+
+    // Resolve which categories this payment grants credits to.
+    let grantCategoryIds: string[] = [];
+    let tierPhotoCredits = 0;
+    let tierIsBundle = false;
+
+    if (tierId && editionId) {
+      const { data: tier } = await supabase
+        .from('pricing_tiers')
+        .select('photo_credits, is_bundle')
+        .eq('id', tierId)
+        .single();
+
+      if (tier) {
+        tierPhotoCredits = tier.photo_credits as number;
+        tierIsBundle = !!tier.is_bundle;
+      }
+
+      if (tierIsBundle) {
+        // Bundle: grant credits to every paid category in the edition.
+        const { data: paidCats } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('edition_id', editionId)
+          .gt('price', 0);
+        grantCategoryIds = (paidCats || []).map((c: { id: string }) => c.id);
+      } else {
+        // Single-category tier: trust only paid categories from the request.
+        const { data: validCats } = await supabase
+          .from('categories')
+          .select('id')
+          .eq('edition_id', editionId)
+          .in('id', categoryIds.length > 0 ? categoryIds : ['00000000-0000-0000-0000-000000000000'])
+          .gt('price', 0);
+        grantCategoryIds = (validCats || []).map((c: { id: string }) => c.id);
+      }
+    }
+
+    // Create payment record. Link to the (first) granted category so
+    // refunds / audits can find the matching credit row.
     await supabase.from('payments').insert({
       submission_id: submissionId || null,
       user_id: userId,
@@ -145,35 +203,23 @@ serve(async (req) => {
       paypal_capture_id: capture.id,
       paypal_payer_email: payerEmail,
       tier_id: tierId || null,
+      category_id: grantCategoryIds[0] || null,
       paid_at: new Date().toISOString(),
     });
 
-    // New flow: create user credits from tier
-    if (tierId && editionId) {
-      const { data: tier } = await supabase
-        .from('pricing_tiers')
-        .select('photo_credits')
-        .eq('id', tierId)
-        .single();
-
-      // Count how many paid categories exist for this edition to set submission limit
-      const { count: paidCategoryCount } = await supabase
-        .from('categories')
-        .select('id', { count: 'exact', head: true })
-        .eq('edition_id', editionId)
-        .gt('price', 0);
-
-      if (tier) {
-        await supabase.from('user_credits').upsert(
-          {
-            user_id: userId,
-            edition_id: editionId,
-            tier_id: tierId,
-            photo_credits: tier.photo_credits,
-            submissions_remaining: paidCategoryCount || 1,
-          },
-          { onConflict: 'user_id,edition_id' }
-        );
+    // Grant per-category credits via the SECURITY DEFINER RPC.
+    if (editionId && tierId && tierPhotoCredits > 0 && grantCategoryIds.length > 0) {
+      for (const catId of grantCategoryIds) {
+        const { error: grantErr } = await supabase.rpc('grant_photo_credits', {
+          p_user_id: userId,
+          p_edition_id: editionId,
+          p_category_id: catId,
+          p_tier_id: tierId,
+          p_photo_credits: tierPhotoCredits,
+        });
+        if (grantErr) {
+          console.error('grant_photo_credits failed', { catId, grantErr });
+        }
       }
     }
 

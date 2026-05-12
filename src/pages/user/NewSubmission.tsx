@@ -59,8 +59,15 @@ export default function NewSubmission() {
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [selectedTierId, setSelectedTierId] = useState('');
 
-  // User credits
-  const [userCredits, setUserCredits] = useState<{ photo_credits: number; tier_id: string; submissions_remaining: number } | null>(null);
+  // User credits scoped to selected category
+  const [userCredits, setUserCredits] = useState<{
+    photo_credits: number;
+    photo_credits_used: number;
+    tier_id: string | null;
+  } | null>(null);
+
+  // Existing non-draft submissions in this edition: { categoryId: submissionId }
+  const [submittedByCategory, setSubmittedByCategory] = useState<Record<string, string>>({});
 
   // Payment
   const [paying, setPaying] = useState(false);
@@ -94,7 +101,7 @@ export default function NewSubmission() {
   }, [selectedTier]);
 
   const paidPhotoLimit = useMemo(() => {
-    if (userCredits) return userCredits.photo_credits;
+    if (userCredits) return Math.max(userCredits.photo_credits - userCredits.photo_credits_used, 0);
     if (selectedTier) return selectedTier.photo_credits;
     return 0;
   }, [userCredits, selectedTier]);
@@ -146,14 +153,39 @@ export default function NewSubmission() {
   }, [editionId]);
 
   useEffect(() => {
-    if (!editionId || !user?.id) { setUserCredits(null); return; }
+    if (!editionId || !user?.id || !selectedCategoryId) {
+      setUserCredits(null);
+      return;
+    }
     supabase
       .from('user_credits')
-      .select('photo_credits, tier_id, submissions_remaining')
+      .select('photo_credits, photo_credits_used, tier_id')
       .eq('user_id', user.id)
       .eq('edition_id', editionId)
+      .eq('category_id', selectedCategoryId)
       .maybeSingle()
       .then(({ data }) => setUserCredits(data || null));
+  }, [editionId, user?.id, selectedCategoryId, paymentComplete]);
+
+  // Fetch existing non-draft submissions for this user/edition.
+  useEffect(() => {
+    if (!editionId || !user?.id) {
+      setSubmittedByCategory({});
+      return;
+    }
+    supabase
+      .from('submissions')
+      .select('id, category_id, status')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .neq('status', 'draft')
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const row of data || []) {
+          map[(row as any).category_id] = (row as any).id;
+        }
+        setSubmittedByCategory(map);
+      });
   }, [editionId, user?.id]);
 
   // --- Category selection (single) ---
@@ -233,8 +265,14 @@ export default function NewSubmission() {
   const handleSubmit = async (asDraft: boolean) => {
     if (!user?.id || !selectedCategory) return;
 
-    if (!asDraft && isPaid && userCredits && userCredits.submissions_remaining <= 0) {
-      toast.error('You have no submissions remaining for this edition. Contact support if you need assistance.');
+    // Block duplicate non-draft submission for the same category.
+    if (!asDraft && submittedByCategory[selectedCategory.id]) {
+      toast.error('You already have a submission for this category. Only one entry per category is allowed.');
+      return;
+    }
+
+    if (!asDraft && isPaid && (!userCredits || userCredits.photo_credits - userCredits.photo_credits_used < photos.length)) {
+      toast.error('You do not have enough photo credits for this category.');
       return;
     }
 
@@ -289,12 +327,16 @@ export default function NewSubmission() {
         }
       }
 
-      if (!asDraft && isPaid && status === 'submitted' && userCredits) {
-        await supabase.rpc('decrement_submissions_remaining', {
-          p_user_id: user.id,
-          p_edition_id: editionId,
-          p_count: 1,
-        });
+      if (!asDraft && isPaid && status === 'submitted') {
+        // Refresh credits from DB so the UI reflects the trigger-managed photo_credits_used.
+        const { data: refreshed } = await supabase
+          .from('user_credits')
+          .select('photo_credits, photo_credits_used, tier_id')
+          .eq('user_id', user.id)
+          .eq('edition_id', editionId)
+          .eq('category_id', selectedCategory.id)
+          .maybeSingle();
+        setUserCredits(refreshed || null);
       }
 
       toast.success(asDraft ? 'Saved as draft!' : t('submission.submitted_success'));
@@ -411,13 +453,19 @@ export default function NewSubmission() {
                     const isSelected = selectedCategoryId === cat.id;
                     const accent = CAT_ACCENTS[i % CAT_ACCENTS.length];
                     const catIsPaid = cat.price > 0;
+                    const alreadySubmitted = !!submittedByCategory[cat.id];
                     return (
                       <button
                         key={cat.id}
                         type="button"
-                        onClick={() => selectCategory(cat.id)}
-                        className={`group relative rounded-xl overflow-hidden text-left transition-all cursor-pointer border-2 ${
-                          isSelected ? `${accent.border} ring-1 ring-white/20` : 'border-surface-700 hover:border-surface-500'
+                        onClick={() => !alreadySubmitted && selectCategory(cat.id)}
+                        disabled={alreadySubmitted}
+                        className={`group relative rounded-xl overflow-hidden text-left transition-all border-2 ${
+                          alreadySubmitted
+                            ? 'border-surface-800 opacity-50 cursor-not-allowed'
+                            : isSelected
+                              ? `${accent.border} ring-1 ring-white/20 cursor-pointer`
+                              : 'border-surface-700 hover:border-surface-500 cursor-pointer'
                         }`}
                       >
                         <div className="h-24 sm:h-28 bg-surface-800 overflow-hidden relative">
@@ -430,7 +478,13 @@ export default function NewSubmission() {
                             </div>
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/40 to-transparent" />
-                          {isSelected && (
+                          {alreadySubmitted && (
+                            <div className="absolute top-2 right-2 h-6 px-2 rounded-full bg-emerald-500 flex items-center gap-1">
+                              <Check className="h-3 w-3 text-white" />
+                              <span className="text-[10px] font-semibold text-white">Submitted</span>
+                            </div>
+                          )}
+                          {!alreadySubmitted && isSelected && (
                             <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center">
                               <Check className="h-3.5 w-3.5 text-white" />
                             </div>
@@ -466,17 +520,24 @@ export default function NewSubmission() {
                   {selectedCategory.name}
                   {isPaid && <span className="text-gold-400 text-xs">· €{Number(selectedCategory.price).toFixed(0)}</span>}
                 </p>
-                {userCredits && userCredits.submissions_remaining <= 0 && isPaid && (
+                {userCredits && isPaid && userCredits.photo_credits - userCredits.photo_credits_used <= 0 && (
                   <div className="p-2 rounded-lg bg-red-500/10 border border-red-500/20 mt-1">
                     <p className="text-xs text-red-400 font-medium">
-                      You have used all your paid submissions for this edition. Contact support if you need to submit again.
+                      You have used all your photo credits for this category. Contact support if you need to submit again.
                     </p>
                   </div>
                 )}
-                {userCredits && userCredits.submissions_remaining > 0 && isPaid && (
+                {userCredits && isPaid && userCredits.photo_credits - userCredits.photo_credits_used > 0 && (
                   <p className="text-xs text-surface-400">
-                    {userCredits.submissions_remaining} paid submission{userCredits.submissions_remaining !== 1 ? 's' : ''} remaining
+                    {userCredits.photo_credits - userCredits.photo_credits_used} of {userCredits.photo_credits} photo credit{userCredits.photo_credits !== 1 ? 's' : ''} remaining
                   </p>
+                )}
+                {submittedByCategory[selectedCategory.id] && (
+                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
+                    <p className="text-xs text-amber-400 font-medium">
+                      You already have a submission for this category. Only one entry per category is allowed.
+                    </p>
+                  </div>
                 )}
               </div>
             )}
@@ -658,12 +719,20 @@ export default function NewSubmission() {
                                 setPaying(true);
                                 try {
                                   const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
-                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                   });
                                   if (error) throw new Error(error.message || 'Capture request failed');
                                   if (res?.success) {
                                     setPaymentComplete(true);
-                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
+                                    // Refresh credits from DB so the UI reflects the actual grant.
+                                    const { data: refreshed } = await supabase
+                                      .from('user_credits')
+                                      .select('photo_credits, photo_credits_used, tier_id')
+                                      .eq('user_id', user!.id)
+                                      .eq('edition_id', editionId)
+                                      .eq('category_id', selectedCategory!.id)
+                                      .maybeSingle();
+                                    setUserCredits(refreshed || null);
                                     toast.success('Payment successful! Credits added.');
                                   } else {
                                     throw new Error(res?.error || 'Capture failed');
@@ -712,12 +781,20 @@ export default function NewSubmission() {
                                 setPaying(true);
                                 try {
                                   const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
-                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                    body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                   });
                                   if (error) throw new Error(error.message || 'Capture request failed');
                                   if (res?.success) {
                                     setPaymentComplete(true);
-                                    setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
+                                    // Refresh credits from DB so the UI reflects the actual grant.
+                                    const { data: refreshed } = await supabase
+                                      .from('user_credits')
+                                      .select('photo_credits, photo_credits_used, tier_id')
+                                      .eq('user_id', user!.id)
+                                      .eq('edition_id', editionId)
+                                      .eq('category_id', selectedCategory!.id)
+                                      .maybeSingle();
+                                    setUserCredits(refreshed || null);
                                     toast.success('Payment successful! Credits added.');
                                   } else {
                                     throw new Error(res?.error || 'Capture failed');

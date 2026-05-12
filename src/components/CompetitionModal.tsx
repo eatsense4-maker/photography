@@ -77,7 +77,8 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [selectedTierId, setSelectedTierId] = useState('');
-  const [userCredits, setUserCredits] = useState<{ photo_credits: number; tier_id: string; submissions_remaining: number } | null>(null);
+  const [userCredits, setUserCredits] = useState<{ photo_credits: number; photo_credits_used: number; tier_id: string | null } | null>(null);
+  const [submittedByCategory, setSubmittedByCategory] = useState<Record<string, string>>({});
   const [paying, setPaying] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
@@ -94,7 +95,10 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   const needsPayment = isPaid && !hasCredits;
   const selectedTier = useMemo(() => pricingTiers.find(t => t.id === selectedTierId) || null, [pricingTiers, selectedTierId]);
   const paymentAmount = useMemo(() => selectedTier ? Number(selectedTier.price) : 0, [selectedTier]);
-  const paidPhotoLimit = useMemo(() => userCredits?.photo_credits ?? selectedTier?.photo_credits ?? 0, [userCredits, selectedTier]);
+  const paidPhotoLimit = useMemo(() => {
+    if (userCredits) return Math.max(userCredits.photo_credits - userCredits.photo_credits_used, 0);
+    return selectedTier?.photo_credits ?? 0;
+  }, [userCredits, selectedTier]);
   const maxPhotos = selectedCategory ? (isPaid ? Math.min(selectedCategory.max_photos, paidPhotoLimit || selectedCategory.max_photos) : selectedCategory.max_photos) : 0;
   const hasPhotos = photos.length > 0;
 
@@ -112,9 +116,28 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   }, [editionId]);
 
   useEffect(() => {
-    if (!editionId || !user?.id) { setUserCredits(null); return; }
-    supabase.from('user_credits').select('photo_credits, tier_id, submissions_remaining').eq('user_id', user.id).eq('edition_id', editionId).maybeSingle()
+    if (!editionId || !user?.id || !selectedCategoryId) { setUserCredits(null); return; }
+    supabase.from('user_credits')
+      .select('photo_credits, photo_credits_used, tier_id')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .eq('category_id', selectedCategoryId)
+      .maybeSingle()
       .then(({ data }) => setUserCredits(data || null));
+  }, [editionId, user?.id, selectedCategoryId, paymentComplete]);
+
+  useEffect(() => {
+    if (!editionId || !user?.id) { setSubmittedByCategory({}); return; }
+    supabase.from('submissions')
+      .select('id, category_id, status')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .neq('status', 'draft')
+      .then(({ data }) => {
+        const map: Record<string, string> = {};
+        for (const row of data || []) { map[(row as any).category_id] = (row as any).id; }
+        setSubmittedByCategory(map);
+      });
   }, [editionId, user?.id]);
 
   // Auto-skip auth step if already logged in
@@ -182,6 +205,14 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   // -- Submit --
   const handleSubmit = async () => {
     if (!user?.id || !selectedCategory || photos.length === 0) return;
+    if (submittedByCategory[selectedCategory.id]) {
+      toast.error('You already have a submission for this category. Only one entry per category is allowed.');
+      return;
+    }
+    if (isPaid && (!userCredits || userCredits.photo_credits - userCredits.photo_credits_used < photos.length)) {
+      toast.error('Not enough photo credits for this category.');
+      return;
+    }
     setLoading(true);
     try {
       const status = isPaid && !hasCredits ? 'draft' : 'submitted';
@@ -211,8 +242,15 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
         }
       }
 
-      if (isPaid && status === 'submitted' && userCredits) {
-        await supabase.rpc('decrement_submissions_remaining', { p_user_id: user.id, p_edition_id: editionId, p_count: 1 });
+      if (isPaid && status === 'submitted') {
+        const { data: refreshed } = await supabase
+          .from('user_credits')
+          .select('photo_credits, photo_credits_used, tier_id')
+          .eq('user_id', user.id)
+          .eq('edition_id', editionId)
+          .eq('category_id', selectedCategory.id)
+          .maybeSingle();
+        setUserCredits(refreshed || null);
       }
       setSubmitSuccess(true);
       toast.success('Submission successful!');
@@ -464,10 +502,17 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                 {categories.map((cat, i) => {
                   const isSelected = selectedCategoryId === cat.id;
                   const accent = CAT_ACCENTS[i % CAT_ACCENTS.length];
+                  const alreadySubmitted = !!submittedByCategory[cat.id];
                   return (
-                    <button key={cat.id} type="button" onClick={() => selectCategory(cat.id)}
-                      className={`group relative rounded-xl overflow-hidden text-left transition-all cursor-pointer border-2 ${
-                        isSelected ? `${accent.border} ring-1 ring-white/20` : 'border-surface-700 hover:border-surface-500'
+                    <button key={cat.id} type="button"
+                      onClick={() => !alreadySubmitted && selectCategory(cat.id)}
+                      disabled={alreadySubmitted}
+                      className={`group relative rounded-xl overflow-hidden text-left transition-all border-2 ${
+                        alreadySubmitted
+                          ? 'border-surface-800 opacity-50 cursor-not-allowed'
+                          : isSelected
+                            ? `${accent.border} ring-1 ring-white/20 cursor-pointer`
+                            : 'border-surface-700 hover:border-surface-500 cursor-pointer'
                       }`}>
                       {/* Image */}
                       <div className="h-28 sm:h-32 bg-surface-800 overflow-hidden relative">
@@ -480,8 +525,12 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/40 to-transparent" />
-                        {/* Selected check */}
-                        {isSelected && (
+                        {alreadySubmitted ? (
+                          <div className="absolute top-2 right-2 h-6 px-2 rounded-full bg-emerald-500 flex items-center gap-1">
+                            <Check className="h-3 w-3 text-white" />
+                            <span className="text-[10px] font-semibold text-white">Submitted</span>
+                          </div>
+                        ) : isSelected && (
                           <div className="absolute top-2 right-2 h-6 w-6 rounded-full bg-primary-500 flex items-center justify-center">
                             <Check className="h-3.5 w-3.5 text-white" />
                           </div>
@@ -600,12 +649,19 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                               setPaying(true);
                               try {
                                 const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
-                                  body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                  body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                 });
                                 if (error) throw new Error(error.message || 'Capture failed');
                                 if (res?.success) {
                                   setPaymentComplete(true);
-                                  setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
+                                  const { data: refreshed } = await supabase
+                                    .from('user_credits')
+                                    .select('photo_credits, photo_credits_used, tier_id')
+                                    .eq('user_id', user!.id)
+                                    .eq('edition_id', editionId)
+                                    .eq('category_id', selectedCategory!.id)
+                                    .maybeSingle();
+                                  setUserCredits(refreshed || null);
                                   toast.success('Payment successful!');
                                 } else throw new Error(res?.error || 'Capture failed');
                               } catch (err: any) { toast.error(err.message || 'Payment failed.'); }
@@ -633,12 +689,19 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                               setPaying(true);
                               try {
                                 const { data: res, error } = await supabase.functions.invoke('capture-paypal-order', {
-                                  body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId },
+                                  body: { orderId: data.orderID, userId: user!.id, tierId: selectedTierId, editionId, categoryIds: [selectedCategory!.id] },
                                 });
                                 if (error) throw new Error(error.message || 'Capture failed');
                                 if (res?.success) {
                                   setPaymentComplete(true);
-                                  setUserCredits({ photo_credits: selectedTier!.photo_credits, tier_id: selectedTierId, submissions_remaining: 1 });
+                                  const { data: refreshed } = await supabase
+                                    .from('user_credits')
+                                    .select('photo_credits, photo_credits_used, tier_id')
+                                    .eq('user_id', user!.id)
+                                    .eq('edition_id', editionId)
+                                    .eq('category_id', selectedCategory!.id)
+                                    .maybeSingle();
+                                  setUserCredits(refreshed || null);
                                   toast.success('Payment successful!');
                                 } else throw new Error(res?.error || 'Capture failed');
                               } catch (err: any) { toast.error(err.message || 'Payment failed.'); }
