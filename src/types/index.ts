@@ -54,6 +54,14 @@ export interface Category {
   max_photos: number;
   price: number;
   sort_order: number;
+  prize_amount: number;
+  prize_currency: string;
+  prize_label: string | null;
+  prize_label_al: string | null;
+  prize_description: string | null;
+  prize_description_al: string | null;
+  is_active: boolean;
+  submission_deadline: string | null;
   created_at: string;
 }
 
@@ -134,6 +142,7 @@ export interface Payment {
 export interface PricingTier {
   id: string;
   edition_id: string;
+  category_id: string | null;
   name: string;
   photo_credits: number;
   price: number;

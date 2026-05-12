@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2, Grid, Image, DollarSign, Upload, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Grid, Image, DollarSign, Upload, X, Award, Calendar, CheckCircle2, XCircle } from 'lucide-react';
 import { Button, Card, Modal, Input, Textarea, Select } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
 import type { Category } from '@/types';
@@ -33,6 +33,15 @@ export default function AdminCategories() {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  // Prize / lifecycle
+  const [prizeAmount, setPrizeAmount] = useState('0');
+  const [prizeCurrency, setPrizeCurrency] = useState('EUR');
+  const [prizeLabel, setPrizeLabel] = useState('');
+  const [prizeLabelAl, setPrizeLabelAl] = useState('');
+  const [prizeDescription, setPrizeDescription] = useState('');
+  const [prizeDescriptionAl, setPrizeDescriptionAl] = useState('');
+  const [isActive, setIsActive] = useState(true);
+  const [submissionDeadline, setSubmissionDeadline] = useState('');
 
   const deriveSlug = (n: string) => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
@@ -77,6 +86,14 @@ export default function AdminCategories() {
     setEditionId(selectedEdition);
     setImageUrl('');
     setPreviewUrl('');
+    setPrizeAmount('0');
+    setPrizeCurrency('EUR');
+    setPrizeLabel('');
+    setPrizeLabelAl('');
+    setPrizeDescription('');
+    setPrizeDescriptionAl('');
+    setIsActive(true);
+    setSubmissionDeadline('');
     setShowModal(true);
   };
 
@@ -93,6 +110,14 @@ export default function AdminCategories() {
     setEditionId(cat.edition_id);
     setImageUrl(cat.image_url || '');
     setPreviewUrl(cat.image_url || '');
+    setPrizeAmount((cat.prize_amount ?? 0).toString());
+    setPrizeCurrency(cat.prize_currency || 'EUR');
+    setPrizeLabel(cat.prize_label || '');
+    setPrizeLabelAl(cat.prize_label_al || '');
+    setPrizeDescription(cat.prize_description || '');
+    setPrizeDescriptionAl(cat.prize_description_al || '');
+    setIsActive(cat.is_active ?? true);
+    setSubmissionDeadline(cat.submission_deadline ? cat.submission_deadline.slice(0, 16) : '');
     setShowModal(true);
   };
 
@@ -123,6 +148,14 @@ export default function AdminCategories() {
       max_photos: parseInt(maxPhotos),
       price: parseFloat(price),
       sort_order: parseInt(sortOrder),
+      prize_amount: parseFloat(prizeAmount || '0'),
+      prize_currency: prizeCurrency || 'EUR',
+      prize_label: prizeLabel || null,
+      prize_label_al: prizeLabelAl || null,
+      prize_description: prizeDescription || null,
+      prize_description_al: prizeDescriptionAl || null,
+      is_active: isActive,
+      submission_deadline: submissionDeadline ? new Date(submissionDeadline).toISOString() : null,
     };
 
     if (editingCategory) {
@@ -210,8 +243,15 @@ export default function AdminCategories() {
                       <Grid className="h-5 w-5 text-primary-500" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-white">{cat.name}</h3>
-                      <p className="text-xs text-surface-500 mt-0.5">Order: {cat.sort_order}</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-white">{cat.name}</h3>
+                        {cat.is_active === false ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/30"><XCircle className="h-3 w-3" />Inactive</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"><CheckCircle2 className="h-3 w-3" />Active</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-surface-500 mt-0.5">Order: {cat.sort_order}{cat.slug ? ` · /${cat.slug}` : ''}</p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -219,16 +259,29 @@ export default function AdminCategories() {
                     <Button variant="ghost" size="sm" icon={<Trash2 className="h-4 w-4 text-red-400" />} onClick={() => setDeleteId(cat.id)} />
                   </div>
                 </div>
-                <p className="text-sm text-surface-400 mb-4">{cat.description || '—'}</p>
-                <div className="flex items-center gap-4 text-sm text-surface-500">
+                <p className="text-sm text-surface-400 mb-4 line-clamp-2">{cat.description || '—'}</p>
+                <div className="flex items-center gap-4 text-sm text-surface-500 flex-wrap">
                   <div className="flex items-center gap-1">
                     <Image className="h-4 w-4" />
                     Max {cat.max_photos} photos
                   </div>
                   <div className="flex items-center gap-1">
                     <DollarSign className="h-4 w-4" />
-                    €{cat.price}
+                    Entry €{cat.price}
                   </div>
+                  {cat.prize_amount > 0 && (
+                    <div className="flex items-center gap-1 text-gold-400">
+                      <Award className="h-4 w-4" />
+                      Prize {cat.prize_currency === 'EUR' ? '€' : `${cat.prize_currency} `}{Number(cat.prize_amount).toLocaleString()}
+                      {cat.prize_label ? <span className="text-surface-500">· {cat.prize_label}</span> : null}
+                    </div>
+                  )}
+                  {cat.submission_deadline && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {new Date(cat.submission_deadline).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
                 </div>
               </Card>
@@ -276,8 +329,51 @@ export default function AdminCategories() {
 
           <div className="grid grid-cols-3 gap-4">
             <Input label="Max Photos" type="number" value={maxPhotos} onChange={(e) => setMaxPhotos(e.target.value)} />
-            <Input label="Price (€)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+            <Input label="Entry Price (€)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
             <Input label="Sort Order" type="number" value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} />
+          </div>
+
+          {/* Prize management */}
+          <div className="pt-2 border-t border-surface-800">
+            <div className="flex items-center gap-2 mb-3">
+              <Award className="h-4 w-4 text-gold-400" />
+              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Prize</h4>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <Input label="Prize Amount" type="number" value={prizeAmount} onChange={(e) => setPrizeAmount(e.target.value)} placeholder="e.g. 1000" />
+              <Input label="Currency" value={prizeCurrency} onChange={(e) => setPrizeCurrency(e.target.value.toUpperCase().slice(0, 6))} placeholder="EUR" />
+              <Input label="Short Label (EN)" value={prizeLabel} onChange={(e) => setPrizeLabel(e.target.value)} placeholder="Cash prize + Trophy" />
+            </div>
+            <div className="grid grid-cols-1 gap-4 mt-3">
+              <Input label="Short Label (AL)" value={prizeLabelAl} onChange={(e) => setPrizeLabelAl(e.target.value)} placeholder="Çmim monetar + Trofe" />
+              <Textarea label="Prize Description (EN)" value={prizeDescription} onChange={(e) => setPrizeDescription(e.target.value)} rows={3} placeholder="1st place: €1,000 + Trophy\n2nd place: €500\n3rd place: €250" />
+              <Textarea label="Prize Description (AL)" value={prizeDescriptionAl} onChange={(e) => setPrizeDescriptionAl(e.target.value)} rows={3} placeholder="Vendi i parë: €1,000 + Trofe..." />
+            </div>
+          </div>
+
+          {/* Lifecycle */}
+          <div className="pt-2 border-t border-surface-800">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="h-4 w-4 text-primary-400" />
+              <h4 className="text-sm font-semibold text-white uppercase tracking-wider">Lifecycle</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-4 items-end">
+              <Input
+                label="Submission Deadline (optional)"
+                type="datetime-local"
+                value={submissionDeadline}
+                onChange={(e) => setSubmissionDeadline(e.target.value)}
+              />
+              <label className="flex items-center gap-3 px-4 py-2.5 rounded-lg border border-surface-700 bg-surface-900 cursor-pointer hover:border-primary-500 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="h-4 w-4 rounded border-surface-600 bg-surface-800 text-primary-500 focus:ring-primary-500"
+                />
+                <span className="text-sm text-white">Active (visible to applicants)</span>
+              </label>
+            </div>
           </div>
           <div className="flex justify-end gap-3 pt-4">
             <Button variant="ghost" onClick={() => setShowModal(false)}>Cancel</Button>

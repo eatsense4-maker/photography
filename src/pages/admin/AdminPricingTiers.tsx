@@ -4,13 +4,14 @@ import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, CreditCard, Package } from 'lucide-react';
 import { Button, Card, Modal, Input, Textarea, Select } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
-import type { PricingTier } from '@/types';
+import type { PricingTier, Category } from '@/types';
 import toast from 'react-hot-toast';
 
 export default function AdminPricingTiers() {
   usePageTitle('Pricing');
   const [tiers, setTiers] = useState<PricingTier[]>([]);
   const [editions, setEditions] = useState<{ id: string; title: string; year: number }[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedEdition, setSelectedEdition] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -24,6 +25,7 @@ export default function AdminPricingTiers() {
   const [isBundle, setIsBundle] = useState(false);
   const [description, setDescription] = useState('');
   const [sortOrder, setSortOrder] = useState('0');
+  const [categoryId, setCategoryId] = useState<string>('');
 
   useEffect(() => {
     supabase
@@ -51,6 +53,16 @@ export default function AdminPricingTiers() {
     if (selectedEdition) fetchTiers(selectedEdition);
   }, [selectedEdition]);
 
+  useEffect(() => {
+    if (!selectedEdition) { setCategories([]); return; }
+    supabase
+      .from('categories')
+      .select('*')
+      .eq('edition_id', selectedEdition)
+      .order('sort_order')
+      .then(({ data }) => setCategories(data || []));
+  }, [selectedEdition]);
+
   const openCreate = () => {
     setEditingTier(null);
     setName('');
@@ -59,6 +71,7 @@ export default function AdminPricingTiers() {
     setIsBundle(false);
     setDescription('');
     setSortOrder((tiers.length + 1).toString());
+    setCategoryId('');
     setShowModal(true);
   };
 
@@ -70,6 +83,7 @@ export default function AdminPricingTiers() {
     setIsBundle(tier.is_bundle);
     setDescription(tier.description || '');
     setSortOrder(tier.sort_order.toString());
+    setCategoryId(tier.category_id || '');
     setShowModal(true);
   };
 
@@ -82,6 +96,7 @@ export default function AdminPricingTiers() {
       is_bundle: isBundle,
       description: description || null,
       sort_order: parseInt(sortOrder),
+      category_id: isBundle ? null : (categoryId || null),
     };
 
     if (editingTier) {
@@ -164,9 +179,16 @@ export default function AdminPricingTiers() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-white">{tier.name}</h3>
-                      {tier.is_bundle && (
-                        <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Bundle</span>
-                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {tier.is_bundle && (
+                          <span className="text-[10px] font-medium text-emerald-400 uppercase tracking-wider">Bundle</span>
+                        )}
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-surface-400">
+                          {tier.category_id
+                            ? (categories.find(c => c.id === tier.category_id)?.name || 'Category-specific')
+                            : 'All categories'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -198,6 +220,17 @@ export default function AdminPricingTiers() {
         <div className="space-y-4">
           <Input label="Name" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. 3 Photos" />
           <Textarea label="Description" value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
+          {!isBundle && (
+            <Select
+              label="Applies to category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              options={[
+                { value: '', label: 'All categories (default)' },
+                ...categories.map((c) => ({ value: c.id, label: c.name })),
+              ]}
+            />
+          )}
           <div className="grid grid-cols-3 gap-4">
             <Input label="Photo Credits" type="number" value={photoCredits} onChange={(e) => setPhotoCredits(e.target.value)} />
             <Input label="Price (€)" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />

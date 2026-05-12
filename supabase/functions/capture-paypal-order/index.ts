@@ -162,7 +162,7 @@ serve(async (req) => {
     if (tierId && editionId) {
       const { data: tier } = await supabase
         .from('pricing_tiers')
-        .select('photo_credits, is_bundle')
+        .select('photo_credits, is_bundle, category_id')
         .eq('id', tierId)
         .single();
 
@@ -179,6 +179,9 @@ serve(async (req) => {
           .eq('edition_id', editionId)
           .gt('price', 0);
         grantCategoryIds = (paidCats || []).map((c: { id: string }) => c.id);
+      } else if (tier?.category_id) {
+        // Tier locked to one category: ignore client list and grant only that one.
+        grantCategoryIds = [tier.category_id as string];
       } else {
         // Single-category tier: trust only paid categories from the request.
         const { data: validCats } = await supabase

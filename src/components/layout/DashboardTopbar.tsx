@@ -12,6 +12,7 @@ const routeTitleMap: Record<string, string> = {
   '/admin': 'admin.dashboard',
   '/admin/editions': 'admin.editions',
   '/admin/categories': 'admin.categories',
+  '/admin/pricing': 'admin.pricing',
   '/admin/submissions': 'admin.submissions',
   '/admin/users': 'admin.users',
   '/admin/jury': 'admin.jury_management',

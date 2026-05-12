@@ -111,9 +111,17 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
 
   useEffect(() => {
     if (!editionId) return;
-    supabase.from('categories').select('*').eq('edition_id', editionId).order('sort_order').then(({ data }) => setCategories(data || []));
-    supabase.from('pricing_tiers').select('*').eq('edition_id', editionId).eq('is_bundle', false).order('sort_order').then(({ data }) => setPricingTiers(data || []));
+    supabase.from('categories').select('*').eq('edition_id', editionId).eq('is_active', true).or(`submission_deadline.is.null,submission_deadline.gt.${new Date().toISOString()}`).order('sort_order').then(({ data }) => setCategories(data || []));
   }, [editionId]);
+
+  useEffect(() => {
+    if (!editionId) { setPricingTiers([]); return; }
+    let q = supabase.from('pricing_tiers').select('*').eq('edition_id', editionId).eq('is_bundle', false);
+    q = selectedCategoryId
+      ? q.or(`category_id.is.null,category_id.eq.${selectedCategoryId}`)
+      : q.is('category_id', null);
+    q.order('sort_order').then(({ data }) => setPricingTiers(data || []));
+  }, [editionId, selectedCategoryId]);
 
   useEffect(() => {
     if (!editionId || !user?.id || !selectedCategoryId) { setUserCredits(null); return; }

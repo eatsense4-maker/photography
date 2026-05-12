@@ -137,20 +137,24 @@ export default function NewSubmission() {
       .from('categories')
       .select('*')
       .eq('edition_id', editionId)
+      .eq('is_active', true)
+      .or(`submission_deadline.is.null,submission_deadline.gt.${new Date().toISOString()}`)
       .order('sort_order')
       .then(({ data }) => setCategories(data || []));
   }, [editionId]);
 
   useEffect(() => {
     if (!editionId) { setPricingTiers([]); return; }
-    supabase
+    let query = supabase
       .from('pricing_tiers')
       .select('*')
       .eq('edition_id', editionId)
-      .eq('is_bundle', false)
-      .order('sort_order')
-      .then(({ data }) => setPricingTiers(data || []));
-  }, [editionId]);
+      .eq('is_bundle', false);
+    query = selectedCategoryId
+      ? query.or(`category_id.is.null,category_id.eq.${selectedCategoryId}`)
+      : query.is('category_id', null);
+    query.order('sort_order').then(({ data }) => setPricingTiers(data || []));
+  }, [editionId, selectedCategoryId]);
 
   useEffect(() => {
     if (!editionId || !user?.id || !selectedCategoryId) {

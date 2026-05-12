@@ -330,7 +330,13 @@ export default function CategoryDetailPage() {
               )}
               <span className="flex items-center gap-2">
                 <Award className={`h-4 w-4 ${cat.textColor}`} />
-                <strong className="text-white">{cat.prize}</strong> {lang === 'al' ? cat.prizeLabelAl : cat.prizeLabel}
+                <strong className="text-white">
+                  {dbCategory && dbCategory.prize_amount > 0
+                    ? `${dbCategory.prize_currency === 'EUR' ? '€' : dbCategory.prize_currency + ' '}${Number(dbCategory.prize_amount).toLocaleString()}`
+                    : cat.prize}
+                </strong>{' '}
+                {dbCategory?.[lang === 'al' ? 'prize_label_al' : 'prize_label']
+                  || (lang === 'al' ? cat.prizeLabelAl : cat.prizeLabel)}
               </span>
               <span className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary-400" />
@@ -417,6 +423,21 @@ export default function CategoryDetailPage() {
               <p className="text-sm text-surface-300">{lang === 'al' ? cat.photoRulesAl : cat.photoRules}</p>
             </div>
           </div>
+
+          {/* Prize breakdown from DB (admin-managed) */}
+          {dbCategory && (dbCategory.prize_description || dbCategory.prize_description_al) && (
+            <div className="mt-6 p-5 rounded-xl bg-gold-500/5 border border-gold-500/30">
+              <div className="flex items-center gap-2 mb-3">
+                <Award className="h-5 w-5 text-gold-400" />
+                <h3 className="text-sm font-semibold text-gold-400 uppercase tracking-wider">
+                  {t('apply.prize_pool')}
+                </h3>
+              </div>
+              <pre className="text-sm text-surface-200 whitespace-pre-wrap font-sans leading-relaxed">
+                {(lang === 'al' && dbCategory.prize_description_al) ? dbCategory.prize_description_al : (dbCategory.prize_description || dbCategory.prize_description_al)}
+              </pre>
+            </div>
+          )}
         </div>
       </section>
 

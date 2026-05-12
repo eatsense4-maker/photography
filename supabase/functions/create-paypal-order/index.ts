@@ -71,13 +71,21 @@ serve(async (req) => {
       // Look up tier in DB
       const { data: tier, error: tierErr } = await supabase
         .from('pricing_tiers')
-        .select('id, price, is_bundle, edition_id')
+        .select('id, price, is_bundle, edition_id, category_id')
         .eq('id', tierId)
         .eq('edition_id', editionId)
         .single();
 
       if (tierErr || !tier) {
         return new Response(JSON.stringify({ error: 'Invalid pricing tier' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+        });
+      }
+
+      // If tier is scoped to a specific category, the request MUST target only that category.
+      if (tier.category_id && (categoryIds.length !== 1 || categoryIds[0] !== tier.category_id)) {
+        return new Response(JSON.stringify({ error: 'Tier is not valid for the selected category' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
         });
