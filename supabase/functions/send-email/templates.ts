@@ -41,6 +41,7 @@ function esc(v: unknown): string {
 
 export type TemplateName =
   | 'welcome'
+  | 'password_recovery'
   | 'submission_received'
   | 'payment_confirmed'
   | 'photo_approved'
@@ -72,6 +73,22 @@ export function renderTemplate(
           <p style="color:#666;font-size:13px;">If you didn't create this account, please ignore this email or contact us.</p>
         `),
         text: `Welcome, ${name}. Your FOKUS Award account is ready: ${SITE_URL}/dashboard`,
+      };
+    }
+    case 'password_recovery': {
+      const name = esc(data.full_name) || 'photographer';
+      const recoveryUrl = esc(data.recovery_url);
+      return {
+        subject: 'Reset your FOKUS Award password',
+        html: layout('Reset your password', `
+          <h1 style="margin:0 0 16px;font-size:22px;">Reset your password</h1>
+          <p>Hello ${name},</p>
+          <p>We received a request to reset the password for your FOKUS Award account.</p>
+          ${btn(recoveryUrl, 'Set a new password')}
+          <p>This link can be used once and expires for your security.</p>
+          <p style="color:#666;font-size:13px;">If you didn't request a password reset, you can safely ignore this email.</p>
+        `),
+        text: `Hello ${name}, reset your FOKUS Award password here: ${recoveryUrl}\n\nIf you didn't request this, ignore this email.`,
       };
     }
     case 'submission_received': {

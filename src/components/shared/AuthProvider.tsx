@@ -1,17 +1,7 @@
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { loadOrCreateProfile } from '@/lib/auth-profile';
 import { useAuthStore } from '@/stores';
-import type { Profile } from '@/types';
-
-async function fetchProfile(userId: string): Promise<Profile | null> {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-  if (error || !data) return null;
-  return data as Profile;
-}
 
 /**
  * AuthProvider — resolves session on mount via getSession() (lock-free thanks
@@ -27,7 +17,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     // --- 1. Resolve initial session (instant with no-op lock) ---
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        const profile = await fetchProfile(session.user.id);
+        const profile = await loadOrCreateProfile(session.user);
         setUser(profile ?? null);
       } else {
         setUser(null);
@@ -45,7 +35,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         if (event === 'SIGNED_IN' && session?.user) {
           // Skip if signIn() in useAuth already set the user
           if (useAuthStore.getState().isAuthenticated) return;
-          const profile = await fetchProfile(session.user.id);
+          const profile = await loadOrCreateProfile(session.user);
           setUser(profile ?? null);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

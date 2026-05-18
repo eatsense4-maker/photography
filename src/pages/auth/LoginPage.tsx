@@ -25,11 +25,9 @@ export default function LoginPage() {
   const { t } = useTranslation();
   usePageTitle('Login');
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, resendVerification, isAuthenticated, user } = useAuth();
+  const { signIn, signInWithGoogle, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [needsVerification, setNeedsVerification] = useState<string | null>(null);
-  const [resending, setResending] = useState(false);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -48,7 +46,6 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setLoading(true);
-    setNeedsVerification(null);
     try {
       await signIn(data.email, data.password);
       toast.success(t('auth.welcome_back_toast'));
@@ -60,27 +57,9 @@ export default function LoginPage() {
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('auth.login_failed_toast');
-      if (/not confirmed|email not confirmed/i.test(message)) {
-        setNeedsVerification(data.email);
-        toast.error('Please verify your email first.');
-      } else {
-        toast.error(message);
-      }
+      toast.error(message);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!needsVerification) return;
-    setResending(true);
-    try {
-      await resendVerification(needsVerification);
-      toast.success('Verification email sent. Check your inbox.');
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Failed to resend');
-    } finally {
-      setResending(false);
     }
   };
 
@@ -210,21 +189,6 @@ export default function LoginPage() {
               {t('auth.login_button')}
             </Button>
 
-            {needsVerification && (
-              <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 text-sm text-amber-200">
-                <p className="mb-2">
-                  Your email <strong>{needsVerification}</strong> is not yet verified.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={resending}
-                  className="font-medium underline disabled:opacity-50"
-                >
-                  {resending ? 'Sending…' : 'Resend verification email'}
-                </button>
-              </div>
-            )}
           </form>
 
           <p className="text-center text-sm text-surface-400 mt-8">

@@ -10,6 +10,8 @@ import { z } from 'zod';
 import { Mail, Lock, Eye, EyeOff, User, Globe2 } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores';
+import { getDashboardPath } from '@/lib/auth-utils';
 import toast from 'react-hot-toast';
 
 const registerSchema = z
@@ -48,7 +50,8 @@ export default function RegisterPage() {
     try {
       await signUp(data.email, data.password, data.full_name, data.country);
       toast.success(t('auth.registered_toast'));
-      navigate('/login');
+      const currentUser = useAuthStore.getState().user;
+      navigate(getDashboardPath(currentUser?.role ?? 'user'), { replace: true });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : t('auth.registration_failed_toast');
       toast.error(message);

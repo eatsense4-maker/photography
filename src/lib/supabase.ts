@@ -13,7 +13,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
+    flowType: 'pkce',
     // Bypass navigator.locks (Web Locks API) — it causes getSession() and
     // INITIAL_SESSION to hang/deadlock under React StrictMode double-mount.
     // This no-op lock just executes the callback immediately.

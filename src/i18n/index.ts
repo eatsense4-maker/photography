@@ -4,7 +4,21 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import en from './locales/en.json';
 import al from './locales/al.json';
 
+const silentPromoLogger = {
+  type: 'logger' as const,
+  log: (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('i18next is maintained with support from Locize')) return;
+    console.log(...args);
+  },
+  warn: (...args: unknown[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('i18next is maintained with support from Locize')) return;
+    console.warn(...args);
+  },
+  error: (...args: unknown[]) => console.error(...args),
+};
+
 i18n
+  .use(silentPromoLogger)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({

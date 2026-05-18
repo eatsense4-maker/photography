@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 const BRAND_COLOR = '#bd3020';
 const SITE_URL = process.env.SITE_URL || 'https://fokusaward.com';
-const OUT_DIR = resolve('docs', 'email-previews');
+const OUT_DIR = resolve('docs', 'email-templates');
 
 function layout(title, body) {
   return `<!doctype html>
@@ -51,6 +51,22 @@ function renderTemplate(template, data) {
           <p style="color:#666;font-size:13px;">If you did not create this account, please ignore this email or contact us.</p>
         `),
         text: `Welcome, ${name}. Your FOKUS Award account is ready: ${SITE_URL}/dashboard`,
+      };
+    }
+    case 'password_recovery': {
+      const name = esc(data.full_name) || 'photographer';
+      const recoveryUrl = esc(data.recovery_url);
+      return {
+        subject: 'Reset your FOKUS Award password',
+        html: layout('Reset your password', `
+          <h1 style="margin:0 0 16px;font-size:22px;">Reset your password</h1>
+          <p>Hello ${name},</p>
+          <p>We received a request to reset the password for your FOKUS Award account.</p>
+          ${btn(recoveryUrl, 'Set a new password')}
+          <p>This link can be used once and expires for your security.</p>
+          <p style="color:#666;font-size:13px;">If you did not request a password reset, you can safely ignore this email.</p>
+        `),
+        text: `Hello ${name}, reset your FOKUS Award password here: ${recoveryUrl}\n\nIf you did not request this, ignore this email.`,
       };
     }
     case 'submission_received': {
@@ -173,6 +189,7 @@ function renderTemplate(template, data) {
 
 const samples = {
   welcome: { full_name: 'Arta Hoxha' },
+  password_recovery: { full_name: 'Arta Hoxha', recovery_url: `${SITE_URL}/auth/reset-password?code=sample-recovery-code` },
   submission_received: { submission_id: '11111111-1111-4111-8111-111111111111', submission_title: 'Morning Light' },
   payment_confirmed: { amount: '25.00', currency: 'EUR', paypal_order_id: 'PAYPAL-ORDER-123' },
   photo_approved: { submission_id: '11111111-1111-4111-8111-111111111111', submission_title: 'Morning Light' },

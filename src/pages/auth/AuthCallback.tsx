@@ -38,8 +38,23 @@ export default function AuthCallback() {
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+
+    const start = async () => {
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!error) {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) resolveAndRedirect(session.user.id);
+    };
+
+    start().catch(() => {
+      navigate('/login', { replace: true });
     });
 
     return () => {

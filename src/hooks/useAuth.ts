@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
+import { loadOrCreateProfile } from '@/lib/auth-profile';
 import { useAuthStore } from '@/stores';
 import type { Profile, UserRole } from '@/types';
 
@@ -19,15 +20,7 @@ export function useAuth() {
         if (error) throw error;
 
         if (data.user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-
-          if (profileError || !profile) {
-            throw new Error('Profile not found. Please contact support.');
-          }
+          const profile = await loadOrCreateProfile(data.user);
           setUser(profile as Profile);
         } else {
           throw new Error('Authentication failed — no user returned.');
@@ -57,6 +50,15 @@ export function useAuth() {
           },
         });
         if (error) throw error;
+
+        const session = data.session;
+        const newUser = data.user;
+
+        if (session && newUser) {
+          const profile = await loadOrCreateProfile(newUser);
+          setUser(profile as Profile);
+        }
+
         setLoading(false);
         return data;
       } catch (err) {
@@ -64,7 +66,7 @@ export function useAuth() {
         throw err;
       }
     },
-    [setLoading]
+    [setLoading, setUser]
   );
 
   const signInWithGoogle = useCallback(async () => {
@@ -81,15 +83,6 @@ export function useAuth() {
   const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
-    });
-    if (error) throw error;
-  }, []);
-
-  const resendVerification = useCallback(async (email: string) => {
-    const { error } = await supabase.auth.resend({
-      type: 'signup',
-      email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
     });
     if (error) throw error;
   }, []);
@@ -135,7 +128,6 @@ export function useAuth() {
     signInWithGoogle,
     signOut,
     resetPassword,
-    resendVerification,
     updateProfile,
     hasRole,
   };

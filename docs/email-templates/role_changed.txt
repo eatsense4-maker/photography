@@ -1,0 +1,3 @@
+Subject: Your account role was updated
+
+Your role is now jury.
