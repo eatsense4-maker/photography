@@ -607,7 +607,12 @@ export default function HomePage() {
                     {t('home.sidebar_desc')}
                   </p>
                   <Link to="/apply">
-                    <Button variant="gold" size="sm" className="w-full" icon={<ArrowRight className="h-4 w-4" />}>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="w-full !bg-[#bd3020] hover:!bg-[#a92a1c] !text-white shadow-lg shadow-[#bd3020]/25"
+                      icon={<ArrowRight className="h-4 w-4" />}
+                    >
                       {t('home.view_categories')}
                     </Button>
                   </Link>
