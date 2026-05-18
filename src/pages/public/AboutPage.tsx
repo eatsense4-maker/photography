@@ -34,6 +34,20 @@ export default function AboutPage() {
       bioKey: 'about.curator_burim_bio',
     },
     {
+      name: 'Blerta Kambo',
+      country: 'Albania',
+      photo: getPhotoUrl('curators/blerta-kambo.jpg'),
+      roleKey: 'about.curator_blerta_role',
+      bioKey: 'about.curator_blerta_bio',
+    },
+    {
+      name: 'Albes Fusha',
+      country: 'Albania',
+      photo: getPhotoUrl('curators/albes-fusha.jpg'),
+      roleKey: 'about.curator_albes_role',
+      bioKey: 'about.curator_albes_bio',
+    },
+    {
       name: 'Saimir Ahmeti',
       country: 'Albania',
       photo: getPhotoUrl('curators/saimir-ahmeti.jpg'),
@@ -135,6 +149,9 @@ export default function AboutPage() {
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-white mt-3 mb-6">
                   {t('about.story_heading')}
                 </h2>
+                <p className="text-sm md:text-base text-primary-300 -mt-2 mb-6 font-medium">
+                  {t('about.curated_by')}
+                </p>
               </motion.div>
               <motion.p
                 custom={1}
@@ -168,7 +185,7 @@ export default function AboutPage() {
             >
               <div className="aspect-square rounded-2xl overflow-hidden">
                 <img
-                  src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&h=800&fit=crop"
+                  src={getPhotoUrl('submissions/3b431e38-bc17-4f70-8176-700bd286d5e4-about.jpeg')}
                   alt="Photography"
                   className="w-full h-full object-cover"
                 />

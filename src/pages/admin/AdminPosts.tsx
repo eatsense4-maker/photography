@@ -12,8 +12,8 @@ import type { Post, PostCategory } from '@/types';
 import toast from 'react-hot-toast';
 
 const CATEGORY_OPTIONS = [
-  { value: 'news', label: 'News' },
-  { value: 'event', label: 'Event' },
+  { value: 'news', label: 'Kulture' },
+  { value: 'event', label: 'Arte Figurative' },
   { value: 'announcement', label: 'Announcement' },
 ];
 

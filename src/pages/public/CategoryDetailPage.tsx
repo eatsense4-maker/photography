@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ArrowRight, ArrowLeft, Award, Calendar, Check, X as XIcon, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { formatSubmissionDeadline } from '@/lib/submissionDeadline';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import type { Edition, Category } from '@/types';
@@ -270,6 +271,7 @@ export default function CategoryDetailPage() {
   const isTheme = cat.slug === 'main-theme-breath';
   const conceptParagraphs = lang === 'en' ? CONCEPT_EN : CONCEPT_AL;
   const heroImage = dbCategory?.image_url || cat.heroImage;
+  const categoryDeadlineText = formatSubmissionDeadline(dbCategory?.submission_deadline || null, lang) || t('apply.deadline_tba');
 
   return (
     <div className="pb-24">
@@ -340,7 +342,7 @@ export default function CategoryDetailPage() {
               </span>
               <span className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-primary-400" />
-                {t('apply.deadline')}: <strong className="text-white">{t('apply.deadline_date')}</strong>
+                {t('apply.deadline')}: <strong className="text-white">{categoryDeadlineText}</strong>
               </span>
             </motion.div>
           </div>
@@ -373,6 +375,9 @@ export default function CategoryDetailPage() {
           <h2 className="detail-heading font-display font-bold text-white mb-5">
             {t('apply.about_category')}
           </h2>
+          <p className="text-sm font-medium text-primary-400 -mt-2 mb-4">
+            {lang === 'al' ? 'Kuruar nga Blerta Kambo' : 'Curated by Blerta Kambo'}
+          </p>
           <p className="detail-body text-surface-200">
             {lang === 'al' ? cat.descriptionAl : cat.description}
           </p>

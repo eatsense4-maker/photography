@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Facebook, Instagram, Mail, MapPin, Youtube } from 'lucide-react';
-import { getPhotoUrl } from '@/lib/r2';
+import { Facebook, Instagram, Mail, MapPin, Phone, Youtube } from 'lucide-react';
+import fokusLogo from '@/assets/FOKUS LOGO.png';
 
 export default function Footer() {
   const { t } = useTranslation();
@@ -23,7 +23,7 @@ export default function Footer() {
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center mb-4">
               <img
-                src={getPhotoUrl('brand/fokus-logo.png')}
+                src={fokusLogo}
                 alt="FOKUS Award"
                 width={120}
                 height={40}
@@ -99,6 +99,12 @@ export default function Footer() {
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-400" />
                 <span>{t('footer.location')}</span>
               </li>
+              <li className="flex items-start gap-3 text-sm text-surface-400">
+                <Phone className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary-400" />
+                <a href="tel:+355693949167" className="hover:text-white transition-colors">
+                  +355 69 394 9167
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -108,7 +114,7 @@ export default function Footer() {
               {t('footer.follow_us')}
             </h3>
             <p className="text-sm text-surface-400 leading-relaxed">
-              Stay updated with the latest news, winners, and upcoming editions of FOKUS Award.
+              {t('footer.follow_text')}
             </p>
             <div className="mt-4">
               <Link

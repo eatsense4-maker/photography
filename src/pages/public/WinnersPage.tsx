@@ -133,8 +133,7 @@ export default function WinnersPage() {
         categories!submissions_category_id_fkey(name),
         submission_photos!inner(id, storage_key, status)
       `)
-      .in('edition_id', editionIds)
-      .eq('submission_photos.status', 'approved');
+      .in('edition_id', editionIds);
 
     const userIds = [...new Set(((subs || []) as Array<{ user_id: string }>).map((s) => s.user_id).filter(Boolean))];
     const { data: profiles } = userIds.length

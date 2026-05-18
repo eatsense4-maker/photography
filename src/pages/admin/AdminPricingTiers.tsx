@@ -257,7 +257,9 @@ export default function AdminPricingTiers() {
 
       {/* Delete Confirm Modal */}
       <Modal isOpen={!!deleteId} onClose={() => setDeleteId(null)} title="Delete Tier">
-        <p className="text-surface-300">Are you sure you want to delete this pricing tier?</p>
+        <p className="text-surface-300">
+          Are you sure you want to delete this pricing tier? Existing user credits and payments will stay in place.
+        </p>
         <div className="flex justify-end gap-3 pt-6">
           <Button variant="ghost" onClick={() => setDeleteId(null)}>Cancel</Button>
           <Button variant="danger" onClick={handleDelete}>Delete</Button>

@@ -161,9 +161,10 @@ export default function EditionGalleryPage() {
   async function fetchDbEditionData(yr: number): Promise<{ edition: GalleryEdition; photos: GalleryPhoto[] } | null> {
     const { data: ed } = await supabase
       .from('editions')
-      .select('id, title, slug, year, theme, published')
+      .select('id, title, slug, year, theme, published, results_published')
       .eq('year', yr)
       .eq('published', true)
+      .eq('results_published', true)
       .single();
 
     if (!ed) return null;
@@ -182,8 +183,7 @@ export default function EditionGalleryPage() {
         categories!submissions_category_id_fkey(name),
         submission_photos!inner(id, storage_key, status)
       `)
-      .eq('edition_id', ed.id)
-      .eq('submission_photos.status', 'approved');
+      .eq('edition_id', ed.id);
 
     const userIds = [...new Set(((subs || []) as Array<{ user_id: string }>).map((s) => s.user_id).filter(Boolean))];
     const { data: profiles } = userIds.length

@@ -126,7 +126,7 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <p className="text-sm text-surface-400">Phone</p>
-                      <p className="text-white">+355 XX XXX XXXX</p>
+                      <a href="tel:+355693949167" className="text-white hover:text-primary-400 transition-colors">+355 69 394 9167</a>
                     </div>
                   </div>
                 </div>

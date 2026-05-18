@@ -20,6 +20,10 @@ A single new migration was created. Run it with `supabase db push`.
 - New per-role policies:
   - `Profiles: self, admin, jury read` (TO authenticated) — full row access.
   - `Profiles: anon public columns` (TO anon USING (true)) — required by RLS.
+- Added [`20260513020000_fix_profiles_rls_recursion.sql`](supabase/migrations/20260513020000_fix_profiles_rls_recursion.sql)
+  after production testing showed `profiles?select=*&id=eq.<user-id>` could
+  return HTTP 500. The cause was a recursive policy check on `profiles`; role
+  checks now go through `SECURITY DEFINER` helpers instead.
 - **Column-level GRANT** is the actual privacy gate:
   ```sql
   REVOKE SELECT ON public.profiles FROM anon;
@@ -40,6 +44,19 @@ A single new migration was created. Run it with `supabase db push`.
 - Public gallery/winner pages now fetch photographer display names from the
   `public_profiles` view instead of joining directly to `profiles`, preserving
   the email/role privacy boundary for logged-in normal users too.
+- Final public access rule: unauthenticated visitors can read all photo rows
+  for editions where `published = true` and `results_published = true`.
+  Editions still in draft/unpublished Admin Results remain hidden.
+
+### Public CMS access
+- Added [`20260513050000_public_posts_partners_access.sql`](supabase/migrations/20260513050000_public_posts_partners_access.sql)
+  to explicitly grant `anon`/`authenticated` SELECT access to public CMS rows:
+  active partners and published posts. This fixes public homepage requests to
+  `/rest/v1/partners` and `/rest/v1/posts` returning 401.
+- Added [`20260513060000_public_core_content_access.sql`](supabase/migrations/20260513060000_public_core_content_access.sql)
+  to explicitly grant public SELECT access to core public lookup tables:
+  published editions, categories, pricing tiers, and pages. This fixes public
+  `/rest/v1/editions` requests returning 401.
 
 ### Welcome / `handle_new_user` (report §1.3, §2.1)
 - `handle_new_user()` now persists `raw_user_meta_data->>'country'` and inserts
@@ -52,6 +69,12 @@ A single new migration was created. Run it with `supabase db push`.
 ### Pricing currency
 - `pricing_tiers.currency TEXT DEFAULT 'EUR'` with a check constraint for
   EUR/USD/GBP/ALL. Read by `create-paypal-order`.
+
+### Pricing tier deletion with existing credits
+- Added [`20260513010000_pricing_tiers_credit_fk.sql`](supabase/migrations/20260513010000_pricing_tiers_credit_fk.sql).
+  `user_credits.tier_id` is now nullable and uses
+  `ON UPDATE CASCADE ON DELETE SET NULL`, so admins can remove old pricing
+  tiers without breaking purchased user credits.
 
 ### Posts trigger (report §3.4)
 - `set_posts_updated_at` BEFORE UPDATE trigger added (only if the `posts`
@@ -154,6 +177,9 @@ returns 400. The previous behaviour (trust whatever amount came back) is gone.
   secrets, with comments.
 - `scripts/generate-sitemap.mjs` — reads editions / categories / posts /
   curators from Supabase and writes `dist/sitemap.xml`. Run after `vite build`.
+- `scripts/generate-email-previews.mjs` and `npm run email:previews` — generate
+  HTML and plaintext previews for all transactional email templates in
+  [`docs/email-previews`](docs/email-previews).
 
 ---
 

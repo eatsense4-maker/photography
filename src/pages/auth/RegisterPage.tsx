@@ -72,8 +72,7 @@ export default function RegisterPage() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              'url(https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1200&h=1600&fit=crop)',
+            backgroundImage: `url(${getPhotoUrl('submissions/1fc13921-3dda-4cfc-afc7-51d090d7817e-register.jpeg')})`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-surface-950/60 to-surface-950" />

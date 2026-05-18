@@ -99,8 +99,7 @@ export default function LoginPage() {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              'url(https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=1200&h=1600&fit=crop)',
+            backgroundImage: `url(${getPhotoUrl('auth/touch-with-eyes-side.jpg')})`,
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-r from-surface-950/60 to-surface-950" />

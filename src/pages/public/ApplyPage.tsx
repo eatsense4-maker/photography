@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { ArrowRight, Award, Calendar, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { formatSubmissionDeadline } from '@/lib/submissionDeadline';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import type { Edition, Category } from '@/types';
@@ -29,6 +30,14 @@ const ACCENT_STYLES = [
 
 function deriveSlug(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function getPrizeAmount(category: Category) {
+  return Math.max(Number(category.prize_amount || 0), 0);
+}
+
+function formatPrizeValue(amount: number, currency: string) {
+  return currency === 'EUR' ? `€${amount.toLocaleString()}` : `${currency} ${amount.toLocaleString()}`;
 }
 
 export default function ApplyPage() {
@@ -75,6 +84,16 @@ export default function ApplyPage() {
   }
 
   const isOpen = edition?.status === 'open';
+  const totalPrizePool = categories.reduce((sum, category) => sum + getPrizeAmount(category), 0);
+  const prizeCurrency = categories.find((category) => getPrizeAmount(category) > 0)?.prize_currency || 'EUR';
+  const uniqueDeadlines = Array.from(
+    new Set(categories.map((category) => category.submission_deadline).filter((deadline): deadline is string => Boolean(deadline)))
+  );
+  const applyDeadlineText = uniqueDeadlines.length === 1
+    ? formatSubmissionDeadline(uniqueDeadlines[0], lang)
+    : uniqueDeadlines.length > 1
+      ? t('apply.deadline_varies')
+      : t('apply.deadline_tba');
 
   return (
     <div>
@@ -129,7 +148,7 @@ export default function ApplyPage() {
             )}
             <span className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-primary-400" />
-              {t('apply.deadline')}: <strong className="text-white">{t('apply.deadline_date')}</strong>
+              {t('apply.deadline')}: <strong className="text-white">{applyDeadlineText}</strong>
             </span>
           </motion.div>
         </div>
@@ -214,11 +233,13 @@ export default function ApplyPage() {
             viewport={{ once: true }}
             className="text-center mb-10"
           >
-            <Award className="h-8 w-8 text-gold-400 mx-auto mb-3" />
+            <Award className="h-8 w-8 text-[#bd3020] mx-auto mb-3" />
             <h2 className="text-2xl sm:text-3xl font-display font-bold text-white">
               {t('apply.prize_pool')}
             </h2>
-            <p className="text-3xl sm:text-5xl font-bold text-gold-400 mt-3">€{categories.reduce((sum, c) => sum + c.price, 0).toLocaleString()}</p>
+            <p className="text-3xl sm:text-5xl font-bold text-[#bd3020] mt-3">
+              {formatPrizeValue(totalPrizePool, prizeCurrency)}
+            </p>
             <p className="text-sm text-surface-400 mt-2">
               {t('apply.honorary_extras')}
             </p>
@@ -226,7 +247,6 @@ export default function ApplyPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {categories.map((cat, i) => {
-              const style = ACCENT_STYLES[i % ACCENT_STYLES.length];
               const catTitle = lang === 'al' && cat.name_al ? cat.name_al : cat.name;
               return (
               <motion.div
@@ -236,13 +256,15 @@ export default function ApplyPage() {
                 viewport={{ once: true }}
                 custom={i}
                 variants={fadeUp}
-                className={`rounded-xl border ${style.borderColor} bg-white/85 p-4 text-center shadow-sm`}
+                className="rounded-xl border border-[#bd3020]/35 bg-white/85 p-4 text-center shadow-sm"
               >
-                <Trophy className={`h-5 w-5 ${style.textColor} mx-auto mb-2`} />
+                <Trophy className="h-5 w-5 text-[#bd3020] mx-auto mb-2" />
                 <p className="text-xs font-semibold text-surface-400 uppercase tracking-wider mb-1">
                   {catTitle}
                 </p>
-                <p className={`text-xl font-bold ${style.textColor}`}>€{cat.price.toLocaleString()}</p>
+                <p className="text-xl font-bold text-[#bd3020]">
+                  {formatPrizeValue(getPrizeAmount(cat), cat.prize_currency || 'EUR')}
+                </p>
               </motion.div>
               );
             })}
@@ -257,7 +279,12 @@ export default function ApplyPage() {
               className="text-center mt-10"
             >
               <Link to={isAuthenticated ? '/dashboard/submissions/new' : '/register'}>
-                <Button variant="gold" size="lg" icon={<ArrowRight className="h-5 w-5" />}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon={<ArrowRight className="h-5 w-5" />}
+                  className="!bg-[#bd3020] hover:!bg-[#a92a1c] !text-white shadow-lg shadow-[#bd3020]/25"
+                >
                   {isAuthenticated
                     ? t('apply.submit_your_work')
                     : t('apply.register_submit')}

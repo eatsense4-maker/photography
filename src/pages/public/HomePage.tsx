@@ -108,6 +108,13 @@ function formatDate(d: string | null, full = false) {
   });
 }
 
+function getPostCategoryLabel(category: string, t: (k: string) => string) {
+  if (category === 'event') return t('home.upcoming_events');
+  if (category === 'news') return t('home.latest_news');
+  if (category === 'announcement') return t('home.announcement_label');
+  return category;
+}
+
 /* ---------- component ---------- */
 export default function HomePage() {
   const { t, i18n } = useTranslation();
@@ -387,7 +394,7 @@ export default function HomePage() {
       )}
 
       {/* ===== Stats ribbon ===== */}
-      <section className="border-b border-surface-200 bg-white/90 backdrop-blur-sm relative z-10">
+      <section className="relative z-10 border-b border-surface-700/50 bg-white/85 backdrop-blur-sm">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
           <div className="flex items-center justify-between py-3 sm:py-4 overflow-x-auto gap-3 sm:gap-6 scrollbar-hide">
             <div className="flex items-center gap-2 shrink-0">
@@ -399,7 +406,7 @@ export default function HomePage() {
                 <div key={s.label} className="flex items-center gap-2 shrink-0">
                   <span className="text-primary-400">{s.icon}</span>
                   <div>
-                    <p className="text-sm font-bold text-surface-900 font-display leading-none">{s.value}</p>
+                    <p className="text-sm font-bold text-white font-display leading-none">{s.value}</p>
                     <p className="text-[9px] text-surface-600 uppercase tracking-wider">{s.label}</p>
                   </div>
                 </div>
@@ -411,12 +418,12 @@ export default function HomePage() {
 
       {/* ===== COMPETITION CATEGORIES — shown when open ===== */}
       {currentEdition?.status === 'open' && homeCategories.length > 0 && (
-        <section className="py-10 sm:py-14 border-b border-surface-200">
+        <section className="border-b border-surface-700/50 bg-white/45 py-10 sm:py-14">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-400 block mb-1">{currentEdition.title} · {t('home.open_call')}</span>
-                <h2 className="text-xl font-display font-bold text-surface-900">{t('home.categories')}</h2>
+                <h2 className="text-xl font-display font-bold text-white">{t('home.categories')}</h2>
               </div>
               <Link to="/apply" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
                 {t('home.view_all')} <ArrowRight className="h-3 w-3" />
@@ -428,6 +435,7 @@ export default function HomePage() {
                 const meta = getCategoryMeta(cat, i);
                 const coverImage = cat.image_url || meta.image;
                 const catName = i18n.language === 'al' && cat.name_al ? cat.name_al : cat.name;
+                const displayCatName = i === 2 ? 'momory' : catName;
                 return (
                   <motion.div
                     key={cat.id}
@@ -436,18 +444,18 @@ export default function HomePage() {
                     viewport={{ once: true }}
                     transition={{ delay: i * 0.08 }}
                   >
-                    <Link to={`/apply/${meta.slug}`} className={`public-invert group block relative h-36 overflow-hidden rounded-xl border border-surface-200 ${style.border} shadow-sm transition-all sm:h-44`}>
+                    <Link to={`/apply/${meta.slug}`} className={`group block relative h-36 overflow-hidden rounded-xl border border-surface-700 bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md sm:h-44 ${style.border}`}>
                       {coverImage ? (
                         <img src={coverImage} alt={catName}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                           loading="lazy" sizes="(max-width: 1024px) 50vw, 33vw" />
                       ) : (
-                        <div className="absolute inset-0 bg-gradient-to-br from-surface-100 to-surface-200" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary-100 via-white to-gold-100" />
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-surface-950 via-surface-950/60 to-transparent" />
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        {cat.price > 0 && <p className={`text-xs font-bold ${style.color}`}>€{cat.price.toLocaleString()}</p>}
-                        <h3 className="text-sm font-semibold text-white leading-tight">{catName}</h3>
+                      <div className="absolute inset-x-0 bottom-0 p-3">
+                        <div className="rounded-lg bg-white/92 px-3 py-2 shadow-sm backdrop-blur-sm">
+                          <h3 className="text-sm font-semibold text-surface-100 leading-tight">{displayCatName}</h3>
+                        </div>
                       </div>
                     </Link>
                   </motion.div>
@@ -468,7 +476,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-emerald-400" />
-                  <h2 className="text-lg font-display font-bold text-surface-900">{t('home.upcoming_events')}</h2>
+                  <h2 className="text-lg font-display font-bold text-white">{t('home.upcoming_events')}</h2>
                 </div>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-10 lg:px-10 snap-x snap-mandatory scrollbar-hide">
@@ -482,7 +490,7 @@ export default function HomePage() {
                     className="shrink-0 w-64 sm:w-72 md:w-80 snap-start"
                   >
                     <Link to={`/news/${post.slug}`} className="group block">
-                      <div className="rounded-xl overflow-hidden bg-white border border-surface-200 hover:border-emerald-500/30 transition-colors shadow-sm">
+                      <div className="rounded-xl overflow-hidden border border-surface-700 bg-white/90 shadow-sm transition-all hover:border-emerald-500/40 hover:shadow-md">
                         <div className="aspect-[16/9] bg-surface-100 overflow-hidden relative">
                           {post.cover_image_url ? (
                             <img src={post.cover_image_url} alt={post.title}
@@ -498,7 +506,7 @@ export default function HomePage() {
                           </div>
                         </div>
                         <div className="p-4">
-                          <h3 className="font-semibold text-surface-900 text-sm leading-snug group-hover:text-emerald-600 transition-colors line-clamp-2">
+                          <h3 className="text-sm font-semibold leading-snug text-white transition-colors group-hover:text-emerald-600 line-clamp-2">
                             {post.title}
                           </h3>
                           {post.excerpt && <p className="text-xs text-surface-500 mt-1.5 line-clamp-2">{post.excerpt}</p>}
@@ -519,7 +527,7 @@ export default function HomePage() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Newspaper className="h-4 w-4 text-blue-400" />
-                  <h2 className="text-lg font-display font-bold text-surface-900">{t('home.latest_news')}</h2>
+                  <h2 className="text-lg font-display font-bold text-white">{t('home.latest_news')}</h2>
                 </div>
                 <Link to="/news" className="text-xs text-primary-400 hover:text-primary-300 flex items-center gap-1 transition-colors">
                   {t('home.view_all')} <ArrowRight className="h-3 w-3" />
@@ -537,7 +545,7 @@ export default function HomePage() {
                       viewport={{ once: true }}
                       transition={{ delay: i * 0.08 }}
                     >
-                      <Link to={`/news/${post.slug}`} className="group flex gap-4 items-start p-3 rounded-xl hover:bg-surface-50 transition-colors">
+                      <Link to={`/news/${post.slug}`} className="group flex gap-4 items-start rounded-xl border border-transparent p-3 transition-colors hover:border-surface-700/70 hover:bg-white/80">
                         <div className="shrink-0 w-28 h-20 sm:w-36 sm:h-24 rounded-lg overflow-hidden bg-surface-100 relative">
                           {post.cover_image_url ? (
                             <img src={post.cover_image_url} alt={post.title}
@@ -555,12 +563,12 @@ export default function HomePage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border ${CATEGORY_COLORS[post.category]}`}>
-                              {post.category}
+                              {getPostCategoryLabel(post.category, t)}
                             </span>
                             <span className="text-[10px] text-surface-500">{formatDate(post.published_at)}</span>
                             {post.facebook_url && <Facebook className="h-3 w-3 text-[#1877F2]" />}
                           </div>
-                          <h3 className="font-semibold text-surface-900 text-sm leading-snug group-hover:text-primary-600 transition-colors line-clamp-2">
+                          <h3 className="text-sm font-semibold leading-snug text-white transition-colors group-hover:text-primary-600 line-clamp-2">
                             {post.title}
                           </h3>
                           {post.excerpt && (
@@ -586,13 +594,13 @@ export default function HomePage() {
                   initial={{ opacity: 0, x: 20 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
-                  className="rounded-2xl border border-surface-200 bg-surface-50 p-5 shadow-sm"
+                  className="rounded-2xl border border-surface-700 bg-white/85 p-5 shadow-sm backdrop-blur-sm"
                 >
                   <div className="flex items-center gap-2 mb-3">
                     <Wind className="h-4 w-4 text-emerald-400" />
                     <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">{t('home.open_call')}</span>
                   </div>
-                  <h3 className="text-lg font-display font-bold text-surface-900 mb-2">
+                  <h3 className="mb-2 text-lg font-display font-bold text-white">
                     {t('home.sidebar_title')}
                   </h3>
                   <p className="text-xs text-surface-500 leading-relaxed mb-4">
@@ -607,7 +615,7 @@ export default function HomePage() {
               )}
 
               {/* Quick Links */}
-              <div className="rounded-2xl border border-surface-200 bg-surface-50 p-5 shadow-sm">
+              <div className="rounded-2xl border border-surface-700 bg-white/85 p-5 shadow-sm backdrop-blur-sm">
                 <h3 className="text-sm font-semibold text-surface-500 uppercase tracking-wider mb-4">{t('home.quick_links')}</h3>
                 <div className="space-y-2">
                   {[
@@ -619,7 +627,7 @@ export default function HomePage() {
                     <Link
                       key={link.to}
                       to={link.to}
-                      className="flex items-center justify-between py-2 px-1 text-sm text-surface-600 hover:text-primary-600 transition-colors border-b border-surface-200 last:border-0"
+                      className="flex items-center justify-between border-b border-surface-700/80 px-1 py-2 text-sm text-surface-300 transition-colors hover:text-primary-600 last:border-0"
                     >
                       {link.label}
                       <ArrowRight className="h-3 w-3" />
@@ -635,7 +643,7 @@ export default function HomePage() {
       </section>
 
       {/* ===== Partners ===== */}
-      <section className="py-16 border-t border-surface-200">
+      <section className="border-t border-surface-700/50 bg-white/35 py-16">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10">
           <motion.div
             initial="hidden"
@@ -644,7 +652,7 @@ export default function HomePage() {
             variants={stagger}
             className="text-center"
           >
-            <motion.h2 custom={0} variants={fadeUp} className="text-xl font-display font-bold text-surface-700 mb-10">
+            <motion.h2 custom={0} variants={fadeUp} className="mb-10 text-xl font-display font-bold text-white">
               {t('home.partners_title')}
             </motion.h2>
             <motion.div
@@ -660,7 +668,7 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                   className="flex flex-col items-center gap-2 group hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-36 h-16 rounded-lg bg-surface-100 flex items-center justify-center overflow-hidden">
+                  <div className="flex h-16 w-36 items-center justify-center overflow-hidden rounded-lg border border-surface-700 bg-white shadow-sm">
                     {partner.logo_url ? (
                       <img src={partner.logo_url} alt={partner.name} width={144} height={64} className="max-w-full max-h-full object-contain p-2" />
                     ) : (
