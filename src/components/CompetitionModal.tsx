@@ -220,6 +220,27 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
     disabled: !selectedCategory || photos.length >= maxPhotos,
   });
 
+  const cleanupFailedSubmission = async (submissionId: string, keys: string[]) => {
+    if (keys.length > 0) {
+      const { error: deleteFilesError } = await supabase.functions.invoke('r2-delete', {
+        body: { keys },
+      });
+
+      if (deleteFilesError) {
+        console.error('Failed to clean up uploaded files:', deleteFilesError);
+      }
+    }
+
+    const { error: deleteSubmissionError } = await supabase
+      .from('submissions')
+      .delete()
+      .eq('id', submissionId);
+
+    if (deleteSubmissionError) {
+      console.error('Failed to roll back submission:', deleteSubmissionError);
+    }
+  };
+
   // -- Submit --
   const handleSubmit = async () => {
     if (!user?.id || !selectedCategory || photos.length === 0) return;
@@ -241,6 +262,7 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
       }).select('id').single();
       if (subError) throw subError;
 
+      const uploadedKeys: string[] = [];
       setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
         setUploadProgress({ current: i + 1, total: photos.length });
@@ -249,14 +271,23 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
           const { key } = await uploadPhoto(photo.file, (progress) => {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, progress } : p));
           });
-          await supabase.from('submission_photos').insert({
+
+          uploadedKeys.push(key);
+
+          const { error: photoError } = await supabase.from('submission_photos').insert({
             submission_id: submission.id, storage_key: key, original_filename: photo.file.name,
             mime_type: photo.file.type, file_size: photo.file.size, sort_order: i,
           });
+
+          if (photoError) throw photoError;
+
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p));
         } catch (uploadErr) {
           console.error('Photo upload failed:', uploadErr);
-          toast.error(`Failed to upload ${photo.file.name}`);
+          await cleanupFailedSubmission(submission.id, uploadedKeys);
+
+          const message = uploadErr instanceof Error ? uploadErr.message : `Failed to upload ${photo.file.name}`;
+          throw new Error(message || `Failed to upload ${photo.file.name}`);
         }
       }
 

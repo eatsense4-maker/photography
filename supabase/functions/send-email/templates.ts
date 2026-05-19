@@ -42,6 +42,7 @@ function esc(v: unknown): string {
 export type TemplateName =
   | 'welcome'
   | 'password_recovery'
+  | 'resubmission_required'
   | 'submission_received'
   | 'payment_confirmed'
   | 'photo_approved'
@@ -89,6 +90,24 @@ export function renderTemplate(
           <p style="color:#666;font-size:13px;">If you didn't request a password reset, you can safely ignore this email.</p>
         `),
         text: `Hello ${name}, reset your FOKUS Award password here: ${recoveryUrl}\n\nIf you didn't request this, ignore this email.`,
+      };
+    }
+    case 'resubmission_required': {
+      const name = esc(data.full_name) || 'photographer';
+      const categories = esc(data.categories) || 'your recent submission';
+      const retryUrl = `${SITE_URL}/dashboard/submissions/new`;
+      return {
+        subject: 'Please resubmit your photos — FOKUS Award',
+        html: layout('Please resubmit your photos', `
+          <h1 style="margin:0 0 16px;font-size:22px;">Please resubmit your photos</h1>
+          <p>Hello ${name},</p>
+          <p>We identified a technical issue on our side that affected your recent submission upload.</p>
+          <p>To avoid leaving an incomplete entry in your account, we removed the affected submission record for <strong>${categories}</strong>.</p>
+          <p>Please upload and submit your photos again using the link below. We apologize for the disruption.</p>
+          ${btn(retryUrl, 'Resubmit photos')}
+          <p style="color:#666;font-size:13px;">If you have any questions, reply to this email or contact us through the website.</p>
+        `),
+        text: `Hello ${name},\n\nA technical issue on our side affected your recent submission upload for ${categories}. We removed the incomplete submission record so you can resubmit cleanly.\n\nPlease resubmit your photos here: ${retryUrl}\n\nWe apologize for the disruption.`,
       };
     }
     case 'submission_received': {

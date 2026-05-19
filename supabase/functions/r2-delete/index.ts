@@ -16,13 +16,26 @@ const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const REGION        = 'auto';
 const SERVICE       = 's3';
 
-const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://fokusaward.com';
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') || 'https://fokusaward.com,https://www.fokusaward.com')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
-};
+function corsOrigin(req: Request): string {
+  const origin = req.headers.get('origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return origin || ALLOWED_ORIGINS[0];
+}
+
+function responseHeaders(req: Request, extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': corsOrigin(req),
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+    'Vary': 'Origin',
+    ...extra,
+  };
+}
 
 // ---- crypto helpers (same as r2-presign) ----
 
@@ -104,7 +117,7 @@ async function deleteR2Object(objectKey: string): Promise<boolean> {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: responseHeaders(req) });
   }
 
   try {
@@ -113,7 +126,7 @@ Deno.serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
       );
     }
 
@@ -125,7 +138,7 @@ Deno.serve(async (req) => {
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 401, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
       );
     }
 
@@ -133,7 +146,7 @@ Deno.serve(async (req) => {
     if (!keys || !Array.isArray(keys) || keys.length === 0) {
       return new Response(
         JSON.stringify({ error: 'keys array is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
       );
     }
 
@@ -141,7 +154,7 @@ Deno.serve(async (req) => {
     if (keys.length > 100) {
       return new Response(
         JSON.stringify({ error: 'Maximum 100 keys per request' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
       );
     }
 
@@ -188,13 +201,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ deleted, skipped }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
     );
   } catch (err) {
     console.error('r2-delete error:', err);
     return new Response(
       JSON.stringify({ error: 'Failed to delete objects' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
     );
   }
 });

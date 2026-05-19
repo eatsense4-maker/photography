@@ -265,6 +265,27 @@ export default function NewSubmission() {
     else if (step === 2) setStep(1);
   };
 
+  const cleanupFailedSubmission = async (submissionId: string, keys: string[]) => {
+    if (keys.length > 0) {
+      const { error: deleteFilesError } = await supabase.functions.invoke('r2-delete', {
+        body: { keys },
+      });
+
+      if (deleteFilesError) {
+        console.error('Failed to clean up uploaded files:', deleteFilesError);
+      }
+    }
+
+    const { error: deleteSubmissionError } = await supabase
+      .from('submissions')
+      .delete()
+      .eq('id', submissionId);
+
+    if (deleteSubmissionError) {
+      console.error('Failed to roll back submission:', deleteSubmissionError);
+    }
+  };
+
   // --- Submit ---
   const handleSubmit = async (asDraft: boolean) => {
     if (!user?.id || !selectedCategory) return;
@@ -300,6 +321,7 @@ export default function NewSubmission() {
 
       if (subError) throw subError;
 
+      const uploadedKeys: string[] = [];
       setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
         setUploadProgress({ current: i + 1, total: photos.length });
@@ -311,7 +333,9 @@ export default function NewSubmission() {
             );
           });
 
-          await supabase.from('submission_photos').insert({
+          uploadedKeys.push(key);
+
+          const { error: photoError } = await supabase.from('submission_photos').insert({
             submission_id: submission.id,
             storage_key: key,
             original_filename: photo.file.name,
@@ -322,12 +346,17 @@ export default function NewSubmission() {
             description: photo.description || null,
           });
 
+          if (photoError) throw photoError;
+
           setPhotos((prev) =>
             prev.map((p) => (p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p))
           );
         } catch (uploadErr) {
           console.error('Photo upload failed:', uploadErr);
-          toast.error(`Failed to upload ${photo.file.name}`);
+          await cleanupFailedSubmission(submission.id, uploadedKeys);
+
+          const message = uploadErr instanceof Error ? uploadErr.message : `Failed to upload ${photo.file.name}`;
+          throw new Error(message || `Failed to upload ${photo.file.name}`);
         }
       }
 

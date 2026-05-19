@@ -12,13 +12,26 @@ const REGION        = 'auto';
 const SERVICE       = 's3';
 const EXPIRES       = 900; // 15 minutes
 
-const ALLOWED_ORIGIN = Deno.env.get('ALLOWED_ORIGIN') || 'https://fokusaward.com';
+const ALLOWED_ORIGINS = (Deno.env.get('ALLOWED_ORIGIN') || 'https://fokusaward.com,https://www.fokusaward.com')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
-const corsHeaders: Record<string, string> = {
-  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
-};
+function corsOrigin(req: Request): string {
+  const origin = req.headers.get('origin') || '';
+  if (ALLOWED_ORIGINS.includes(origin)) return origin;
+  return origin || ALLOWED_ORIGINS[0];
+}
+
+function responseHeaders(req: Request, extra: Record<string, string> = {}): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': corsOrigin(req),
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
+    'Vary': 'Origin',
+    ...extra,
+  };
+}
 
 // ---- helpers ----
 
@@ -101,7 +114,7 @@ async function presignPutUrl(key: string, contentType: string): Promise<string> 
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: corsHeaders });
+    return new Response(null, { status: 204, headers: responseHeaders(req) });
   }
 
   try {
@@ -113,7 +126,7 @@ Deno.serve(async (req) => {
     if (!filename || !contentType) {
       return new Response(
         JSON.stringify({ error: 'filename and contentType are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        { status: 400, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
       );
     }
 
@@ -124,13 +137,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ uploadUrl, key }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 200, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
     );
   } catch (err) {
     console.error('r2-presign error:', err);
     return new Response(
       JSON.stringify({ error: 'Failed to generate presigned URL' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      { status: 500, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
     );
   }
 });
