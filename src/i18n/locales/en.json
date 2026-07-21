@@ -251,7 +251,7 @@
     "welcome_back_toast": "Welcome back!",
     "login_failed_toast": "Login failed",
     "google_failed_toast": "Google sign-in failed",
-    "registered_toast": "Account created! Please check your email to confirm.",
+    "registered_toast": "Account created! Welcome to FOKUS Award.",
     "registration_failed_toast": "Registration failed"
   },
   "user": {

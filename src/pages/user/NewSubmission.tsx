@@ -111,7 +111,6 @@ export default function NewSubmission() {
     : 0;
 
   const hasPhotos = photos.length > 0;
-  const allPhotosTitled = photos.every((p) => p.title.trim() !== '');
 
   // --- Data fetching ---
   useEffect(() => {
@@ -990,7 +989,7 @@ export default function NewSubmission() {
               size="sm"
               icon={<ArrowRight className="h-4 w-4" />}
               onClick={goToNextStep}
-              disabled={!hasPhotos || !allPhotosTitled}
+              disabled={!hasPhotos}
             >
               Review
             </Button>
@@ -1056,8 +1055,8 @@ export default function NewSubmission() {
                       <div key={photo.id} className="flex items-center gap-2 text-xs">
                         <img src={photo.preview} alt="" className="w-6 h-6 rounded object-cover flex-shrink-0" />
                         <span className="text-surface-300 flex-shrink-0">#{idx + 1}</span>
-                        <span className={`truncate ${photo.title.trim() ? 'text-white' : 'text-red-400 italic'}`}>
-                          {photo.title.trim() || 'Missing title'}
+                        <span className={`truncate ${photo.title.trim() ? 'text-white' : 'text-surface-400 italic'}`}>
+                          {photo.title.trim() || 'Untitled'}
                         </span>
                       </div>
                     ))}
@@ -1090,7 +1089,7 @@ export default function NewSubmission() {
                 icon={<ImageIcon className="h-4 w-4" />}
                 onClick={() => handleSubmit(false)}
                 loading={loading}
-                disabled={!title.trim() || photos.some(p => !p.title.trim())}
+                disabled={!hasPhotos}
                 className="bg-emerald-600 hover:bg-emerald-700"
               >
                 Submit
@@ -1115,7 +1114,7 @@ export default function NewSubmission() {
           {(!title.trim() || photos.some(p => !p.title.trim())) && (
             <p className="text-xs text-surface-400 text-center flex items-center justify-center gap-1">
               <HelpCircle className="h-3 w-3" />
-              {!title.trim() ? 'Enter a submission title to submit' : 'All photos need a title'}
+              Titles are optional — you can submit without them.
             </p>
           )}
         </motion.div>

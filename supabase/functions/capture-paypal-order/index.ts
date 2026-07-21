@@ -265,6 +265,7 @@ serve(async (req) => {
     });
 
     // Grant per-category credits via the SECURITY DEFINER RPC.
+    const failedGrants: string[] = [];
     if (editionId && tierId && tierPhotoCredits > 0 && grantCategoryIds.length > 0) {
       for (const catId of grantCategoryIds) {
         const { error: grantErr } = await supabase.rpc('grant_photo_credits', {
@@ -276,8 +277,38 @@ serve(async (req) => {
         });
         if (grantErr) {
           console.error('grant_photo_credits failed', { catId, grantErr });
+          failedGrants.push(catId);
         }
       }
+    }
+
+    // If the payment was captured but credits could not be granted, do
+    // NOT report success — that would charge the buyer while leaving
+    // them unable to submit. Flag the payment for admin reconciliation
+    // and surface the failure to the client.
+    if (failedGrants.length > 0) {
+      await supabase
+        .from('payments')
+        .update({ metadata: { credit_grant_failed: true, failed_categories: failedGrants } })
+        .eq('paypal_order_id', orderId);
+
+      // Notify the user their payment went through and support is on it.
+      await supabase.from('notifications').insert({
+        user_id: userId,
+        type: 'warning',
+        title: 'Payment received — credits pending',
+        message: 'Your payment was received but credits could not be applied automatically. Our team has been notified and will resolve this shortly.',
+        link: `/dashboard/submissions`,
+      });
+
+      return new Response(
+        JSON.stringify({
+          error: 'Payment captured but photo credits could not be granted. Our team has been notified.',
+          captureId: capture.id,
+          creditGrantFailed: true,
+        }),
+        { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+      );
     }
 
     // Legacy flow: update submission status

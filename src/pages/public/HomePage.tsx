@@ -435,7 +435,7 @@ export default function HomePage() {
                 const meta = getCategoryMeta(cat, i);
                 const coverImage = cat.image_url || meta.image;
                 const catName = i18n.language === 'al' && cat.name_al ? cat.name_al : cat.name;
-                const displayCatName = i === 2 ? 'momory' : catName;
+                const displayCatName = catName;
                 return (
                   <motion.div
                     key={cat.id}

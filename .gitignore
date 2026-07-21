@@ -15,6 +15,9 @@ dist-ssr
 !.env.example
 *.local
 
+# Generated mailbox exports (personal data)
+email-senders.csv
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
