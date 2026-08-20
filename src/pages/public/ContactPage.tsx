@@ -36,15 +36,30 @@ export default function ContactPage() {
   const onSubmit = async (data: ContactForm) => {
     setSending(true);
     try {
-      const { error } = await supabase.functions.invoke('send-email', {
-        body: {
-          kind: 'contact',
-          name: data.name,
-          email: data.email,
-          subject: data.subject,
-          message: data.message,
-        },
-      });
+      // Refresh the session so the gateway never sees an expired JWT.
+      // (send-email has verify_jwt:true; an expired token causes a CORS-blocked 401
+      // before the function runs, which surfaces as a network error in the SDK.)
+      await supabase.auth.refreshSession();
+
+      const invoke = () =>
+        supabase.functions.invoke('send-email', {
+          body: {
+            kind: 'contact',
+            name: data.name,
+            email: data.email,
+            subject: data.subject,
+            message: data.message,
+          },
+        });
+
+      let { error } = await invoke();
+
+      // Retry once on network-level failure after a second refresh.
+      if (error?.message?.includes('Failed to send a request')) {
+        await supabase.auth.refreshSession();
+        ({ error } = await invoke());
+      }
+
       if (error) throw error;
       toast.success(t('contact.success'));
       reset();

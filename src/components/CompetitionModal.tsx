@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
-import PayPalProvider from '@/components/PayPalProvider';
+
 import {
   ArrowRight, ArrowLeft, X, Upload, Check, Camera,
   ShieldCheck, Calendar, Award, Wind, Eye, Leaf, Film,
@@ -78,7 +78,8 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
   const [selectedTierId, setSelectedTierId] = useState('');
   const [userCredits, setUserCredits] = useState<{ photo_credits: number; photo_credits_used: number; tier_id: string | null } | null>(null);
-  const [submittedByCategory, setSubmittedByCategory] = useState<Record<string, string>>({});
+  const [submissionCountByCategory, setSubmissionCountByCategory] = useState<Record<string, number>>({});
+  const [creditsByCategory, setCreditsByCategory] = useState<Record<string, number>>({});
   const [paying, setPaying] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
@@ -135,18 +136,36 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   }, [editionId, user?.id, selectedCategoryId, paymentComplete]);
 
   useEffect(() => {
-    if (!editionId || !user?.id) { setSubmittedByCategory({}); return; }
-    supabase.from('submissions')
-      .select('id, category_id, status')
-      .eq('user_id', user.id)
-      .eq('edition_id', editionId)
-      .neq('status', 'draft')
-      .then(({ data }) => {
-        const map: Record<string, string> = {};
-        for (const row of data || []) { map[(row as any).category_id] = (row as any).id; }
-        setSubmittedByCategory(map);
-      });
-  }, [editionId, user?.id]);
+    if (!editionId || !user?.id) {
+      setSubmissionCountByCategory({});
+      setCreditsByCategory({});
+      return;
+    }
+    Promise.all([
+      supabase.from('submissions')
+        .select('category_id')
+        .eq('user_id', user.id)
+        .eq('edition_id', editionId)
+        .neq('status', 'draft'),
+      supabase.from('user_credits')
+        .select('category_id, photo_credits')
+        .eq('user_id', user.id)
+        .eq('edition_id', editionId),
+    ]).then(([subRes, credRes]) => {
+      const countMap: Record<string, number> = {};
+      for (const row of subRes.data || []) {
+        const cid = (row as any).category_id;
+        countMap[cid] = (countMap[cid] || 0) + 1;
+      }
+      setSubmissionCountByCategory(countMap);
+      const creditMap: Record<string, number> = {};
+      for (const row of credRes.data || []) {
+        const cid = (row as any).category_id;
+        creditMap[cid] = (creditMap[cid] || 0) + (row as any).photo_credits;
+      }
+      setCreditsByCategory(creditMap);
+    });
+  }, [editionId, user?.id, paymentComplete]);
 
   // Auto-skip auth step if already logged in
   useEffect(() => {
@@ -183,6 +202,8 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   // -- Category select (single) --
   const selectCategory = (catId: string) => {
     setSelectedCategoryId(catId);
+    setSelectedTierId('');
+    setPaymentComplete(false);
     setPhotos([]);
   };
 
@@ -212,32 +233,69 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
     disabled: !selectedCategory || photos.length >= maxPhotos,
   });
 
-  const cleanupFailedSubmission = async (submissionId: string, keys: string[]) => {
-    if (keys.length > 0) {
-      const { error: deleteFilesError } = await supabase.functions.invoke('r2-delete', {
-        body: { keys },
-      });
-
-      if (deleteFilesError) {
-        console.error('Failed to clean up uploaded files:', deleteFilesError);
-      }
+  const getOrCreateDraftSubmission = async (): Promise<string> => {
+    if (!user?.id || !selectedCategory) {
+      throw new Error('Missing submission context');
     }
 
-    const { error: deleteSubmissionError } = await supabase
+    const { data: existingDraft, error: draftFetchError } = await supabase
       .from('submissions')
-      .delete()
-      .eq('id', submissionId);
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .eq('category_id', selectedCategory.id)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (deleteSubmissionError) {
-      console.error('Failed to roll back submission:', deleteSubmissionError);
+    if (draftFetchError) throw draftFetchError;
+
+    if (existingDraft?.id) {
+      const { error: draftUpdateError } = await supabase
+        .from('submissions')
+        .update({
+          title: title || null,
+          description: description || null,
+        })
+        .eq('id', existingDraft.id);
+
+      if (draftUpdateError) throw draftUpdateError;
+      return existingDraft.id;
     }
+
+    const { data: createdDraft, error: draftCreateError } = await supabase
+      .from('submissions')
+      .insert({
+        user_id: user.id,
+        edition_id: editionId,
+        category_id: selectedCategory.id,
+        title: title || null,
+        description: description || null,
+        status: 'draft',
+        submitted_at: null,
+      })
+      .select('id')
+      .single();
+
+    if (draftCreateError || !createdDraft?.id) {
+      throw draftCreateError || new Error('Failed to create draft submission');
+    }
+
+    return createdDraft.id;
   };
 
   // -- Submit --
   const handleSubmit = async () => {
     if (!user?.id || !selectedCategory || photos.length === 0) return;
-    if (submittedByCategory[selectedCategory.id]) {
-      toast.error('You already have a submission for this category. Only one entry per category is allowed.');
+    const submittedCount = submissionCountByCategory[selectedCategory.id] || 0;
+    const purchasedCredits = creditsByCategory[selectedCategory.id] || 0;
+    if (isPaid && submittedCount >= purchasedCredits) {
+      toast.error('You have used all your purchased photo credits for this category.');
+      return;
+    }
+    if (!isPaid && submittedCount > 0) {
+      toast.error('You already have a submission for this category. Only one entry per free category is allowed.');
       return;
     }
     if (isPaid && (!userCredits || userCredits.photo_credits - userCredits.photo_credits_used < photos.length)) {
@@ -246,44 +304,59 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
     }
     setLoading(true);
     try {
-      const status = isPaid && !hasCredits ? 'draft' : 'submitted';
-      const { data: submission, error: subError } = await supabase.from('submissions').insert({
-        user_id: user.id, edition_id: editionId, category_id: selectedCategory.id,
-        title: title || null, description: description || null, status,
-        submitted_at: status === 'submitted' ? new Date().toISOString() : null,
-      }).select('id').single();
-      if (subError) throw subError;
+      const submissionId = await getOrCreateDraftSubmission();
 
-      const uploadedKeys: string[] = [];
       setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
         setUploadProgress({ current: i + 1, total: photos.length });
         const photo = photos[i];
+
+        if (photo.uploaded && photo.storageKey) {
+          continue;
+        }
+
         try {
+          let uploadedKey: string | null = null;
+
           const { key } = await uploadPhoto(photo.file, (progress) => {
             setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, progress } : p));
           });
 
-          uploadedKeys.push(key);
+          uploadedKey = key;
 
           const { error: photoError } = await supabase.from('submission_photos').insert({
-            submission_id: submission.id, storage_key: key, original_filename: photo.file.name,
+            submission_id: submissionId, storage_key: key, original_filename: photo.file.name,
             mime_type: photo.file.type, file_size: photo.file.size, sort_order: i,
           });
 
-          if (photoError) throw photoError;
+          if (photoError) {
+            if (uploadedKey) {
+              await supabase.functions.invoke('r2-delete', { body: { keys: [uploadedKey] } });
+            }
+            throw photoError;
+          }
 
           setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p));
         } catch (uploadErr) {
           console.error('Photo upload failed:', uploadErr);
-          await cleanupFailedSubmission(submission.id, uploadedKeys);
-
           const message = uploadErr instanceof Error ? uploadErr.message : `Failed to upload ${photo.file.name}`;
-          throw new Error(message || `Failed to upload ${photo.file.name}`);
+          throw new Error(`${message || `Failed to upload ${photo.file.name}`}. Progress has been kept as draft.`);
         }
       }
 
-      if (isPaid && status === 'submitted') {
+      const { error: finalizeError } = await supabase
+        .from('submissions')
+        .update({
+          title: title || null,
+          description: description || null,
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        })
+        .eq('id', submissionId);
+
+      if (finalizeError) throw finalizeError;
+
+      if (isPaid) {
         const { data: refreshed } = await supabase
           .from('user_credits')
           .select('photo_credits, photo_credits_used, tier_id')
@@ -335,7 +408,6 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
 
   return (
-    <PayPalProvider>
     <div className="public-invert fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <motion.div className="fixed inset-0 bg-black/80 backdrop-blur-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
       <motion.div
@@ -527,7 +599,12 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
                 {categories.map((cat, i) => {
                   const isSelected = selectedCategoryId === cat.id;
                   const accent = CAT_ACCENTS[i % CAT_ACCENTS.length];
-                  const alreadySubmitted = !!submittedByCategory[cat.id];
+                  const catIsPaid = cat.price > 0;
+                  const catSubmitCount = submissionCountByCategory[cat.id] || 0;
+                  const catPurchasedCredits = creditsByCategory[cat.id] || 0;
+                  const alreadySubmitted = catIsPaid
+                    ? catSubmitCount > 0 && catSubmitCount >= catPurchasedCredits
+                    : catSubmitCount > 0;
                   return (
                     <button key={cat.id} type="button"
                       onClick={() => !alreadySubmitted && selectCategory(cat.id)}
@@ -902,7 +979,6 @@ export default function CompetitionModal({ isOpen, onClose }: Props) {
         </div>
       </motion.div>
     </div>
-    </PayPalProvider>
   );
 }
 

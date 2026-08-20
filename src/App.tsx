@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import PayPalProvider from '@/components/PayPalProvider';
 
 // Layouts
 import { PublicLayout, DashboardLayout } from '@/components/layout';
@@ -72,6 +73,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <PayPalProvider>
         <AuthProvider>
         <BrowserRouter>
           <Suspense fallback={
@@ -186,6 +188,7 @@ export default function App() {
           }}
         />
         </AuthProvider>
+      </PayPalProvider>
     </QueryClientProvider>
   );
 }

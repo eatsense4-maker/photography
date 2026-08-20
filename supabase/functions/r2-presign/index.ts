@@ -2,7 +2,15 @@
  * r2-presign — Generates presigned PUT URLs for Cloudflare R2.
  *
  * AWS Signature V4 implemented natively (no external SDK needed).
+ *
+ * verify_jwt is disabled so the Supabase gateway never rejects a request
+ * before the function runs (a gateway 401 lacks CORS headers and causes
+ * the browser to report a network error instead of an auth error).
+ * JWT validation is performed manually inside the handler so every error
+ * response — including 401 — always carries the correct CORS headers.
  */
+
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const R2_ACCOUNT_ID = Deno.env.get('R2_ACCOUNT_ID')!;
 const R2_ACCESS_KEY = Deno.env.get('R2_ACCESS_KEY')!;
@@ -117,6 +125,36 @@ Deno.serve(async (req) => {
     return new Response(null, { status: 204, headers: responseHeaders(req) });
   }
 
+  // --- Manual JWT / session verification (verify_jwt=false lets us return
+  //     CORS-annotated 401s instead of the gateway's header-less 401). ---
+  const authHeader = req.headers.get('Authorization');
+  const apiKey     = req.headers.get('apikey');
+
+  if (!authHeader && !apiKey) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization' }),
+      { status: 401, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
+    );
+  }
+
+  const supabaseUrl  = Deno.env.get('SUPABASE_URL')!;
+  const supabaseAnon = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  const client = createClient(supabaseUrl, supabaseAnon, {
+    global: { headers: { ...(authHeader ? { Authorization: authHeader } : {}) } },
+    auth: { persistSession: false },
+  });
+
+  const { data: { user }, error: authError } = await client.auth.getUser();
+
+  if (authError || !user) {
+    return new Response(
+      JSON.stringify({ error: 'Session expired or invalid. Please sign in again.' }),
+      { status: 401, headers: responseHeaders(req, { 'Content-Type': 'application/json' }) },
+    );
+  }
+
+  // --- Generate presigned URL ---
   try {
     const { filename, contentType } = (await req.json()) as {
       filename: string;

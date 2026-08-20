@@ -31,7 +31,7 @@ export default function JuryReview() {
   const [saving, setSaving] = useState(false);
   const [photos, setPhotos] = useState<ReviewPhoto[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [score, setScore] = useState<number | ''>(50);
+  const [scoreStr, setScoreStr] = useState<string>('5');
   const [comment, setComment] = useState('');
   const [lightbox, setLightbox] = useState(false);
   const [filterCategory, setFilterCategory] = useState('');
@@ -73,7 +73,7 @@ export default function JuryReview() {
       `)
       .in('category_id', catIds)
       .in('status', ['submitted', 'under_review', 'accepted'])
-      .eq('submission_photos.status', 'approved');
+      .neq('submission_photos.status', 'rejected');
 
     if (!subs || subs.length === 0) {
       setLoading(false);
@@ -111,7 +111,7 @@ export default function JuryReview() {
 
     setPhotos(result);
     if (result.length > 0 && result[0].existingScore !== null) {
-      setScore(result[0].existingScore);
+      setScoreStr(String(result[0].existingScore));
       setComment(result[0].existingComment || '');
     }
     setLoading(false);
@@ -132,10 +132,10 @@ export default function JuryReview() {
       setCurrentIndex(idx);
       const photo = filteredPhotos[idx];
       if (photo?.existingScore !== null) {
-        setScore(photo.existingScore!);
+        setScoreStr(String(photo.existingScore!));
         setComment(photo.existingComment || '');
       } else {
-        setScore(50);
+        setScoreStr('5');
         setComment('');
       }
     },
@@ -146,10 +146,10 @@ export default function JuryReview() {
     setCurrentIndex(0);
     if (filteredPhotos.length > 0) {
       const p = filteredPhotos[0];
-      setScore(p.existingScore ?? 50);
+      setScoreStr(String(p.existingScore ?? 5));
       setComment(p.existingComment || '');
     } else {
-      setScore(50);
+      setScoreStr('5');
       setComment('');
     }
   }, [filterCategory, filterStatus]);
@@ -175,9 +175,9 @@ export default function JuryReview() {
       return;
     }
 
-    const numScore = Number(score);
-    if (score === '' || numScore < 50 || numScore > 100) {
-      toast.error('Please enter a score between 50 and 100');
+    const numScore = parseFloat(scoreStr);
+    if (scoreStr === '' || isNaN(numScore) || numScore < 0 || numScore > 10) {
+      toast.error('Please enter a score between 0 and 10');
       return;
     }
 
@@ -218,6 +218,27 @@ export default function JuryReview() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleNumpad = (key: string) => {
+    if (current?.scoreId) return;
+    setScoreStr((prev) => {
+      if (key === 'C') return '';
+      if (key === '⌫') return prev.slice(0, -1);
+      if (key === '.') {
+        if (prev.includes('.')) return prev;
+        return (prev === '' ? '0' : prev) + '.';
+      }
+      const next = prev + key;
+      // Avoid leading double-zero
+      if (/^00/.test(next)) return '0';
+      const n = parseFloat(next);
+      if (isNaN(n) || n > 10) return prev;
+      // Max one decimal place
+      const dot = next.indexOf('.');
+      if (dot !== -1 && next.length - dot > 2) return prev;
+      return next;
+    });
   };
 
   const totalScored = photos.filter((p) => p.existingScore !== null).length;
@@ -319,7 +340,7 @@ export default function JuryReview() {
                     {current.existingScore !== null && (
                       <div className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/90 text-white text-sm font-bold">
                         <Star className="h-3.5 w-3.5 fill-white" />
-                        {current.existingScore}/100
+                        {current.existingScore}/10
                       </div>
                     )}
                   </>
@@ -355,33 +376,58 @@ export default function JuryReview() {
                   <div className="flex items-center justify-center gap-3 p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
                     <Lock className="h-4 w-4 text-emerald-400" />
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-emerald-400">{current.existingScore}/100</p>
+                      <p className="text-2xl font-bold text-emerald-400">{current.existingScore}/10</p>
                       <p className="text-xs text-emerald-500 mt-0.5">{t('jury.score_locked')}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
+                    {/* Keyboard-typeable score input */}
                     <div className="flex items-center gap-3">
                       <input
                         type="number"
-                        min={50}
-                        max={100}
+                        min={0}
+                        max={10}
                         step={0.5}
-                        value={score}
+                        value={scoreStr}
                         onChange={(e) => {
                           const v = e.target.value;
-                          if (v === '') { setScore(''); return; }
+                          if (v === '') { setScoreStr(''); return; }
                           const n = parseFloat(v);
-                          if (!isNaN(n)) setScore(Math.min(100, Math.max(50, n)));
+                          if (!isNaN(n) && n >= 0 && n <= 10) setScoreStr(v);
                         }}
-                        className="w-full px-4 py-3 text-center text-2xl font-bold rounded-xl bg-surface-900 border border-surface-700 text-gold-400 focus:outline-none focus:border-gold-500 transition-colors"
-                        placeholder="50–100"
+                        className="w-full px-4 py-3 text-center text-3xl font-bold rounded-xl bg-surface-900 border border-surface-700 text-gold-400 focus:outline-none focus:border-gold-500 transition-colors"
+                        placeholder="0–10"
                       />
-                      <span className="text-surface-400 text-sm font-medium whitespace-nowrap">/ 100</span>
+                      <span className="text-surface-400 text-sm font-medium whitespace-nowrap">/ 10</span>
+                    </div>
+                    {/* On-screen numpad */}
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {(['7','8','9','4','5','6','1','2','3','.','0','⌫'] as const).map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleNumpad(key)}
+                          className={`py-3 rounded-lg text-sm font-semibold transition-all active:scale-95 cursor-pointer ${
+                            key === '⌫'
+                              ? 'bg-surface-700 text-red-400 hover:bg-red-500/20'
+                              : 'bg-surface-800 text-white hover:bg-surface-600'
+                          }`}
+                        >
+                          {key}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => handleNumpad('C')}
+                        className="col-span-3 py-2.5 rounded-lg text-sm font-medium bg-surface-800 text-surface-400 hover:bg-surface-700 transition-colors cursor-pointer"
+                      >
+                        Clear
+                      </button>
                     </div>
                     <div className="flex justify-between text-[10px] text-surface-500 px-1">
-                      <span>50 — min</span>
-                      <span>100 — max</span>
+                      <span>0 — min</span>
+                      <span>10 — max</span>
                     </div>
                   </div>
                 )}
@@ -395,7 +441,7 @@ export default function JuryReview() {
                 <Textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Why this score? Your notes stay private..." rows={3} />
               </div>
 
-              <Button variant="primary" className="w-full" size="lg" onClick={handleSave} loading={saving} disabled={!!current?.scoreId || score === '' || Number(score) < 50 || Number(score) > 100}>
+              <Button variant="primary" className="w-full" size="lg" onClick={handleSave} loading={saving} disabled={!!current?.scoreId || scoreStr === '' || isNaN(parseFloat(scoreStr)) || parseFloat(scoreStr) < 0 || parseFloat(scoreStr) > 10}>
                 {t('jury.submit_score')}
               </Button>
 
@@ -425,7 +471,7 @@ export default function JuryReview() {
                     <button
                       key={p.photoId}
                       onClick={() => navigateTo(i)}
-                      title={`Photo #${i + 1}${p.existingScore !== null ? ` — ${p.existingScore}/100` : ''}`}
+                      title={`Photo #${i + 1}${p.existingScore !== null ? ` — ${p.existingScore}/10` : ''}`}
                       className={`w-3 h-3 rounded-sm transition-colors cursor-pointer ${
                         i === currentIndex ? 'bg-primary-500 ring-1 ring-primary-400' : p.existingScore !== null ? 'bg-emerald-500' : 'bg-surface-700 hover:bg-surface-600'
                       }`}

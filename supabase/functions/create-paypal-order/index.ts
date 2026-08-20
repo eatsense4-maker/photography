@@ -36,6 +36,14 @@ function corsOrigin(req: Request): string {
   return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
 }
 
+function jsonHeaders(allowOrigin: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Cache-Control': 'no-store',
+  };
+}
+
 serve(async (req) => {
   const allowOrigin = corsOrigin(req);
   if (req.method === 'OPTIONS') {
@@ -75,7 +83,7 @@ serve(async (req) => {
       if (tierErr || !tier) {
         return new Response(JSON.stringify({ error: 'Invalid pricing tier' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+          headers: jsonHeaders(allowOrigin),
         });
       }
 
@@ -85,7 +93,7 @@ serve(async (req) => {
       if (tier.category_id && (categoryIds.length !== 1 || categoryIds[0] !== tier.category_id)) {
         return new Response(JSON.stringify({ error: 'Tier is not valid for the selected category' }), {
           status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+          headers: jsonHeaders(allowOrigin),
         });
       }
 
@@ -103,7 +111,7 @@ serve(async (req) => {
         if (paidCount === 0) {
           return new Response(JSON.stringify({ error: 'No paid categories selected' }), {
             status: 400,
-            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+            headers: jsonHeaders(allowOrigin),
           });
         }
         amount = parseFloat(tier.price) * paidCount;
@@ -172,7 +180,7 @@ serve(async (req) => {
         JSON.stringify({ error: `PayPal API error (${orderRes.status})`, details: errBody }),
         {
           status: 502,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+          headers: jsonHeaders(allowOrigin),
         }
       );
     }
@@ -180,10 +188,7 @@ serve(async (req) => {
     const order = await orderRes.json() as { id: string };
 
     return new Response(JSON.stringify({ orderId: order.id }), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': allowOrigin,
-      },
+      headers: jsonHeaders(allowOrigin),
     });
   } catch (error) {
     console.error('create-paypal-order error:', error);
@@ -191,10 +196,7 @@ serve(async (req) => {
       JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to create PayPal order' }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': allowOrigin,
-        },
+        headers: jsonHeaders(allowOrigin),
       }
     );
   }

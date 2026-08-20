@@ -36,6 +36,14 @@ function corsOrigin(req: Request): string {
   return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
 }
 
+function jsonHeaders(allowOrigin: string): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Cache-Control': 'no-store',
+  };
+}
+
 serve(async (req) => {
   const allowOrigin = corsOrigin(req);
   if (req.method === 'OPTIONS') {
@@ -78,7 +86,7 @@ serve(async (req) => {
     if (orderData.status === 'COMPLETED') {
       return new Response(
         JSON.stringify({ success: true, captureId: 'already_completed' }),
-        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+        { headers: jsonHeaders(allowOrigin) }
       );
     }
 
@@ -88,7 +96,7 @@ serve(async (req) => {
         JSON.stringify({ error: `Order not approved. Current status: ${orderData.status}`, details: orderData }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+          headers: jsonHeaders(allowOrigin),
         }
       );
     }
@@ -111,7 +119,7 @@ serve(async (req) => {
     if (!captureRes.ok && captureData?.details?.[0]?.issue === 'ORDER_ALREADY_CAPTURED') {
       return new Response(
         JSON.stringify({ success: true, captureId: 'already_captured' }),
-        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+        { headers: jsonHeaders(allowOrigin) }
       );
     }
 
@@ -125,7 +133,7 @@ serve(async (req) => {
         JSON.stringify({ error: `Payment not completed: ${ppError}`, description: ppDesc, details: captureData }),
         {
           status: 502,
-          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin },
+          headers: jsonHeaders(allowOrigin),
         }
       );
     }
@@ -148,7 +156,7 @@ serve(async (req) => {
     if (existingPayment) {
       return new Response(
         JSON.stringify({ success: true, captureId: capture.id, idempotent: true }),
-        { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+        { headers: jsonHeaders(allowOrigin) }
       );
     }
 
@@ -243,7 +251,7 @@ serve(async (req) => {
 
         return new Response(
           JSON.stringify({ error: 'Payment amount mismatch. Refund initiated.' }),
-          { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+          { status: 400, headers: jsonHeaders(allowOrigin) }
         );
       }
     }
@@ -307,7 +315,7 @@ serve(async (req) => {
           captureId: capture.id,
           creditGrantFailed: true,
         }),
-        { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': allowOrigin } }
+        { status: 500, headers: jsonHeaders(allowOrigin) }
       );
     }
 
@@ -332,12 +340,7 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true, captureId: capture.id }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': allowOrigin,
-        },
-      }
+      { headers: jsonHeaders(allowOrigin) }
     );
   } catch (error) {
     console.error('capture-paypal-order error:', error);
@@ -345,10 +348,7 @@ serve(async (req) => {
       JSON.stringify({ error: error instanceof Error ? error.message : 'Failed to capture payment' }),
       {
         status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': allowOrigin,
-        },
+        headers: jsonHeaders(allowOrigin),
       }
     );
   }

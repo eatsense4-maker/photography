@@ -348,7 +348,7 @@
     "comment_label": "Koment",
     "comment_optional": "(opsionale)",
     "all_categories": "Të gjitha kategoritë",
-    "score_range_hint": "Vlerësoni çdo foto nga 50 në 100",
+    "score_range_hint": "Vlerësoni çdo foto nga 0 në 10",
     "submit_score": "Dorëzo Notën",
     "progress": "Progresi"
   },

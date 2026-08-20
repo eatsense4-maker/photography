@@ -67,78 +67,39 @@ export default function AdminResults() {
   const fetchResults = async () => {
     setLoading(true);
 
-    // Get categories for this edition
+    // Get categories for this edition (for the filter dropdown)
     const { data: cats } = await supabase
       .from('categories')
       .select('id, name')
       .eq('edition_id', selectedEdition);
     setCategories(cats || []);
-    const catIds = (cats || []).map((c) => c.id);
 
-    if (catIds.length === 0) {
+    // Use RPC to aggregate scores server-side — avoids PostgREST 1000-row default limit
+    const { data, error } = await supabase
+      .rpc('get_edition_photo_scores', { p_edition_id: selectedEdition });
+
+    if (error || !data || data.length === 0) {
       setCategoryWinners([]);
       setLoading(false);
       return;
     }
 
-    // Fetch scores for photos in this edition's categories
-    const { data } = await supabase
-      .from('scores')
-      .select(`
-        score, photo_id,
-        submission_photos!scores_photo_id_fkey(
-          id, storage_key,
-          submissions!submission_photos_submission_id_fkey(
-            category_id, edition_id,
-            profiles!submissions_user_id_fkey(full_name, country),
-            categories!submissions_category_id_fkey(id, name)
-          )
-        )
-      `)
-      .not('photo_id', 'is', null)
-      .not('score', 'is', null);
-
-    if (!data) {
-      setCategoryWinners([]);
-      setLoading(false);
-      return;
-    }
-
-    // Filter to this edition & aggregate by photo_id
-    const photoMap = new Map<
-      string,
-      { scores: number[]; storageKey: string; name: string; country: string; category: string; categoryId: string }
-    >();
-
-    for (const row of data as any[]) {
-      const photoId = row.photo_id;
-      const editionId = row.submission_photos?.submissions?.edition_id;
-      if (!photoId || editionId !== selectedEdition) continue;
-      if (!photoMap.has(photoId)) {
-        photoMap.set(photoId, {
-          scores: [],
-          storageKey: row.submission_photos?.storage_key || '',
-          name: row.submission_photos?.submissions?.profiles?.full_name || 'Unknown',
-          country: row.submission_photos?.submissions?.profiles?.country || '—',
-          category: row.submission_photos?.submissions?.categories?.name || '—',
-          categoryId: row.submission_photos?.submissions?.categories?.id || '',
-        });
-      }
-      photoMap.get(photoId)!.scores.push(Number(row.score));
-    }
-
-    // Build per-category ranked lists
+    // Build per-category ranked lists directly from aggregated RPC rows
     const byCat = new Map<string, PhotoResult[]>();
-    for (const [photoId, info] of photoMap) {
-      const avg = info.scores.reduce((a, b) => a + b, 0) / info.scores.length;
+    for (const row of data as any[]) {
       const result: PhotoResult = {
-        rank: 0, photoId, storageKey: info.storageKey,
-        photographerName: info.name, country: info.country,
-        category: info.category, categoryId: info.categoryId,
-        avgScore: avg, juryCount: info.scores.length,
+        rank: 0,
+        photoId: row.photo_id,
+        storageKey: row.storage_key || '',
+        photographerName: row.photographer || 'Unknown',
+        country: row.country || '—',
+        category: row.category_name || '—',
+        categoryId: row.category_id || '',
+        avgScore: Number(row.avg_score),
+        juryCount: Number(row.jury_count),
       };
-      if (!byCat.has(info.categoryId)) byCat.set(info.categoryId, []);
-      byCat.get(info.categoryId)!.push(result);
+      if (!byCat.has(row.category_id)) byCat.set(row.category_id, []);
+      byCat.get(row.category_id)!.push(result);
     }
 
     const catWinnersList: CategoryWinners[] = [];

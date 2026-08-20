@@ -10,6 +10,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  global: {
+    headers: {
+      // Prevent Supabase's CDN from serving stale API responses.
+      // This is critical for payment/credit queries.
+      'Cache-Control': 'no-cache',
+    },
+  },
   auth: {
     autoRefreshToken: true,
     persistSession: true,

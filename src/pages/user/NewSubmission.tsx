@@ -1,18 +1,18 @@
 ﻿import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { motion } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { PayPalButtons } from '@paypal/react-paypal-js';
-import PayPalProvider from '@/components/PayPalProvider';
+
 import {
   Upload, X, ArrowRight, ArrowLeft, Image as ImageIcon,
   CreditCard, Check, Camera, ShieldCheck, Info, HelpCircle, Lock,
 } from 'lucide-react';
 import { Button, Input, Textarea, Select, Card } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
-import { uploadPhoto } from '@/lib/r2';
+import { uploadPhoto, getPhotoUrl } from '@/lib/r2';
 import { useAuth } from '@/hooks/useAuth';
 import toast from 'react-hot-toast';
 import type { PricingTier, Category } from '@/types';
@@ -29,11 +29,13 @@ const CAT_ACCENTS = [
 
 interface UploadedPhoto {
   id: string;
-  file: File;
+  file: File | null;
   preview: string;
   progress: number;
   uploaded: boolean;
   storageKey?: string;
+  thumbnailKey?: string;
+  dbPhotoId?: string;
   title: string;
   description: string;
 }
@@ -42,10 +44,16 @@ export default function NewSubmission() {
   const { t } = useTranslation();
   usePageTitle('New Submission');
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const draftIdParam = searchParams.get('draftId');
+  const prefillEditionIdParam = searchParams.get('editionId');
+  const prefillCategoryIdParam = searchParams.get('categoryId');
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+  const [hydratedFromQuery, setHydratedFromQuery] = useState(false);
 
   // Edition
   const [editionId, setEditionId] = useState('');
@@ -66,8 +74,10 @@ export default function NewSubmission() {
     tier_id: string | null;
   } | null>(null);
 
-  // Existing non-draft submissions in this edition: { categoryId: submissionId }
-  const [submittedByCategory, setSubmittedByCategory] = useState<Record<string, string>>({});
+// Existing non-draft submissions in this edition: { categoryId: count }
+  const [submissionCountByCategory, setSubmissionCountByCategory] = useState<Record<string, number>>({});
+  // Purchased photo credits per category: { categoryId: totalCredits }
+  const [creditsByCategory, setCreditsByCategory] = useState<Record<string, number>>({});
 
   // Payment
   const [paying, setPaying] = useState(false);
@@ -170,30 +180,119 @@ export default function NewSubmission() {
       .then(({ data }) => setUserCredits(data || null));
   }, [editionId, user?.id, selectedCategoryId, paymentComplete]);
 
-  // Fetch existing non-draft submissions for this user/edition.
+  useEffect(() => {
+    if (hydratedFromQuery || !user?.id) return;
+
+    const hydrateFromDraft = async () => {
+      if (draftIdParam) {
+        const { data: draft, error } = await supabase
+          .from('submissions')
+          .select(`
+            id, edition_id, category_id, title, description, status,
+            submission_photos(id, storage_key, thumbnail_key, sort_order, title, description)
+          `)
+          .eq('id', draftIdParam)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          toast.error('Failed to open draft for editing.');
+          setHydratedFromQuery(true);
+          return;
+        }
+
+        if (!draft || (draft as any).status !== 'draft') {
+          toast.error('Draft not found or no longer editable.');
+          setHydratedFromQuery(true);
+          return;
+        }
+
+        const draftPhotos: UploadedPhoto[] = ((draft as any).submission_photos || [])
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .map((photo: any) => ({
+            id: `existing-${photo.id}`,
+            file: null,
+            preview: getPhotoUrl(photo.thumbnail_key || photo.storage_key),
+            progress: 100,
+            uploaded: true,
+            storageKey: photo.storage_key,
+            thumbnailKey: photo.thumbnail_key || undefined,
+            dbPhotoId: photo.id,
+            title: photo.title || '',
+            description: photo.description || '',
+          }));
+
+        setEditionId((draft as any).edition_id);
+        setSelectedCategoryId((draft as any).category_id);
+        setTitle((draft as any).title || '');
+        setDescription((draft as any).description || '');
+        setPhotos(draftPhotos);
+        setStep(draftPhotos.length > 0 ? 4 : 3);
+        setHydratedFromQuery(true);
+        return;
+      }
+
+      if (prefillEditionIdParam) {
+        setEditionId(prefillEditionIdParam);
+      }
+      if (prefillCategoryIdParam) {
+        setSelectedCategoryId(prefillCategoryIdParam);
+        setStep(3);
+      }
+
+      setHydratedFromQuery(true);
+    };
+
+    hydrateFromDraft();
+  }, [
+    hydratedFromQuery,
+    draftIdParam,
+    prefillEditionIdParam,
+    prefillCategoryIdParam,
+    user?.id,
+  ]);
+
+  // Fetch existing non-draft submission counts and purchased credits per category.
   useEffect(() => {
     if (!editionId || !user?.id) {
-      setSubmittedByCategory({});
+      setSubmissionCountByCategory({});
+      setCreditsByCategory({});
       return;
     }
-    supabase
-      .from('submissions')
-      .select('id, category_id, status')
-      .eq('user_id', user.id)
-      .eq('edition_id', editionId)
-      .neq('status', 'draft')
-      .then(({ data }) => {
-        const map: Record<string, string> = {};
-        for (const row of data || []) {
-          map[(row as any).category_id] = (row as any).id;
-        }
-        setSubmittedByCategory(map);
-      });
-  }, [editionId, user?.id]);
+    Promise.all([
+      supabase
+        .from('submissions')
+        .select('category_id')
+        .eq('user_id', user.id)
+        .eq('edition_id', editionId)
+        .neq('status', 'draft'),
+      supabase
+        .from('user_credits')
+        .select('category_id, photo_credits')
+        .eq('user_id', user.id)
+        .eq('edition_id', editionId),
+    ]).then(([subRes, credRes]) => {
+      const countMap: Record<string, number> = {};
+      for (const row of subRes.data || []) {
+        const cid = (row as any).category_id;
+        countMap[cid] = (countMap[cid] || 0) + 1;
+      }
+      setSubmissionCountByCategory(countMap);
+
+      const creditMap: Record<string, number> = {};
+      for (const row of credRes.data || []) {
+        const cid = (row as any).category_id;
+        creditMap[cid] = (creditMap[cid] || 0) + (row as any).photo_credits;
+      }
+      setCreditsByCategory(creditMap);
+    });
+  }, [editionId, user?.id, paymentComplete]);
 
   // --- Category selection (single) ---
   const selectCategory = (catId: string) => {
     setSelectedCategoryId(catId);
+    setSelectedTierId('');
+    setPaymentComplete(false);
     setPhotos([]);
   };
 
@@ -230,12 +329,41 @@ export default function NewSubmission() {
     disabled: !selectedCategory || photos.length >= maxPhotos,
   });
 
-  const removePhoto = (photoId: string) => {
-    setPhotos((prev) => {
-      const photo = prev.find((p) => p.id === photoId);
-      if (photo) URL.revokeObjectURL(photo.preview);
-      return prev.filter((p) => p.id !== photoId);
-    });
+  const removePhoto = async (photoId: string) => {
+    const current = photos;
+    const index = current.findIndex((p) => p.id === photoId);
+    if (index < 0) return;
+
+    const target = current[index];
+
+    setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+    if (target.preview.startsWith('blob:')) {
+      URL.revokeObjectURL(target.preview);
+    }
+
+    if (target.dbPhotoId && target.storageKey) {
+      try {
+        const keysToDelete = [target.storageKey];
+        if (target.thumbnailKey) keysToDelete.push(target.thumbnailKey);
+
+        await supabase.functions.invoke('r2-delete', { body: { keys: keysToDelete } });
+
+        const { error } = await supabase
+          .from('submission_photos')
+          .delete()
+          .eq('id', target.dbPhotoId);
+
+        if (error) throw error;
+        toast.success('Saved photo removed from draft.');
+      } catch {
+        setPhotos((prev) => {
+          const next = [...prev];
+          next.splice(index, 0, target);
+          return next;
+        });
+        toast.error('Failed to remove saved photo.');
+      }
+    }
   };
 
   const updatePhotoField = (photoId: string, field: 'title' | 'description', value: string) => {
@@ -264,34 +392,72 @@ export default function NewSubmission() {
     else if (step === 2) setStep(1);
   };
 
-  const cleanupFailedSubmission = async (submissionId: string, keys: string[]) => {
-    if (keys.length > 0) {
-      const { error: deleteFilesError } = await supabase.functions.invoke('r2-delete', {
-        body: { keys },
-      });
-
-      if (deleteFilesError) {
-        console.error('Failed to clean up uploaded files:', deleteFilesError);
-      }
+  const getOrCreateDraftSubmission = async (): Promise<string> => {
+    if (!user?.id || !selectedCategory) {
+      throw new Error('Missing submission context');
     }
 
-    const { error: deleteSubmissionError } = await supabase
+    const { data: existingDraft, error: draftFetchError } = await supabase
       .from('submissions')
-      .delete()
-      .eq('id', submissionId);
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('edition_id', editionId)
+      .eq('category_id', selectedCategory.id)
+      .eq('status', 'draft')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (deleteSubmissionError) {
-      console.error('Failed to roll back submission:', deleteSubmissionError);
+    if (draftFetchError) throw draftFetchError;
+
+    if (existingDraft?.id) {
+      const { error: draftUpdateError } = await supabase
+        .from('submissions')
+        .update({
+          title: title || null,
+          description: description || null,
+        })
+        .eq('id', existingDraft.id);
+
+      if (draftUpdateError) throw draftUpdateError;
+      return existingDraft.id;
     }
+
+    const { data: createdDraft, error: draftCreateError } = await supabase
+      .from('submissions')
+      .insert({
+        user_id: user.id,
+        edition_id: editionId,
+        category_id: selectedCategory.id,
+        title: title || null,
+        description: description || null,
+        status: 'draft',
+        submitted_at: null,
+      })
+      .select('id')
+      .single();
+
+    if (draftCreateError || !createdDraft?.id) {
+      throw draftCreateError || new Error('Failed to create draft submission');
+    }
+
+    return createdDraft.id;
   };
 
   // --- Submit ---
   const handleSubmit = async (asDraft: boolean) => {
     if (!user?.id || !selectedCategory) return;
 
-    // Block duplicate non-draft submission for the same category.
-    if (!asDraft && submittedByCategory[selectedCategory.id]) {
-      toast.error('You already have a submission for this category. Only one entry per category is allowed.');
+    // Block duplicate non-draft submission when credits are exhausted.
+    const submittedCount = submissionCountByCategory[selectedCategory.id] || 0;
+    const purchasedCredits = creditsByCategory[selectedCategory.id] || 0;
+    const categoryIsPaidCheck = selectedCategory.price > 0;
+    if (!asDraft && categoryIsPaidCheck && submittedCount >= purchasedCredits) {
+      toast.error('You have used all your purchased photo credits for this category.');
+      return;
+    }
+    if (!asDraft && !categoryIsPaidCheck && submittedCount > 0) {
+      toast.error('You already have a submission for this category. Only one entry per free category is allowed.');
       return;
     }
 
@@ -302,64 +468,97 @@ export default function NewSubmission() {
 
     setLoading(true);
     try {
-      const status = asDraft ? 'draft' : (isPaid && !hasCredits ? 'draft' : 'submitted');
+      const submissionId = await getOrCreateDraftSubmission();
 
-      const { data: submission, error: subError } = await supabase
-        .from('submissions')
-        .insert({
-          user_id: user.id,
-          edition_id: editionId,
-          category_id: selectedCategory.id,
-          title: title || null,
-          description: description || null,
-          status,
-          submitted_at: status === 'submitted' ? new Date().toISOString() : null,
-        })
-        .select('id')
-        .single();
-
-      if (subError) throw subError;
-
-      const uploadedKeys: string[] = [];
       setUploadProgress({ current: 0, total: photos.length });
       for (let i = 0; i < photos.length; i++) {
         setUploadProgress({ current: i + 1, total: photos.length });
         const photo = photos[i];
+
+        if (photo.uploaded && photo.storageKey) {
+          if (!photo.dbPhotoId) {
+            throw new Error('Missing saved photo reference while updating draft.');
+          }
+
+          const { error: existingPhotoUpdateError } = await supabase
+            .from('submission_photos')
+            .update({
+              sort_order: i,
+              title: photo.title || null,
+              description: photo.description || null,
+            })
+            .eq('id', photo.dbPhotoId);
+
+          if (existingPhotoUpdateError) {
+            throw existingPhotoUpdateError;
+          }
+          continue;
+        }
+
         try {
+          let uploadedKey: string | null = null;
+
+          if (!photo.file) {
+            throw new Error('Missing file for photo upload.');
+          }
+
           const { key } = await uploadPhoto(photo.file, (progress) => {
             setPhotos((prev) =>
               prev.map((p) => (p.id === photo.id ? { ...p, progress } : p))
             );
           });
 
-          uploadedKeys.push(key);
+          uploadedKey = key;
 
-          const { error: photoError } = await supabase.from('submission_photos').insert({
-            submission_id: submission.id,
-            storage_key: key,
-            original_filename: photo.file.name,
-            mime_type: photo.file.type,
-            file_size: photo.file.size,
-            sort_order: i,
-            title: photo.title || null,
-            description: photo.description || null,
-          });
+          const { data: insertedPhoto, error: photoError } = await supabase
+            .from('submission_photos')
+            .insert({
+              submission_id: submissionId,
+              storage_key: key,
+              original_filename: photo.file.name,
+              mime_type: photo.file.type,
+              file_size: photo.file.size,
+              sort_order: i,
+              title: photo.title || null,
+              description: photo.description || null,
+            })
+            .select('id')
+            .single();
 
-          if (photoError) throw photoError;
+          if (photoError) {
+            if (uploadedKey) {
+              await supabase.functions.invoke('r2-delete', { body: { keys: [uploadedKey] } });
+            }
+            throw photoError;
+          }
 
           setPhotos((prev) =>
-            prev.map((p) => (p.id === photo.id ? { ...p, uploaded: true, storageKey: key } : p))
+            prev.map((p) => (p.id === photo.id
+              ? { ...p, uploaded: true, storageKey: key, dbPhotoId: insertedPhoto?.id || p.dbPhotoId }
+              : p))
           );
         } catch (uploadErr) {
           console.error('Photo upload failed:', uploadErr);
-          await cleanupFailedSubmission(submission.id, uploadedKeys);
-
-          const message = uploadErr instanceof Error ? uploadErr.message : `Failed to upload ${photo.file.name}`;
-          throw new Error(message || `Failed to upload ${photo.file.name}`);
+          const fileName = photo.file?.name || `Photo ${i + 1}`;
+          const message = uploadErr instanceof Error ? uploadErr.message : `Failed to upload ${fileName}`;
+          throw new Error(`${message || `Failed to upload ${fileName}`}. Progress has been kept as draft.`);
         }
       }
 
-      if (!asDraft && isPaid && status === 'submitted') {
+      const finalStatus = asDraft ? 'draft' : 'submitted';
+      const { error: finalizeError } = await supabase
+        .from('submissions')
+        .update({
+          title: title || null,
+          description: description || null,
+          status: finalStatus,
+          submitted_at: finalStatus === 'submitted' ? new Date().toISOString() : null,
+        })
+        .eq('id', submissionId);
+
+      if (finalizeError) throw finalizeError;
+
+      if (!asDraft && isPaid && finalStatus === 'submitted') {
         // Refresh credits from DB so the UI reflects the trigger-managed photo_credits_used.
         const { data: refreshed } = await supabase
           .from('user_credits')
@@ -391,7 +590,6 @@ export default function NewSubmission() {
     : step === 1 ? 0 : step === 3 ? 1 : 2;
 
   return (
-    <PayPalProvider>
     <div className="max-w-4xl mx-auto space-y-4 pb-6">
       <div className="text-center">
         <h1 className="text-xl font-display font-bold text-white">
@@ -400,6 +598,11 @@ export default function NewSubmission() {
         <p className="text-surface-300 text-xs mt-1">
           {t('submission.follow_steps')}
         </p>
+        {draftIdParam && (
+          <p className="text-primary-300 text-xs mt-1">
+            You are editing an existing draft. Add or remove photos, then submit when ready.
+          </p>
+        )}
       </div>
 
       {/* Progress Steps */}
@@ -471,6 +674,8 @@ export default function NewSubmission() {
               onChange={(e) => {
                 setEditionId(e.target.value);
                 setSelectedCategoryId(null);
+                setSelectedTierId('');
+                setPaymentComplete(false);
                 setPhotos([]);
               }}
             />
@@ -485,7 +690,11 @@ export default function NewSubmission() {
                     const isSelected = selectedCategoryId === cat.id;
                     const accent = CAT_ACCENTS[i % CAT_ACCENTS.length];
                     const catIsPaid = cat.price > 0;
-                    const alreadySubmitted = !!submittedByCategory[cat.id];
+                    const catSubmitCount = submissionCountByCategory[cat.id] || 0;
+                    const catPurchasedCredits = creditsByCategory[cat.id] || 0;
+                    const alreadySubmitted = catIsPaid
+                      ? catSubmitCount > 0 && catSubmitCount >= catPurchasedCredits
+                      : catSubmitCount > 0;
                     return (
                       <button
                         key={cat.id}
@@ -564,13 +773,36 @@ export default function NewSubmission() {
                     {userCredits.photo_credits - userCredits.photo_credits_used} of {userCredits.photo_credits} photo credit{userCredits.photo_credits !== 1 ? 's' : ''} remaining
                   </p>
                 )}
-                {submittedByCategory[selectedCategory.id] && (
-                  <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
-                    <p className="text-xs text-amber-400 font-medium">
-                      You already have a submission for this category. Only one entry per category is allowed.
-                    </p>
-                  </div>
-                )}
+                {(() => {
+                  const submittedCount = submissionCountByCategory[selectedCategory.id] || 0;
+                  const purchasedCredits = creditsByCategory[selectedCategory.id] || 0;
+                  if (isPaid && submittedCount > 0 && submittedCount < purchasedCredits) {
+                    return (
+                      <p className="text-xs text-emerald-400">
+                        {submittedCount} of {purchasedCredits} credit{purchasedCredits !== 1 ? 's' : ''} used — {purchasedCredits - submittedCount} submission{purchasedCredits - submittedCount !== 1 ? 's' : ''} remaining.
+                      </p>
+                    );
+                  }
+                  if (isPaid && submittedCount >= purchasedCredits && purchasedCredits > 0) {
+                    return (
+                      <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
+                        <p className="text-xs text-amber-400 font-medium">
+                          You have used all {purchasedCredits} purchased photo credit{purchasedCredits !== 1 ? 's' : ''} for this category.
+                        </p>
+                      </div>
+                    );
+                  }
+                  if (!isPaid && submittedCount > 0) {
+                    return (
+                      <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 mt-1">
+                        <p className="text-xs text-amber-400 font-medium">
+                          You already have a submission for this category. Only one entry per free category is allowed.
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             )}
           </Card>
@@ -957,7 +1189,7 @@ export default function NewSubmission() {
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-surface-500 font-mono">#{idx + 1}</span>
-                        <span className="text-[10px] text-surface-500 truncate">{photo.file.name}</span>
+                        <span className="text-[10px] text-surface-500 truncate">{photo.file?.name || 'Saved draft photo'}</span>
                       </div>
                       <input
                         type="text"
@@ -1120,7 +1352,6 @@ export default function NewSubmission() {
         </motion.div>
       )}
     </div>
-    </PayPalProvider>
   );
 }
 

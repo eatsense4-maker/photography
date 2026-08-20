@@ -40,6 +40,7 @@ export default function AdminPayments() {
         .select(`
           id, amount, currency, status, paypal_order_id, paid_at, created_at,
           profiles!payments_user_id_fkey(full_name),
+          categories!payments_category_id_fkey(name),
           submissions!payments_submission_id_fkey(
             categories!submissions_category_id_fkey(name)
           )
@@ -51,7 +52,7 @@ export default function AdminPayments() {
           data.map((p: any) => ({
             id: p.id,
             userName: p.profiles?.full_name || 'Unknown',
-            category: p.submissions?.categories?.name || '—',
+            category: p.categories?.name || p.submissions?.categories?.name || '—',
             amount: Number(p.amount),
             currency: p.currency || 'EUR',
             status: p.status,

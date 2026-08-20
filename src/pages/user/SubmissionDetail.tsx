@@ -18,6 +18,8 @@ import {
   MessageSquare,
   Trash2,
   AlertTriangle,
+  PenSquare,
+  Send,
 } from 'lucide-react';
 import { Card, Badge, Button, Modal, Textarea } from '@/components/ui';
 import { supabase } from '@/lib/supabase';
@@ -43,6 +45,8 @@ const paymentBadge: Record<PaymentStatus, { label: string; variant: 'success' | 
 
 interface SubmissionData {
   id: string;
+  category_id: string;
+  edition_id: string;
   title: string;
   description: string;
   status: SubmissionStatus;
@@ -56,6 +60,8 @@ interface SubmissionData {
     storage_key: string;
     thumbnail_key: string | null;
     sort_order: number;
+    title: string | null;
+    description: string | null;
     status: PhotoReviewStatus;
     review_note: string | null;
   }[];
@@ -69,6 +75,15 @@ export default function SubmissionDetail() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
   const backPath = isAdmin ? '/admin/submissions' : '/dashboard/submissions';
+  // Admin queue: ordered submission IDs passed from the list view.
+  const navState = location.state as { queue?: string[]; filters?: object } | null;
+  const queue = navState?.queue ?? [];
+  const currentIndex = queue.indexOf(id ?? '');
+  const prevId = currentIndex > 0 ? queue[currentIndex - 1] : null;
+  const nextId = currentIndex >= 0 && currentIndex < queue.length - 1 ? queue[currentIndex + 1] : null;
+
+  const goBack = () => navigate(backPath, { state: navState?.filters ? { filters: navState.filters } : undefined });
+  const goToSubmission = (targetId: string) => navigate(`/admin/submissions/${targetId}`, { state: navState });
   const [submission, setSubmission] = useState<SubmissionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -81,6 +96,7 @@ export default function SubmissionDetail() {
   // User cancel/delete state
   const [cancelModal, setCancelModal] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [submitDraftLoading, setSubmitDraftLoading] = useState(false);
   const [deletePhotoModal, setDeletePhotoModal] = useState<{ photoId: string; storageKey: string; thumbnailKey: string | null } | null>(null);
   const [deletePhotoLoading, setDeletePhotoLoading] = useState(false);
 
@@ -89,10 +105,10 @@ export default function SubmissionDetail() {
     const { data, error } = await supabase
       .from('submissions')
       .select(`
-        id, title, description, status, submitted_at, created_at,
+        id, edition_id, category_id, title, description, status, submitted_at, created_at,
         categories!submissions_category_id_fkey(name),
         editions!submissions_edition_id_fkey(title, year),
-        submission_photos(id, storage_key, thumbnail_key, sort_order, status, review_note),
+        submission_photos(id, storage_key, thumbnail_key, sort_order, title, description, status, review_note),
         payments(status)
       `)
       .eq('id', id)
@@ -110,6 +126,8 @@ export default function SubmissionDetail() {
 
     setSubmission({
       id: s.id,
+      category_id: s.category_id,
+      edition_id: s.edition_id,
       title: s.title || 'Untitled',
       description: s.description || '',
       status: s.status as SubmissionStatus,
@@ -168,10 +186,16 @@ export default function SubmissionDetail() {
       return;
     }
     toast.success(`All pending photos ${action}`);
-    fetchSubmission();
+    // Auto-advance to the next submission in the queue, or return to list.
+    if (nextId) {
+      goToSubmission(nextId);
+    } else {
+      goBack();
+    }
   };
 
   const canModify = submission && !isAdmin && ['draft', 'submitted'].includes(submission.status);
+  const canEditDraft = submission && !isAdmin && submission.status === 'draft';
 
   const handleDeletePhoto = async () => {
     if (!deletePhotoModal || !submission) return;
@@ -231,6 +255,43 @@ export default function SubmissionDetail() {
     }
   };
 
+  const handleSubmitDraft = async () => {
+    if (!submission || submission.status !== 'draft') return;
+    if (submission.photos.length === 0) {
+      toast.error('Add at least one photo before submitting your draft.');
+      return;
+    }
+
+    setSubmitDraftLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .update({
+          status: 'submitted',
+          submitted_at: new Date().toISOString(),
+        })
+        .eq('id', submission.id)
+        .eq('status', 'draft')
+        .select('id')
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) throw new Error('Draft was not found or is no longer editable.');
+
+      toast.success('Draft submitted successfully.');
+      fetchSubmission();
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to submit draft.');
+    } finally {
+      setSubmitDraftLoading(false);
+    }
+  };
+
+  const handleContinueEditing = () => {
+    if (!submission || submission.status !== 'draft') return;
+    navigate(`/dashboard/submissions/new?draftId=${submission.id}`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -246,12 +307,23 @@ export default function SubmissionDetail() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <Breadcrumb items={[
-        { label: t('nav.dashboard'), to: '/dashboard' },
-        { label: t('user.submissions'), to: backPath },
-        { label: submission.title || 'Submission' },
-      ]} />
+      {/* Breadcrumb + admin queue navigation */}
+      <div className="flex items-center justify-between gap-4">
+        <Breadcrumb items={[
+          { label: t('nav.dashboard'), to: '/dashboard' },
+          { label: isAdmin ? 'Submissions' : t('user.submissions'), onClick: isAdmin ? goBack : undefined, to: isAdmin ? undefined : backPath },
+          { label: submission.title || 'Submission' },
+        ]} />
+        {isAdmin && queue.length > 1 && (
+          <div className="flex items-center gap-1 flex-shrink-0 text-xs text-surface-400">
+            <Button variant="ghost" size="sm" disabled={!prevId} onClick={() => prevId && goToSubmission(prevId)} icon={<ChevronLeft className="h-4 w-4" />} />
+            <span className="tabular-nums px-1">{currentIndex + 1} / {queue.length}</span>
+            <Button variant="ghost" size="sm" disabled={!nextId} onClick={() => nextId && goToSubmission(nextId)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -278,6 +350,28 @@ export default function SubmissionDetail() {
         <div className="flex items-center gap-2 flex-shrink-0">
           <Badge variant={sb.variant as any}>{sb.label}</Badge>
           {pb && <Badge variant={pb.variant as any}>{pb.label}</Badge>}
+          {canEditDraft && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={<PenSquare className="h-4 w-4" />}
+              onClick={handleContinueEditing}
+            >
+              Continue Editing
+            </Button>
+          )}
+          {canEditDraft && (
+            <Button
+              variant="primary"
+              size="sm"
+              icon={<Send className="h-4 w-4" />}
+              onClick={handleSubmitDraft}
+              loading={submitDraftLoading}
+              disabled={submission.photos.length === 0}
+            >
+              Submit Draft
+            </Button>
+          )}
           {canModify && (
             <Button
               variant="danger"
@@ -402,6 +496,21 @@ export default function SubmissionDetail() {
                       <Trash2 className="h-3.5 w-3.5" />
                       Remove
                     </button>
+                  )}
+
+                  {(photo.title || photo.description) && (
+                    <div className="space-y-0.5 px-0.5">
+                      {photo.title && (
+                        <p className="text-xs font-medium text-white truncate" title={photo.title}>
+                          {photo.title}
+                        </p>
+                      )}
+                      {photo.description && (
+                        <p className="text-[11px] text-surface-400 line-clamp-2" title={photo.description}>
+                          {photo.description}
+                        </p>
+                      )}
+                    </div>
                   )}
 
                   {/* Admin per-photo actions */}

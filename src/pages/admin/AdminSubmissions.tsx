@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Search,
@@ -43,16 +43,19 @@ export default function AdminSubmissions() {
   const { t } = useTranslation();
   usePageTitle('Submissions');
   const navigate = useNavigate();
+  const location = useLocation();
+  // Restore filters if returning from a detail view.
+  const saved = (location.state as any)?.filters;
   const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [groupBy, setGroupBy] = useState<GroupMode>('none');
+  const [search, setSearch] = useState(saved?.search ?? '');
+  const [statusFilter, setStatusFilter] = useState(saved?.statusFilter ?? '');
+  const [categoryFilter, setCategoryFilter] = useState(saved?.categoryFilter ?? '');
+  const [groupBy, setGroupBy] = useState<GroupMode>(saved?.groupBy ?? 'none');
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [actionModal, setActionModal] = useState<{ sub: AdminSubmission; action: string } | null>(null);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(saved?.page ?? 1);
   const pageSize = 25;
 
   const fetchSubmissions = async () => {
@@ -152,17 +155,21 @@ export default function AdminSubmissions() {
   const handleAction = async (action: string) => {
     if (!actionModal) return;
     const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+    const updatedId = actionModal.sub.id;
     const { error } = await supabase
       .from('submissions')
       .update({ status: newStatus })
-      .eq('id', actionModal.sub.id);
+      .eq('id', updatedId);
     if (error) {
       toast.error(error.message);
       return;
     }
     toast.success(`Submission ${action}ed`);
     setActionModal(null);
-    fetchSubmissions();
+    // Update in-place so pagination/filters/grouping are preserved.
+    setSubmissions((prev) =>
+      prev.map((s) => (s.id === updatedId ? { ...s, status: newStatus } : s))
+    );
   };
 
   const groupModes: { mode: GroupMode; icon: React.ReactNode; label: string }[] = [
@@ -228,7 +235,7 @@ export default function AdminSubmissions() {
               <td className="px-6 py-3 text-sm text-surface-400">{sub.submittedAt}</td>
               <td className="px-6 py-3 text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <Button variant="ghost" size="sm" icon={<Eye className="h-4 w-4" />} onClick={() => navigate(`/admin/submissions/${sub.id}`)} />
+                  <Button variant="ghost" size="sm" icon={<Eye className="h-4 w-4" />} onClick={() => navigate(`/admin/submissions/${sub.id}`, { state: { queue: filteredSubmissions.map(s => s.id), filters: { search, statusFilter, categoryFilter, groupBy, page } } })} />
                   <Button
                     variant="ghost"
                     size="sm"
@@ -343,13 +350,13 @@ export default function AdminSubmissions() {
                 {t('common.showing_range', { from: (page - 1) * pageSize + 1, to: Math.min(page * pageSize, filteredSubmissions.length), total: filteredSubmissions.length })}
               </p>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)} icon={<ChevronLeft className="h-4 w-4" />}>
+                <Button variant="ghost" size="sm" disabled={page <= 1} onClick={() => setPage((p: number) => p - 1)} icon={<ChevronLeft className="h-4 w-4" />}>
                   {t('common.previous')}
                 </Button>
                 <span className="text-sm text-surface-300 tabular-nums">
                   {page} / {Math.ceil(filteredSubmissions.length / pageSize)}
                 </span>
-                <Button variant="ghost" size="sm" disabled={page >= Math.ceil(filteredSubmissions.length / pageSize)} onClick={() => setPage(p => p + 1)}>
+                <Button variant="ghost" size="sm" disabled={page >= Math.ceil(filteredSubmissions.length / pageSize)} onClick={() => setPage((p: number) => p + 1)}>
                   {t('common.next')}
                   <ChevronRight className="h-4 w-4" />
                 </Button>

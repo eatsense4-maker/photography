@@ -69,6 +69,7 @@ export default function ProfilePage() {
         .from('payments')
         .select(`
           id, amount, currency, status, paypal_order_id, paypal_capture_id, paid_at, created_at,
+          categories!payments_category_id_fkey(name),
           submissions!payments_submission_id_fkey(
             categories!submissions_category_id_fkey(name)
           ),
@@ -87,7 +88,7 @@ export default function ProfilePage() {
           paypal_capture_id: p.paypal_capture_id,
           paid_at: p.paid_at,
           created_at: p.created_at,
-          category: p.submissions?.categories?.name || '—',
+          category: p.categories?.name || p.submissions?.categories?.name || '—',
           tier_name: p.pricing_tiers?.name || null,
         })));
       }
